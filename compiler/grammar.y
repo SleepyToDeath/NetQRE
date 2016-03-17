@@ -72,7 +72,7 @@ extern list<list<Expr*>*>* pred_list;
 %type <arg> arg
 %type <arglist> arglist
 
-%start expr
+%start prog
 %%
 prog	    : decl_list {$$ = $1; func_list = $$;};
 decl_list   : /* empty */

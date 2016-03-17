@@ -69,17 +69,17 @@ entropy_baseline: apps/entropy_baseline.cpp
 testexpr: ast.cpp ast.h
 	${CCC} ${CCFLAGS} ast.cpp -o ast -std=c++11
 
-parser: y.tab.o lex.yy.o ast.o netqrec.o
-	${CCC} ${CCFLAGS} lex.yy.o y.tab.o ast.o netqrec.o -o parser -lfl -std=c++11  
+parser: y.tab.o lex.yy.o ast.o parser2.o
+	${CCC} ${CCFLAGS} lex.yy.o y.tab.o ast.o parser2.o -o parser -lfl -std=c++11  
 
 compiler: y.tab.o lex.yy.o ast.o
-	${CCC} ${CCFLAGS} lex.yy.o y.tab.o ast.o netqrec.cpp  fsm.cpp  -o compiler -lfl -std=c++11  
+	${CCC} ${CCFLAGS} lex.yy.o y.tab.o ast.o parser2.cpp  fsm.cpp  -o compiler -lfl -std=c++11  
 
-parser.o: ast.h netqrec.cpp
-	${CCC} -c netqrec.cpp -o y.tab.o -std=c++11 
+parser.o: ast.h parser2.cpp
+	${CCC} -c parser2.cpp -o y.tab.o -std=c++11 
 
-netqrec.o: ast.h netqrec.cpp
-	${CCC} -c netqrec.cpp ../core2/tree.cpp ../core2/fsm.cpp -o y.tab.o -std=c++11 
+parser2.o: ast.h parser2.cpp
+	${CCC} -c parser2.cpp ../core2/tree.cpp ../core2/fsm.cpp -o y.tab.o -std=c++11 
 
 ast.o: ast.cpp ast.h
 	${CCC} -c ast.cpp -std=c++11

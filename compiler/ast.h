@@ -1,37 +1,56 @@
+#ifndef AST_H
+#define AST_H
+
 #include <string>
 #include <list>
+#include "fsm.h"
+//#include "packet.h"
 
 using namespace std;
 
 class Node {
     public:
 	Node* parent;
-	list<string> freeVariables;
 
     public:
+	virtual void emitUpdateChange(ostream&, Node*, string, string) {}
+	virtual void emit(ostream&, string="") {}
 	// Get free variables at this node
 	virtual void getFreeVariables() {};
-
+	// Get the ordered list of variables in the ast
+	virtual list<string> getSortedVariables(const list<string>*) {};
+	virtual void emitDataStructure(ostream&) {};
+	virtual void emitDataStructureType(ostream&, int) {}
 	virtual void emitUpdate(ostream&) {};
-	virtual void emitUpdateChange(ostream&, Node*, string, string) {}
 	virtual void emitResetState(ostream&) {};
-	virtual void emitEval(ostream&) {}
 
-	virtual void emitDataStructure(ostream&) {}
+	virtual void emitProcess(ostream&) {};
+	virtual void emitCheck(ostream&, int) {};
 };
 
 class Expr : public Node {
     public:
+	// add this function once we have the class for packet
+	//virtual execute(packet);
+	
 	// print debug infomation and other info 
 	void print();
+	double getValue();
+	virtual void emit(ostream&, string="") {}
+	virtual void emitRevPred(ostream&, string="") {}
+
+	virtual void emitUpdateCode(ostream&, string="") {}
+	virtual void emitProcessCode(ostream&, string="") {}
+	virtual void emitSummaryCode(ostream&, string="") {}
 
 	// below is for parser2
+	list<string> freeVariables;
+	virtual TreeNode* addToTree(TreeNode*) {};
 	virtual void getFreeVariables() {};
-
+	virtual list<string> getSortedVariables(const list<string>*) {};
+	virtual void emitDataStructure(ostream&) {};
 	virtual void emitUpdate(ostream&) {};
 	virtual void emitResetState(ostream&) {};
-
-	virtual void emitDataStructure(ostream&) {};
 };
 
 // values
@@ -42,7 +61,9 @@ class ValExpr : public Expr {
     public:
 	ValExpr(double);
 	double getValue();
-	virtual void emitEval(ostream&);
+	virtual void emit(ostream&, string="");
+	virtual void emitUpdateCode(ostream&, string="");
+	virtual void emitProcessCode(ostream&, string="");
 };
 
 // booleans
@@ -53,7 +74,7 @@ class BoolExpr : public Expr {
     public:
 	BoolExpr(bool);
 	double getValue();
-	virtual void emitEval(ostream&);
+	virtual void emit(ostream&, string="");
 };
 
 // id
@@ -63,7 +84,7 @@ class IdExpr : public Expr {
 
     public:
 	IdExpr(string);
-	virtual void emitEval(ostream&);
+	virtual void emit(ostream&, string="");
 	virtual void emitUpdate(ostream&);
 };
 
@@ -76,6 +97,7 @@ class MemExpr : public Expr {
 
     public:
 	MemExpr(Expr*, string);
+	virtual void emit(ostream&, string="");
 };
 
 // id (Expr, .., expr ) 
@@ -86,8 +108,11 @@ class FunCallExpr : public Expr {
 
     public:
 	FunCallExpr(string, list<Expr *> *);
+	virtual void emit(ostream&, string="");
 	virtual void getFreeVariables();
 	virtual void emitUpdate(ostream&);
+	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitCheck(ostream&, int);
 };
 
 class BiopExpr : public Expr {
@@ -99,55 +124,72 @@ class BiopExpr : public Expr {
 	BiopExpr(Expr*, Expr*);
 	virtual void getFreeVariables();
 	virtual void emitUpdate(ostream&);
+	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitCheck(ostream&, int);
 };
 
 // constructor for Expr + expr
 class PlusExpr : public BiopExpr {
     public:
 	PlusExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 // constructor for Expr - expr
 class MinusExpr : public BiopExpr {
     public:
 	MinusExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 // constructor for Expr * expr
 class TimesExpr : public BiopExpr {
     public:
 	TimesExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
+	virtual void emitUpdateChange(ostream&, Node*, string, string);
 };
 
 // constructor for Expr / expr
 class DivideExpr : public BiopExpr {
     public:
 	DivideExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 // constructor for Expr < expr
 class LessExpr : public BiopExpr {
     public:
 	LessExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
+	virtual void emitRevPred(ostream&, string="");
 };
 
 // constructor for Expr > expr
 class GreaterExpr : public BiopExpr {
     public:
 	GreaterExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
+	virtual void emitRevPred(ostream&, string="");
 };
 
 // constructor for Expr == expr
 class EqualExpr : public BiopExpr {
     public:
 	EqualExpr(Expr*, Expr*);
-	virtual void getFreeVariables();
+	virtual void emit(ostream&, string="");
+	virtual void emitRevPred(ostream&, string="");
+	virtual TreeNode* addToTree(TreeNode*);
+
+	//virtual void getFreeVariables();
+//	virtual void emitDataStructure();
 };
 
 // constructor for Expr != expr
 class NotEqualExpr : public BiopExpr {
     public:
 	NotEqualExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
 	//virtual void emitPred(ostream&, string="");
 };
 
@@ -155,6 +197,7 @@ class NotEqualExpr : public BiopExpr {
 class AndExpr : public BiopExpr {
     public:
 	AndExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 
@@ -162,6 +205,7 @@ class AndExpr : public BiopExpr {
 class OrExpr : public BiopExpr {
     public:
 	OrExpr(Expr*, Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 // base class for unary Expressions
@@ -173,18 +217,22 @@ class UnaryExpr : public Expr {
 	UnaryExpr(Expr*);
 	virtual void emitUpdate(ostream&);
 	virtual void getFreeVariables();
+	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitCheck(ostream&, int);
 };
 
 // ! Expr
 class NegateExpr : public UnaryExpr {
     public:
 	NegateExpr(Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 // - Expr
 class UnaryMinusExpr : public UnaryExpr {
     public:
 	UnaryMinusExpr(Expr*);
+	virtual void emit(ostream&, string="");
 };
 
 // Expr ? Expr : Expr
@@ -196,12 +244,15 @@ class ChoiceExpr : public Expr {
 
     public:
 	ChoiceExpr(Expr*,Expr*,Expr*);
+	virtual void emit(ostream&, string="");
 
 	virtual void getFreeVariables();
+	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitDataStructure(ostream&);
 	virtual void emitUpdate(ostream&);
 	void emitUpdateChange(ostream&, Node*, string, string);
 	virtual void emitResetState(ostream&);
+	virtual void emitCheck(ostream&, int);
 };
 
 
@@ -216,11 +267,11 @@ class AggExpr : public Expr {
 	AggExpr(string,Expr*,string);
 	virtual void emit(ostream&, string="");
 	virtual void getFreeVariables();
-//	virtual void emitUpdate(ostream&);
-//	void emitUpdateChange(ostream&, Node*, string, string);
-//	virtual void emitDataStructureType(ostream&, int);
-//	virtual void emitResetState(ostream&);
-//	virtual void emitCheck(ostream&, int);
+	virtual void emitUpdate(ostream&);
+	void emitUpdateChange(ostream&, Node*, string, string);
+	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitResetState(ostream&);
+	virtual void emitCheck(ostream&, int);
 };
 
 // agg{split(e1,e2)}
@@ -232,10 +283,12 @@ class SplitExpr : public Expr {
 
     public:
 	SplitExpr(string,Expr*,Expr*);
+//	virtual void emit(ostream&, string="");
 	virtual void getFreeVariables();
 //	virtual void emitUpdate(ostream&);
 //	void emitUpdateChange(ostream&, Node*, string, string);
-//	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitCheck(ostream&, int);
 };
 
 // agg{iter(e1)}
@@ -246,9 +299,13 @@ class IterExpr : public Expr {
 
     public:
 	IterExpr(string, Expr*);
+//	virtual void emit(ostream&, string="");
 	virtual void getFreeVariables();
 	virtual void emitUpdate(ostream&);
 	virtual void emitUpdateChange(ostream&, Node*, string, string);
+	virtual void emitDataStructureType(ostream&, int);
+	virtual void emitCheck(ostream&, int);
+	virtual void emit(ostream&, string="");
 };
 
 class PipeExpr : public Expr {
@@ -259,15 +316,25 @@ class PipeExpr : public Expr {
     public:
 	PipeExpr(Expr*, Expr*);
 	virtual void getFreeVariables();
+	virtual void emit(ostream&, string="");
+	virtual void emitUpdate(ostream&);
+	virtual void emitCheck(ostream&, int);
+	virtual void emitUpdateChange(ostream&, Node*, string, string);
+	virtual void emitDataStructureType(ostream&, int);
 };
 
 
 class Decl : public Node {
     public:
 	Decl();
+	virtual void emit(ostream&, string="") {};
 
-    public:
+	// parser2
+	list<string> freeVariables;
 	virtual void getFreeVariables() {};
+	virtual list<string> getSortedVariables(const list<string>*) {};
+	virtual void emitDataStructure(ostream&) {};
+	virtual void emitUpdate(ostream&) {};
 };
 
 class VarDecl : public Decl {
@@ -279,6 +346,7 @@ class VarDecl : public Decl {
     public:
 	VarDecl(string, string, Expr*);
 	//virtual void emit();
+	virtual void emit(ostream&, string="");
 };
 
 
@@ -289,6 +357,7 @@ class Arg : public Node {
 
     public:
 	Arg(string, string);
+	virtual void emit(ostream&, string="");
 };
 
 
@@ -299,7 +368,9 @@ class Block : public Node {
 
     public:
 	Block(list<Decl*> *, Expr*);
+	void emit(ostream&, string="");
 	void emitUpdate(ostream&);
+	//list<string> getSortedVariables(const list<string>&);
 };
 
 // if 
@@ -311,10 +382,14 @@ class IfExpr : public Expr {
 
     public:
 	IfExpr(Expr*, Block*, Block*);
+	virtual void emit(ostream&, string="");
 
 	virtual void getFreeVariables();
 	virtual void emitDataStructure(ostream&);
+	virtual list<string> getSortedVariables(const list<string>*);
+	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitUpdate(ostream&);
+	virtual void emitCheck(ostream&, int);
 };
 
 
@@ -339,8 +414,11 @@ class SFun : public FunBase {
 	
 	// parser2
 	virtual void getFreeVariables();
+	virtual list<string> getSortedVariables(const list<string>*);
+	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitDataStructure(ostream&);
 	virtual void emitUpdate(ostream&);
+	virtual void emitCheck(ostream&, int);
 };
 
 
@@ -355,13 +433,18 @@ class RE : public Expr {
     public:
 	FSM* fsm;
 	RE() {}
+	virtual void emit(ostream&, string=""); 
+	virtual void emitInitCode(ostream&, string="") {}
+	virtual FSM* toFSM(Tree*) {}
 
-    public:
+
 	// parser2
 	virtual void emitDataStructure(ostream&);
 	virtual void emitDataStructure(ostream&, list<string>::iterator);
 	virtual void emitUpdate(ostream&, string, TreeNode*);
 	virtual void emitUpdate(ostream&);
+	void emitDataStructureType(ostream&, list<string>::iterator);
+	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitResetState(ostream&);
 	virtual void emitCheck(ostream&, int);
 };
@@ -375,6 +458,8 @@ class SingleRE : public RE {
     public:
 	SingleRE(list<Expr*>*);
 //	virtual void emit(ostream&, string="");
+	virtual void emitInitCode(ostream&, string="");
+	virtual FSM* toFSM(Tree*);
 	virtual void getFreeVariables();
 };
 
@@ -386,6 +471,8 @@ class ConcatRE :public  RE {
     public:
 	ConcatRE(RE*, RE*);
 	//virtual void emit(ostream&, string="");
+	virtual void emitInitCode(ostream&, string="");
+	virtual FSM* toFSM(Tree*);
 	virtual void getFreeVariables();
 };
 
@@ -397,7 +484,7 @@ class UnionRE :public  RE {
     public:
 	UnionRE(RE*, RE*);
 //	virtual void emit(ostream&, string="");
-	virtual void getFreeVariables();
+	virtual void emitInitCode(ostream&, string="");
 };
 
 class StarRE : public RE {
@@ -407,6 +494,8 @@ class StarRE : public RE {
     public:
 	StarRE(RE*);
 	//virtual void emit(ostream&, string="");
+	virtual void emitInitCode(ostream&, string="");
+	virtual FSM* toFSM(Tree*);
 	virtual void getFreeVariables();
 };
 
@@ -415,7 +504,7 @@ set<TreeNode*> addPredicateAt(TreeNode*, list<Expr*>);
 
 
 
-
+#endif
 
 
 
