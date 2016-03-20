@@ -13,13 +13,13 @@
 using namespace std;
 
 class State {
-    public:
+public:
 	int id;
 	bool isFinal;
 	list<pair<State*, TreeNode*>*> inTransitions;
 	list<pair<State*, TreeNode*>*> outTransitions;
 
-    public:
+public:
 	State(bool=false);
 	set<State*>* getClosedStates();
 };
@@ -27,13 +27,13 @@ class State {
 ostream& operator<<(ostream& os, const State&);
 
 class FSM {
-    public:
+public:
 	set<State*> states;
 	set<State*> finalStates;
 	State* initState;
 	int nState;
 
-    public:
+public:
 	//FSM(int);
 	State* addInitState(bool=false);
 	State* addFinalState();
@@ -41,19 +41,19 @@ class FSM {
 	State* addState(bool=false);
 	//void addTransition(State*, SymbolicPred*, State*);
 	void addTransition(State*, 
-	    set<TreeNode*>&,
-	    State*);
+	set<TreeNode*>&,
+	State*);
 	void addEpsilonTransition(State*, State*);
 	void minimize();
 
 	void assignStateId();
 	//void deleteState(state);
-//	int getNumStates();
+	//	int getNumStates();
 	set<State*>& getFinalStates();
-//	void setFinalState(int);
-//	void clearFinalState();
-//	void updateState(Packet&);
-//	bool checkState();
+	//	void setFinalState(int);
+	//	void clearFinalState();
+	//	void updateState(Packet&);
+	//	bool checkState();
 	void print();
 	void populatePredToTree();
 };

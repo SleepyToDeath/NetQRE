@@ -67,3 +67,11 @@ void SFun::emitUpdate(ostream& out) {
 void SFun::emitCheck(ostream& out, int level) {
     block->final_expr->emitCheck(out, level);
 }
+
+void SFun::getFreeVariables() {
+    block->final_expr->getFreeVariables();
+}
+
+list<string> SFun::getSortedVariables(const list<string>* variables) {
+    return block->final_expr->getSortedVariables(variables);
+}
