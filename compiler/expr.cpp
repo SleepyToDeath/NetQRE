@@ -134,11 +134,13 @@ void BiopExpr::emitUpdate(ostream& out) {
 }
 
 void BiopExpr::getFreeVariables() {
+	cout<<"BiopExpr getFreeVariables() called\n";
 	append(left->freeVariables, freeVariables);
 	append(right->freeVariables, freeVariables);
 	left->getFreeVariables();
 	for (string var : left->freeVariables) {
 		freeVariables.push_back(var);
+		cout<<"Adding "<<var<<" to free variable list\n";
 	}
 	right->getFreeVariables();
 	for (string var : right->freeVariables) {
@@ -151,6 +153,7 @@ void BiopExpr::getFreeVariables() {
 		}
 		if (!exist)
 		freeVariables.push_back(var);
+		cout<<"Adding "<<var<<" to free variable list\n";
 	}
 }
 

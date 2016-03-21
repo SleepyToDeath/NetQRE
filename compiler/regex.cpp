@@ -2,6 +2,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <map>
+#include <typeinfo>
 #include "declarations.h"
 #include "util.h"
 //#include "packet.h"
@@ -495,24 +496,42 @@ void SingleRE::getFreeVariables() {
 		ostringstream convert;
 
 		BiopExpr* biExpr = (BiopExpr*)(e);
-		Expr* right = biExpr->right;
-		//	if (dynamic_cast<ValExpr*>(right)!=NULL) {
-		//	    continue;
-		//	}
-		right->emit(convert);
-		string name = convert.str();
-		bool isNew = true;
-		for (string s : freeVariables) {
-			if (s.compare(name) == 0) {
-				isNew = false;
-				break;
+		string s = typeid(biExpr->right).name();
+		cout<<"TYPE - "<<s<<endl; 
+		if( PlusExpr* right_plus = dynamic_cast< PlusExpr* >( biExpr->right ) )
+		{
+			cout<<"Plus Expression in Single RE\n";
+			MinusExpr* left_minus = new MinusExpr((Expr*)biExpr->left, (Expr*)right_plus->right);
+			biExpr->left = left_minus;
+			right_plus->left->emit(convert);
+			string name = convert.str();
+			biExpr->right = new IdExpr(name);
+		}
+		else if( MinusExpr* right_minus = dynamic_cast< MinusExpr* >( biExpr->right ) )
+		{
+			cout<<"Minus Expression in Single RE\n";
+			PlusExpr* left_plus = new PlusExpr((Expr*)biExpr->left, (Expr*)right_minus->right);
+			biExpr->left = left_plus;
+			right_minus->left->emit(convert);
+			string name = convert.str();
+			biExpr->right = new IdExpr(name);
+		}
+			IdExpr* right = (IdExpr*)biExpr->right; 
+			right->emit(convert);
+			string name = convert.str();
+			bool isNew = true;
+			for (string s : freeVariables) {
+				if (s.compare(name) == 0) {
+					isNew = false;
+					break;
+				}
 			}
-		}
 
-		if (isNew) {
-			cout << "new variable " << name << endl;
-			freeVariables.push_back(name);
-		}
+			if (isNew) {
+				cout << "new variable " << name << endl;
+				freeVariables.push_back(name);
+			}
+		
 	} 
 }
 

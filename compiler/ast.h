@@ -115,6 +115,7 @@ public:
 	virtual void emitCheck(ostream&, int);
 };
 
+// constructor for 2 operator expr
 class BiopExpr : public Expr {
 public:
 	Expr *left;
