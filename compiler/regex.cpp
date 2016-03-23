@@ -498,6 +498,7 @@ void SingleRE::getFreeVariables() {
 		BiopExpr* biExpr = (BiopExpr*)(e);
 		string s = typeid(biExpr->right).name();
 		cout<<"TYPE - "<<s<<endl; 
+		
 		if( PlusExpr* right_plus = dynamic_cast< PlusExpr* >( biExpr->right ) )
 		{
 			cout<<"Plus Expression in Single RE\n";
@@ -516,6 +517,8 @@ void SingleRE::getFreeVariables() {
 			string name = convert.str();
 			biExpr->right = new IdExpr(name);
 		}
+			convert.str("");
+			convert.clear();
 			IdExpr* right = (IdExpr*)biExpr->right; 
 			right->emit(convert);
 			string name = convert.str();
