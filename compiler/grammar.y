@@ -106,7 +106,7 @@ expr	    : NUM {$$ = new ValExpr($1); printf("new num\n");}
 	    | ID '(' expr_list ')'{$$ = new FunCallExpr($1, $3);} /* not sure */
 	    | expr '.' ID {$$ = new MemExpr($1, $3);} /* not sure */
 	    | '(' expr ')' {printf("()"); $$ = $2;}
-	    | expr '+' expr {printf("reduce +\n"); $$ = new Expr();}
+	    | expr '+' expr {printf("reduce +\n"); $$ = new PlusExpr($1, $3);}
 	    | expr '-' expr {$$ = new MinusExpr($1, $3);}
 	    | expr '*' expr {$$ = new TimesExpr($1, $3);}
 	    | expr '/' expr {$$ = new DivideExpr($1, $3);}
@@ -129,7 +129,7 @@ expr	    : NUM {$$ = new ValExpr($1); printf("new num\n");}
 	      }
 	    | expr '?' expr {$$ = new ChoiceExpr($1, $3, NULL);}
 	    | expr '?' expr ':' expr {printf("Choice re\n"); $$ = new ChoiceExpr($1, $3, $5);}
-	    | '/' re '/' {printf("re expr\n"); $$ = $2; re_list->push_back($2);}
+	    | '/' re '/' {printf("re expr\n"); $$ = $2; $$->setName(); re_list->push_back($2);}
 	    | agg_expr {$$ = $1;}
 	    | ID '{' SPLIT '(' expr ',' expr ')' '}' 
 		{
@@ -144,17 +144,17 @@ expr	    : NUM {$$ = new ValExpr($1); printf("new num\n");}
 agg_expr    : ID '{' expr '|' ID ID '}' 
 	      {
 		printf("new agg expr\n");
-		$$ = new AggExpr($1, $3, $6);
+		$$ = new AggExpr($1, $3, $6, $5);
 	      }
 	    | ID '{' expr '}' 
 	      {
-		$$ = new AggExpr($1, $3, "");
+		$$ = new AggExpr($1, $3, "", "");
 	      }
 ;
 
 re	    : '[' expr_list ']' { printf("single re\n"); $$ = new SingleRE($2); pred_list->push_back($2);}// expr list
 	    | '.' {printf("any\n"); $$ = new SingleRE(NULL);}// expr list
-	    | re re %prec '*' {printf("concat\n"); $$ = new ConcatRE($1, $2);}
+	    | re re %prec '+' {printf("concat\n"); $$ = new ConcatRE($1, $2);}
 	    | re '*' %prec NEG {printf("star\n"); $$ = new StarRE($1);}
 	    | re '|' re %prec OR {printf("union\n"); $$ = new UnionRE($1,$3);}
 	    | '(' re ')' {$$ = $2;}
