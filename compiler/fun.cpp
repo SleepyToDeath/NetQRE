@@ -75,3 +75,12 @@ void SFun::getFreeVariables() {
 list<string> SFun::getSortedVariables(const list<string>* variables) {
     return block->final_expr->getSortedVariables(variables);
 }
+
+void SFun::genStateTree() {
+    block->final_expr->genStateTree();
+}
+
+void SFun::emitStateTree(ostream& out) {
+    block->final_expr->emitStateTree(out);
+}
+

@@ -1,61 +1,50 @@
-// leaf level
-struct Node_2{
-int state_0x1eb0a50 = 0x1eb3730;
+// leaf
+struct Node_re0_leaf{
+int state_re0;
 };
 // y
-struct Node_1 {
-unordered_map<int, Node_2> state_map;
-Node_2 default_state;
-int sum_0x1eb0bc0 = 0;
+struct Node_re0_y{
+unordered_map<int, Node_re0_leaf> stateMap;
+Node_re0_leaf default_state;
 };
-// x
-struct Node_0 {
-unordered_map<int, Node_1> state_map;
-Node_1 default_state;
-};
-Node_0 state;
+bool getFirst_update(Packet *last) {
+unordered_map<int, Node_re0_leaf>::iterator it_y;
+Node_re0_leaf *node_leaf;
 
-int ret_sum_0x1eb0bc0 = 0;
+it_y = node_y->state_map.find(dst);
+if (it_y == node_y->state_map.end()) { 
+it_y = node_y->state_map.insert({dst, node_y->default_state}).first;
+}
+if (true) {
+node_leaf = &(it_y->second);
 
-void check_state(x,y) {
-Node_1& state_1;
-if (x in state.state_map) {
-state_1 = state.state_map[x];
-} else {
-state_1 = state.default_state;
-}
-ret_sum_0x1eb0bc0 = state_1.sum_0x1eb0bc0;
-Node_2& state_2;
-if (y in state_1.state_map) {
-state_2 = state_1.state_map[y];
-} else {
-state_2 = state_1.default_state;
+switch (node_leaf->state_re0) {
+case 0: 
+node_leaf->state_re0 = 1;
+break;
+default:
+node_leaf->state_re0 = -1;
+break;
 }
 }
+node_leaf = &(node_y->default_state);
 
-bool f_update(Packet *last) {
-auto it0 = state.state_map.find(src+1);
-if (it0 == state.state_map.end()) { 
-it0 = state.state_map.insert({src+1, state.default_state}).first;
+switch (node_leaf->state_re0) {
+default:
+node_leaf->state_re0 = -1;
+break;
 }
-Node_1& state_1 = it0.second;
-auto it1 = state_1.state_map.find(dst);
-if (it1 == state_1.state_map.end()) { 
-it1 = state_1.state_map.insert({dst, state_1.default_state}).first;
+for (it_y = node_y->state_map.begin(); it_y != node_y->state_map.end(); it_y++) {
+if (true && it_y->first != dst) {
+node_leaf = &(it_y->second);
+
+switch (node_leaf->state_re0) {
+default:
+node_leaf->state_re0 = -1;
+break;
 }
-Node_2& state_2 = it1.second;
-if (state_2.state_0x1eb0a50 == 0x1eb3730) {
-state_2.state_0x1eb0a50 = 0x1eb3c10;
-state_1.sum_0x1eb0bc0 += 1 - 0;
 }
-if (state_2.state_0x1eb0a50 == 0x1eb39b0) {
-state_2.state_0x1eb0a50 = 0x1eb3c10;
-state_1.sum_0x1eb0bc0 += 1 - 0;
 }
 return true;
-}
-
-int f(ip x, Packet* last) {
-  return ret_sum_0x1eb0bc0;
 }
 

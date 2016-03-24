@@ -2,6 +2,7 @@
 #define _PREDTREE_H
 
 #include <map>
+#include <iostream>
 
 class Expr;
 class EqualExpr;
@@ -13,11 +14,15 @@ class Tree;
 class TreeNode {
     public:
 	string name;
+	string type;
 
 	Tree* tree;
+	TreeNode* parent;
+
 	map<string, TreeNode*> childrenMap;
 	TreeNode* defaultNode;
 
+	bool hasStateTransition;
 	list<pair<void*, void*>> transitions;
 	
 	//static const string INF;
@@ -31,6 +36,9 @@ class TreeNode {
 
 	int rightOP;
 	string rightBound;
+
+	string stateString;
+
 
     public:
 	TreeNode() : name("Leaf") {}
@@ -62,6 +70,10 @@ class TreeNode {
 	    if (defaultNode != NULL)
 		defaultNode->printTransitions();
 	}
+
+	bool isLeaf() {
+	    return (childrenMap.empty() && defaultNode==NULL);
+	}
 };
 
 //const string TreeNode::INF = string("INF");
@@ -84,6 +96,10 @@ class Tree{
 	    TreeNode *node = new TreeNode();
 	    node->tree = this;
 	    return node;
+	}
+
+	Tree() {
+	    root = createTreeNode("Leaf");
 	}
 
 	Tree(const list<string>& orderedVariableList) {
@@ -117,11 +133,29 @@ class Tree{
 
 	TreeNode* createChild(TreeNode* node) {
 	    TreeNode* child = createTreeNode(id_to_name[name_to_id[node->name]+1]);
+	    child->parent = node;
 	    return child;
 	}
 
 	bool isRoot(TreeNode* node) {
 	    return node==root;
+	}
+
+	TreeNode* copySubTree(TreeNode* node) {
+	    if (node == NULL)
+		return NULL;
+
+	    TreeNode *copyNode = createTreeNode(node->name);
+
+	    for (auto it = node->childrenMap.begin();
+	        it != node->childrenMap.end();
+	        it++) {
+		copyNode->childrenMap[it->first] = copySubTree(it->second);
+	    }
+
+	    copyNode->defaultNode = copySubTree(node->defaultNode);
+
+	    return copyNode;
 	}
 //	set<TreeNode*> addPredicate(list<Expr*> pred) {
 //	    addPredicateAt(root, pred);
