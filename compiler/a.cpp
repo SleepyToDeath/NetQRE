@@ -1,50 +1,30 @@
 // leaf
-struct Node_re0_leaf{
+struct Node_agg0_leaf{
+};
+// x
+struct Node_agg0_x{
+int sum_agg0;
 int state_re0;
+unordered_map<int, Node_agg0_leaf> stateMap;
+Node_agg0_leaf default_state;
 };
-// y
-struct Node_re0_y{
-unordered_map<int, Node_re0_leaf> stateMap;
-Node_re0_leaf default_state;
+// x_f_agg0
+struct Node_agg0_x_f_agg0{
+unordered_map<int, Node_agg0_x> stateMap;
+Node_agg0_x default_state;
 };
-bool getFirst_update(Packet *last) {
-unordered_map<int, Node_re0_leaf>::iterator it_y;
-Node_re0_leaf *node_leaf;
-
-it_y = node_y->state_map.find(dst);
-if (it_y == node_y->state_map.end()) { 
-it_y = node_y->state_map.insert({dst, node_y->default_state}).first;
-}
-if (true) {
-node_leaf = &(it_y->second);
-
-switch (node_leaf->state_re0) {
-case 0: 
-node_leaf->state_re0 = 1;
-break;
-default:
-node_leaf->state_re0 = -1;
-break;
-}
-}
-node_leaf = &(node_y->default_state);
-
-switch (node_leaf->state_re0) {
-default:
-node_leaf->state_re0 = -1;
-break;
-}
-for (it_y = node_y->state_map.begin(); it_y != node_y->state_map.end(); it_y++) {
-if (true && it_y->first != dst) {
-node_leaf = &(it_y->second);
-
-switch (node_leaf->state_re0) {
-default:
-node_leaf->state_re0 = -1;
-break;
-}
-}
-}
-return true;
-}
-
+// leaf
+struct Node_agg1_leaf{
+};
+// x
+struct Node_agg1_x{
+int sum_agg1;
+int state_re1;
+unordered_map<int, Node_agg1_leaf> stateMap;
+Node_agg1_leaf default_state;
+};
+// x_f_agg1
+struct Node_agg1_x_f_agg1{
+unordered_map<int, Node_agg1_x> stateMap;
+Node_agg1_x default_state;
+};

@@ -484,6 +484,8 @@ FSM* SingleRE::toFSM(Tree *tree) {
     return fsm;
 }
 
+
+
 void emitPred(list<Expr*>* pred, ostream& out, string indent) {
     if (pred==NULL) {
 	out << indent << "new Pred(" ;
@@ -623,8 +625,6 @@ void SingleRE::getFreeVariables() {
 
 	BiopExpr* biExpr = (BiopExpr*)(e);
 	string s = typeid(biExpr->right).name();
-	cout<<"TYPE - "<<s<<endl; 
-
 	if( PlusExpr* right_plus = dynamic_cast< PlusExpr* >( biExpr->right ) )
 	{
 	    cout<<"Plus Expression in Single RE\n";
@@ -664,6 +664,14 @@ void SingleRE::getFreeVariables() {
     } 
 }
 
+void SingleRE::addScopeToVariables(string scope) {
+    if (pred == NULL)
+	return;
+    for (auto e : *pred) {
+		e->addScopeToVariables(scope);
+	}
+}
+
 void ConcatRE::getFreeVariables() {
     re1->getFreeVariables();
     re2->getFreeVariables();
@@ -686,12 +694,26 @@ void ConcatRE::getFreeVariables() {
     }
 }
 
+void ConcatRE::addScopeToVariables(string scope) {
+	re1->addScopeToVariables(scope);
+    re2->addScopeToVariables(scope);
+}
+
+void UnionRE::addScopeToVariables(string scope) {
+	re1->addScopeToVariables(scope);
+    re2->addScopeToVariables(scope);
+}
+
 void StarRE::getFreeVariables() {
     re->getFreeVariables();
     freeVariables.insert(freeVariables.end(),
 	    re->freeVariables.begin(),
 	    re->freeVariables.end()
 	    );
+}
+
+void StarRE::addScopeToVariables(string scope) {
+	re->addScopeToVariables(scope);
 }
 
 //TODO : 

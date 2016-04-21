@@ -40,6 +40,13 @@ void FunBase::emit(ostream& out, string indent) {
     out << endl << indent << "}" << endl << endl;
 }
 
+void FunBase::addScopeToVariables(string){
+	//ignore parents scope since currently functions have highest scope
+	//else use - block->final_expr->addScopeToVariables(scope+"_"+id);
+	
+	block->final_expr->addScopeToVariables(id);
+}
+
 Fun::Fun(string type, string id, list<Arg*> *args, Block *block) : FunBase(type, id, args, block) {
     cout << "new function" << endl;
 }
