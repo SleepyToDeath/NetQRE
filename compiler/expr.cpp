@@ -9,14 +9,14 @@
 using namespace std;
 
 void Expr::genStateTree() {
-	stateTree = new list<StateInfo>();
+    stateTree = new list<StateInfo>();
 
-	for (string var : freeVariables) {
-		StateInfo si;
-		si.varName = var;
-		si.typeName = "Node_" + name + "_" + var;
-		stateTree->push_back(si);
-	}
+    for (string var : freeVariables) {
+	StateInfo si;
+	si.varName = var;
+	si.typeName = "Node_" + name + "_" + var;
+	stateTree->push_back(si);
+    }
 }
 
 void Expr::emitStateTree(ostream& out) {
@@ -795,7 +795,7 @@ void AggExpr::getFreeVariables() {
 	append(expr->freeVariables, freeVariables);
 	expr->getFreeVariables();
 	for (auto var : expr->freeVariables) {
-		if (var.compare(varID)!=0)
+	    if (var.compare(varID)!=0)
 		freeVariables.push_back(var);
 	}
 }
@@ -859,7 +859,6 @@ void AggExpr::emitResetState(ostream& out) {
 
 void AggExpr::genStateTree() {
 	Expr::genStateTree();
-
 	StateInfo si;
 	si.varName = varID;
 	si.typeName = "Node_" + name + "_" + varID;

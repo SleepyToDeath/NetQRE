@@ -668,8 +668,8 @@ void SingleRE::addScopeToVariables(string scope) {
     if (pred == NULL)
 	return;
     for (auto e : *pred) {
-		e->addScopeToVariables(scope);
-	}
+	e->addScopeToVariables(scope);
+    }
 }
 
 void ConcatRE::getFreeVariables() {

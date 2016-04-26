@@ -137,12 +137,6 @@ FSM* determinize(FSM* oldFSM) {
     stateMap[newInitState] = oldFSM->initState->getClosedStates();
 
     int pause;
-    cout << "new init state" << endl;
-    cout << newInitState << ": ";
-    for (auto state : *stateMap[newInitState]) {
-	cout << state << " ";
-    }
-    cout << endl;
 
     list<State*> newStates;
     newStates.push_back(newInitState);
@@ -162,7 +156,6 @@ FSM* determinize(FSM* oldFSM) {
 	}
 
 	for (auto pred : allTransitionPreds) {
-	    cout << "Pred " << pred << endl;
 	    set<State*> *oldToStates = new set<State*>();
 	    for (auto oldstate : *oldFromStates) {
 		// if exists oldstate * pred -> nextstate
@@ -182,21 +175,7 @@ FSM* determinize(FSM* oldFSM) {
 	    State *newToState = NULL;
 	    for (auto state : newStates) {
 		// if this is an exsiting new state
-
-		cout << "oldToStates" << endl;
-		for (auto sstate : *oldToStates) {
-		    cout << sstate << " ";
-		}
-		cout << endl;
-
-		cout << endl<< "TEST" << endl;
-		for (auto sstate : *stateMap[state]) {
-		    cout << sstate << " ";
-		}
-		cout << endl;
-
 		if (*stateMap[state] == *oldToStates) {
-		    cout << "DFSDFD" << endl;
 		    newToState = state;
 		    break;
 		}
@@ -207,12 +186,6 @@ FSM* determinize(FSM* oldFSM) {
 		stateMap[newToState] = oldToStates;
 		newStates.push_back(newToState);
 	    }
-
-	    cout << newToState << ": ";
-	    for (auto state : *stateMap[newToState]) {
-		cout << state << " ";
-	    }
-
 
 	    newFromState->outTransitions.push_back(
 		    new pair<State*, TreeNode*>(newToState, pred)
