@@ -11,7 +11,7 @@
 
 // Test emitUpdate function for RE, with star operations.
 
-//sfun int hh(int x, int y) = /.*[src==x, dst==y].*/;
+sfun int hh(int x, int y) = /.*[src==x].*/;
 
 
 //sfun int getLast(int x) = /.*[src==x, dst==y]/;
@@ -44,4 +44,4 @@
 
 // Test aggregation expressions
 
-sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/};
+//sfun int hh = sum{/.*[dst==y].*/ | ip y};

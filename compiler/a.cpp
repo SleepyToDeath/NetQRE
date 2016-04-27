@@ -1,20 +1,16 @@
 // leaf
-struct Node_agg0_leaf{
-};
-// 
-struct Node_agg0_{
-int sum_agg0;
+struct Node_re0_leaf{
 int state_re0;
-unordered_map<int, Node_agg0_leaf> stateMap;
-Node_agg0_leaf default_state;
-};
-// y
-struct Node_agg0_y{
-unordered_map<int, Node_agg0_> stateMap;
-Node_agg0_ default_state;
 };
 // x
-struct Node_agg0_x{
-unordered_map<int, Node_agg0_y> stateMap;
-Node_agg0_y default_state;
+struct Node_re0_x{
+unordered_map<int, Node_re0_leaf> stateMap;
+Node_re0_leaf default_state;
 };
+bool hh_update(Packet *last) {
+unordered_map<int, Node_re0_leaf>::iterator it_x;
+Node_re0_leaf *node_leaf;
+
+return true;
+}
+

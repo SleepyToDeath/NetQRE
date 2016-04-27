@@ -61,32 +61,32 @@ void emitStateTree(ostream& out) {
 }
 
 void genPredTree() {
-	for (auto re : *re_list) {
-		re->genPredTree();
-		cout << "Generated tree is: " << endl;
-		re->predTree->print();
-	}
+    for (auto re : *re_list) {
+	re->genPredTree();
+	cout << "Generated tree is: " << endl;
+	re->predTree->print();
+    }
 }
 
 void genFSM() {
-	for (auto re : *re_list) {
-		FSM* fsm = re->toFSM(re->predTree);
-		fsm->assignStateId();
-		fsm->populatePredToTree();
-		cout << "Generated fsm is: " << endl;
-		fsm->print();
+    for (auto re : *re_list) {
+	FSM* fsm = re->toFSM(re->predTree);
+	fsm->assignStateId();
+	fsm->populatePredToTree();
+	cout << "Generated fsm is: " << endl;
+	fsm->print();
 
-		re->simplifyPredTree(re->predTree->root);
-		//	re->genPredTree();
-		//	re->toFSM(re->predTree);
-	}
+	re->simplifyPredTree(re->predTree->root);
+	//	re->genPredTree();
+	//	re->toFSM(re->predTree);
+    }
 }
 
-/* void emitUpdate(ostream &out) {
-	for (auto func : *func_list) {
+void emitUpdate(ostream &out) {
+    for (auto func : *func_list) {
 	func->emitUpdate(out);
-	}
-} */
+    }
+}
 
 int main(int argc, char **argv) {
     ++argv, --argc;  /* skip over program name */
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     genFSM();
 
     cout << "Emitting update code..." << endl;
-    //emitUpdate(out);
+    emitUpdate(out);
 
 
     out.close();

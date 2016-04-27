@@ -41,6 +41,7 @@ void RE::genStateTree() {
 }
 
 void RE::addState(list<StateInfo>* stateTree) {
+    this->stateTree = stateTree;
     auto last = stateTree->rbegin();
 
     for (auto it = ++stateTree->rbegin();
@@ -724,6 +725,7 @@ void RE::emitUpdate(ostream& out,
 		    TreeNode *predNode,
 		    TreeNode *startPredNode,
 		    bool isBranchDecided) {
+
     string itName = "it_" + stateIt->varName;
     string nodeName = "node_" + stateIt->varName;
 
@@ -736,7 +738,6 @@ void RE::emitUpdate(ostream& out,
     }
 
     // TODO decend the tree if var name does not match
-
     if (!isBranchDecided) {
 	for (auto it = predNode->childrenMap.begin();
 		it != predNode->childrenMap.end();

@@ -49,19 +49,18 @@ void Expr::emitStateTree(ostream& out) {
 }
 
 void Expr::emitDeclInUpdate(ostream& out) {
-	auto stateIt = stateTree->begin();
-	auto nextIt = stateIt;
-	nextIt++;
+    auto stateIt = stateTree->begin();
+    auto nextIt = stateIt;
+    nextIt++;
+    for (; stateIt != stateTree->end() && nextIt != stateTree->end(); stateIt++, nextIt++) {
+	string itName = "it_" + stateIt->varName;
+	string nodeName = "node_" + nextIt->varName;
 
-	for (; stateIt != stateTree->end() && nextIt != stateTree->end(); stateIt++, nextIt++) {
-		string itName = "it_" + stateIt->varName;
-		string nodeName = "node_" + nextIt->varName;
-
-		out << "unordered_map<int, " << nextIt->typeName << ">::iterator " 
-		<< itName << ";" << endl;
-		out << nextIt->typeName << " *" << nodeName << ";" << endl;
-	}
-	out << endl;
+	out << "unordered_map<int, " << nextIt->typeName << ">::iterator " 
+	<< itName << ";" << endl;
+	out << nextIt->typeName << " *" << nodeName << ";" << endl;
+    }
+    out << endl;
 }
 
 ValExpr::ValExpr(double value) : value(value) {}
@@ -242,11 +241,13 @@ void BiopExpr::emitCheck(ostream& out, int level) {
 }
 
 void BiopExpr::genStateTree() {
-	left->genStateTree();
-	right->genStateTree();
+    left->genStateTree();
+    right->genStateTree();
 }
 
 void BiopExpr::addState(list<StateInfo>* stateTree) {
+
+    this->stateTree = stateTree;
 	left->addState(stateTree);
 	right->addState(stateTree);
 }
@@ -463,22 +464,23 @@ void PipeExpr::emitUpdateChange(ostream&, Node*, string, string) {
 }
 
 void PipeExpr::genStateTree() {
-	Expr::genStateTree();
+    Expr::genStateTree();
 
-	StateInfo si2;
-	si2.varName = "leaf";
-	si2.typeName = "Node_" + name + "_" + "leaf";
-	stateTree->push_back(si2);
+    StateInfo si2;
+    si2.varName = "leaf";
+    si2.typeName = "Node_" + name + "_" + "leaf";
+    stateTree->push_back(si2);
 
-	addState(stateTree);
+    addState(stateTree);
 
-	left->addState(stateTree);
-	right->addState(stateTree);
+    left->addState(stateTree);
+    right->addState(stateTree);
 }
 
 void PipeExpr::addState(list<StateInfo>* stateTree) {
-	left->addState(stateTree);
-	right->addState(stateTree);
+    this->stateTree = stateTree;
+    left->addState(stateTree);
+    right->addState(stateTree);
 }
 
 UnaryExpr::UnaryExpr(Expr* expr) : sub_expr(expr) {
@@ -808,7 +810,7 @@ void AggExpr::addScopeToVariables(string scope) {
 
 void AggExpr::emitUpdate(ostream& out) {
 	cout << "AggExpr: emitUpdate" << endl;
-	expr->emitUpdate(out);
+    expr->emitUpdate(out);
 }
 
 void AggExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
@@ -858,23 +860,25 @@ void AggExpr::emitResetState(ostream& out) {
 }
 
 void AggExpr::genStateTree() {
-	Expr::genStateTree();
-	StateInfo si;
-	si.varName = varID;
-	si.typeName = "Node_" + name + "_" + varID;
-	stateTree->push_back(si);
+    Expr::genStateTree();
+    StateInfo si;
+    si.varName = varID;
+    si.typeName = "Node_" + name + "_" + varID;
+    stateTree->push_back(si);
 
-	StateInfo si2;
-	si2.varName = "leaf";
-	si2.typeName = "Node_" + name + "_" + "leaf";
-	stateTree->push_back(si2);
+    StateInfo si2;
+    si2.varName = "leaf";
+    si2.typeName = "Node_" + name + "_" + "leaf";
+    stateTree->push_back(si2);
 
-	addState(stateTree);
+    addState(stateTree);
 
-	expr->addState(stateTree);
+    expr->addState(stateTree);
 }
 
 void AggExpr::addState(list<StateInfo>* stateTree) {
+
+    this->stateTree = stateTree;
 	auto last = stateTree->rbegin();
 
 	for (auto it = ++stateTree->rbegin();
