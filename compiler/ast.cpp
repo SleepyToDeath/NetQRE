@@ -19,11 +19,11 @@ set<TreeNode*> addPredicateAt(TreeNode* node, list<Expr*> pred) {
     }
 
     Expr* front = *pred.begin();
-    cout << "all expr" << endl;
-    for (auto expr : pred) {
-	expr->emit(cout);
-	cout << endl;
-    }
+cout << "all expr" << endl;
+for (auto expr : pred) {
+    expr->emit(cout);
+    cout << endl;
+}
 
     BiopExpr* expr = (BiopExpr*)(front);
     Expr* right = expr->right;

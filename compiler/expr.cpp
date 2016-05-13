@@ -809,36 +809,35 @@ void AggExpr::addScopeToVariables(string scope) {
 }
 
 void AggExpr::emitUpdate(ostream& out) {
-	cout << "AggExpr: emitUpdate" << endl;
     expr->emitUpdate(out);
 }
 
 void AggExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
-	if (freeVariables.empty()) {
-		if (aggop.compare("sum")==0) {
-			out << "state" << ".sum_" << this
-			<< " += " << newValue 
-			<< " - " << oldValue << ";" << endl;
-			parent->emitUpdateChange(out, this, "", "");
-		}
-	} else {
-		if (aggop.compare("sum")==0) {
-			string lastVar = freeVariables.back();
-			out << "state_" << tree->name_to_id[lastVar]+1 << ".sum_" << this
-			<< " += " << newValue 
-			<< " - " << oldValue << ";" << endl;
-			parent->emitUpdateChange(out, this, "", "");
-		} else if (aggop.compare("select")==0) {
-			out << "state[x,y,z] = " << newValue 
-			<< ";" << endl;
-		} else if (aggop.compare("max")==0) {
-			out << "TODO;" << endl;
-		} else if (aggop.compare("min")==0) {
-			out << "TODO;" << endl;
-		} else if (aggop.compare("avg")==0) {
-			out << "TODO;" << endl;
-		} 
+    if (freeVariables.empty()) {
+	if (aggop.compare("sum")==0) {
+	    out << "state" << ".sum_" << this
+		<< " += " << newValue 
+		<< " - " << oldValue << ";" << endl;
+	    parent->emitUpdateChange(out, this, "", "");
 	}
+    } else {
+	if (aggop.compare("sum")==0) {
+	    string lastVar = freeVariables.back();
+	    out << "state_" << tree->name_to_id[lastVar]+1 << ".sum_" << this
+		<< " += " << newValue 
+		<< " - " << oldValue << ";" << endl;
+	    parent->emitUpdateChange(out, this, "", "");
+	} else if (aggop.compare("select")==0) {
+	    out << "state[x,y,z] = " << newValue 
+		<< ";" << endl;
+	} else if (aggop.compare("max")==0) {
+	    out << "TODO;" << endl;
+	} else if (aggop.compare("min")==0) {
+	    out << "TODO;" << endl;
+	} else if (aggop.compare("avg")==0) {
+	    out << "TODO;" << endl;
+	} 
+    }
 }
 
 void AggExpr::emitResetState(ostream& out) {

@@ -111,8 +111,10 @@ void RE::emitStateUpdate(ostream& out, TreeNode* predNode,
 	out << "case " << ((State*)from)->id << ": " << endl
 	    << nodeName << "->" << stateName << " = " << ((State*)to)->id << ";" << endl;
 
-	//	    if (online)
-	//		parent->emitUpdateChange(out, this, "old", "new");
+	if (online) {
+	cout << "DDDDDD" << endl;
+	    parent->emitUpdateChange(out, this, "old", "new");
+	    }
 
 	out << "break;" << endl;
     }
@@ -471,7 +473,8 @@ FSM* SingleRE::toFSM(Tree *tree) {
 	pred = new list<Expr*>();
     }
 
-    set<TreeNode*> predNodes = addPredicateAt(tree->root, *pred);
+    //set<TreeNode*> predNodes = addPredicateAt(tree->root, *pred);
+    set<TreeNode*> predNodes = getPredTreeNodes(tree->root, *pred);
 
     fsm = new FSM();
     State *state1 = fsm->addInitState();

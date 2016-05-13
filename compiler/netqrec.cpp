@@ -77,6 +77,7 @@ void genFSM() {
 	fsm->print();
 
 	re->simplifyPredTree(re->predTree->root);
+	re->predTree->print();
 	//	re->genPredTree();
 	//	re->toFSM(re->predTree);
     }
