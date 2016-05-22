@@ -66,9 +66,34 @@ void SFun::emitDataStructure(ostream& out) {
 
 void SFun::emitUpdate(ostream& out) {
     out << "bool " << id << "_update(Packet *last) {" << endl;
+
+    block->final_expr->emitDeclInUpdate(out);
     block->emitUpdate(out);
     out << "return true;" << endl;
     out << "}" << endl << endl;
+}
+
+string SFun::emitEval(ostream &out) {
+    out << type << " " << id << "_eval(";
+
+    if (arglist) {
+	for (auto arg : *arglist) {
+	    out << arg->type << " " << arg->id << ", ";
+	}
+    }
+    out << "Packet* last";
+
+    out << ") {" << endl;
+   
+    block->final_expr->emitDeclInUpdate(out);
+    block->final_expr->emitEval(out);
+
+    out << "return " << "ret_" << block->final_expr->name
+	<< ";" <<endl;
+
+    out << "}" << endl << endl;
+
+    return "";
 }
 
 void SFun::emitCheck(ostream& out, int level) {

@@ -33,7 +33,7 @@ public:
 	virtual void emitUpdate(ostream&) {};
 	virtual void emitUpdateChange(ostream&, Node*, string, string) {}
 	virtual void emitResetState(ostream&) {};
-	virtual void emitEval(ostream&) {}
+	virtual string emitEval(ostream&) {}
 	virtual void emit(ostream&, string="") {}
 	virtual void genStateTree() {};
 	virtual void addState(list<StateInfo>*) {};
@@ -77,6 +77,7 @@ public:
 	virtual void setName() {};
 	virtual void genStateTree();
 	virtual void emitStateTree(ostream&);
+	virtual void addLeafToStateTree();
 	virtual void emitDeclInUpdate(ostream&); 
 };
 
@@ -91,6 +92,7 @@ public:
 	virtual void emit(ostream&, string="");
 	virtual void emitUpdateCode(ostream&, string="");
 	virtual void emitProcessCode(ostream&, string="");
+	virtual string emitEval(ostream&);
 };
 
 // booleans
@@ -287,10 +289,18 @@ public:
 	//virtual void addScopeToVariables(string);
 	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitDataStructure(ostream&);
+
+	virtual void genStateTree();
+	virtual void addState(list<StateInfo>*);
+	virtual void emitStateTree(ostream&);
+	virtual void emitDeclInUpdate(ostream&); 
+
 	virtual void emitUpdate(ostream&);
 	void emitUpdateChange(ostream&, Node*, string, string);
 	virtual void emitResetState(ostream&);
 	virtual void emitCheck(ostream&, int);
+
+	virtual string emitEval(ostream&);
 };
 
 
@@ -476,6 +486,8 @@ public:
 	virtual void emitCheck(ostream&, int);
 	virtual void genStateTree();
 	virtual void emitStateTree(ostream& out);
+
+	virtual string emitEval(ostream&);
 };
 
 
@@ -531,6 +543,8 @@ public:
 	TreeNode* startPredNode, 
 	TreeNode* endPredNode);
 	virtual void addScopeToVariables(string) {};
+
+	virtual string emitEval(ostream&);
 };
 
 class SingleRE : public RE {

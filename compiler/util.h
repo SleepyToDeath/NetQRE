@@ -12,6 +12,20 @@ inline bool isIn(string var, list<string> &strList) {
     return false;
 }
 
+inline void mergeTo(list<string>& first, const list<string>& second) {
+    for (const string var : second) {
+	bool exist = false;
+	for (string var2 : first) {
+	    if (var2.compare(var)==0) {
+		exist = true;
+		break;
+	    }
+	}
+	if (!exist)
+	    first.push_back(var);
+    }
+}
+
 inline void append(list<string>& first, const list<string>& second) {
     for (const string var : second) {
 	bool exist = false;

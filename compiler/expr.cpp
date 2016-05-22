@@ -19,36 +19,53 @@ void Expr::genStateTree() {
     }
 }
 
+void Expr::addLeafToStateTree() {
+    if (stateTree == NULL)
+	return;
+
+    StateInfo si;
+    si.varName = "leaf";
+    si.typeName = "Node_" + name + "_" + "leaf";
+
+    stateTree->push_back(si);
+}
+
 void Expr::emitStateTree(ostream& out) {
-	int level = stateTree->size();
-	auto it = stateTree->rbegin();
+    int level = stateTree->size();
+    if (level == 0)
+	return;
+
+    auto it = stateTree->rbegin();
+    out << "// " << it->varName << endl;
+    out << "struct " << it->typeName << "{" << endl;
+    for (auto state : it->states) {
+	out << state << endl;
+    }
+    out << "};" << endl;
+
+    auto lastIt = it;
+    for (++it, --level;
+	    it != stateTree->rend();
+	    it++, level--, lastIt++) {
 	out << "// " << it->varName << endl;
+
 	out << "struct " << it->typeName << "{" << endl;
+
 	for (auto state : it->states) {
-		out << state << endl;
+	    out << state << endl;
 	}
+
+	out << "unordered_map<int, " << lastIt->typeName << "> "
+	    << "stateMap;" << endl;
+	out << lastIt->typeName << " default_state;" << endl;
 	out << "};" << endl;
-
-	auto lastIt = it;
-	for (++it, --level;
-	it != stateTree->rend();
-	it++, level--, lastIt++) {
-		out << "// " << it->varName << endl;
-
-		out << "struct " << it->typeName << "{" << endl;
-
-		for (auto state : it->states) {
-			out << state << endl;
-		}
-
-		out << "unordered_map<int, " << lastIt->typeName << "> "
-		<< "stateMap;" << endl;
-		out << lastIt->typeName << " default_state;" << endl;
-		out << "};" << endl;
-	}
+    }
 }
 
 void Expr::emitDeclInUpdate(ostream& out) {
+    if (stateTree == NULL)
+	return;
+
     auto stateIt = stateTree->begin();
     auto nextIt = stateIt;
     nextIt++;
@@ -79,6 +96,12 @@ void ValExpr::emitUpdateCode(ostream & out, string indent) {
 
 void ValExpr::emitProcessCode(ostream & out, string indent) {
 	out << indent << value;
+}
+
+string ValExpr::emitEval(ostream & out) {
+    ostringstream convert;
+    convert << value;
+    return convert.str();
 }
 
 BoolExpr::BoolExpr(bool value) : value(value) {}
@@ -253,8 +276,8 @@ void BiopExpr::addState(list<StateInfo>* stateTree) {
 }
 
 void BiopExpr::emitStateTree(ostream &out) {
-	left->emitStateTree(out);
-	right->emitStateTree(out);
+    left->emitStateTree(out);
+    right->emitStateTree(out);
 }
 
 PlusExpr::PlusExpr(Expr* expr1, Expr* expr2) : BiopExpr(expr1, expr2) {}
@@ -395,42 +418,43 @@ void OrExpr::emit(ostream& out, string indent) {
 
 
 PipeExpr::PipeExpr(Expr* left, Expr* right) : left(left), right(right) {
-	left->parent = this;
-	right->parent = this;
+    left->parent = this;
+    right->parent = this;
 }
 
 void PipeExpr::getFreeVariables() {
-	append(left->freeVariables, freeVariables);
-	append(right->freeVariables, freeVariables);
-	left->getFreeVariables();
-	for (string var : left->freeVariables) {
-		freeVariables.push_back(var);
+    append(left->freeVariables, freeVariables);
+    append(right->freeVariables, freeVariables);
+
+    left->getFreeVariables();
+    for (string var : left->freeVariables) {
+	freeVariables.push_back(var);
+    }
+    mergeTo(right->freeVariables, left->freeVariables);
+    right->getFreeVariables();
+    for (string var : right->freeVariables) {
+	bool exist = false;
+	for (string var2 : freeVariables) {
+	    if (var2.compare(var)==0) {
+		exist = true;
+		break;
+	    }
 	}
-	append(right->freeVariables, left->freeVariables);
-	right->getFreeVariables();
-	for (string var : right->freeVariables) {
-		bool exist = false;
-		for (string var2 : freeVariables) {
-			if (var2.compare(var)==0) {
-				exist = true;
-				break;
-			}
-		}
-		if (!exist)
-		freeVariables.push_back(var);
-	}
+	if (!exist)
+	    freeVariables.push_back(var);
+    }
 }
 
 void PipeExpr::emitUpdate(ostream& out) {
 	cout << "PipeExpr: emitUpdate" << endl;
 	// This is an almost right version. ..
-	//left->emitUpdate(out);
+	left->emitUpdate(out);
 	//out << "last = ";
-	//left->emit(out);
+	left->emitEval(out);
 	//out << ";" << endl;
 	// if no packet output, then return
 	//out << "if (last!=NULL) {" << endl;
-	//right->emitUpdate(out);
+	right->emitUpdate(out);
 	//out << "}" << endl;
 
 	// This implementation assumes left is a single packet filter
@@ -608,7 +632,6 @@ ChoiceExpr::ChoiceExpr(Expr* test, Expr* expr1, Expr* expr2) : test(test), yes_e
 	expr1->parent = this;
 	if (expr2 != NULL)
 	expr2->parent = this;
-	cout << "new ChoiceExpr" << endl; 
 }
 
 void ChoiceExpr::emit(ostream& out, string indent) {
@@ -626,55 +649,19 @@ void ChoiceExpr::emit(ostream& out, string indent) {
 }
 
 void ChoiceExpr::emitDataStructureType(ostream& out, int level) {
-	test->emitDataStructureType(out, level);
-	yes_expr->emitDataStructureType(out, level);
-	if (no_expr != NULL)
+    test->emitDataStructureType(out, level);
+    yes_expr->emitDataStructureType(out, level);
+    if (no_expr != NULL)
 	no_expr->emitDataStructureType(out, level);
 }
 
 void ChoiceExpr::emitDataStructure(ostream& out) {
-	test->emitDataStructure(out);
-	yes_expr->emitDataStructure(out);
-	if (no_expr != NULL)
-	no_expr->emitDataStructure(out);
+    test->emitDataStructure(out);
+    yes_expr->emitDataStructure(out);
+    if (no_expr != NULL)
+    no_expr->emitDataStructure(out);
 }
 
-void ChoiceExpr::emitUpdate(ostream& out) {
-	cout << "ChoiceExpr: emitUpdate" << endl;
-	test->emitUpdate(out);
-	yes_expr->emitUpdate(out);
-	if (no_expr != NULL)
-	no_expr->emitUpdate(out);
-}
-
-void ChoiceExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
-	cout << "Choice: emitUpdateChange" << endl;
-	ostringstream convert1;
-	yes_expr->emit(convert1);
-	string yes = convert1.str();
-	string no;
-
-	if (no_expr == NULL) {
-		no = "0";
-	} else {
-		ostringstream convert2;
-		no_expr->emit(convert2);
-		no = convert2.str();
-	}
-
-	if (oldValue.compare("old")==0) {
-		parent->emitUpdateChange(out, this, no, yes);
-	} else {
-		parent->emitUpdateChange(out, this, yes, no);
-	}
-}
-
-void ChoiceExpr::emitResetState(ostream& out) {
-	test->emitResetState(out);
-	yes_expr->emitResetState(out);
-	if (no_expr != NULL) 
-	no_expr->emitResetState(out);
-}
 
 void ChoiceExpr::emitCheck(ostream& out, int level) {
 	test->emitCheck(out, level);
@@ -698,41 +685,123 @@ void ChoiceExpr::getFreeVariables() {
 		if (!exist)
 		freeVariables.push_back(var);
 	}
-	append(yes_expr->freeVariables, test->freeVariables);
-	yes_expr->getFreeVariables();
-	for (auto var : yes_expr->freeVariables) {
-		bool exist = false;
-		for (auto findStr : freeVariables) {
-			if (findStr.compare(var) == 0) {
-				exist = true;
-				break;
-			}
-		}
-		if (!exist)
-		freeVariables.push_back(var);
-
-		for (auto findStr : freeVariables) {
-			if (findStr.compare(var) == 0) 
-			break;
-			freeVariables.push_back(var);
-		}
-	}
-	if (no_expr!=NULL) {
-		append(no_expr->freeVariables, test->freeVariables);
-		no_expr->getFreeVariables();
-		for (auto var : no_expr->freeVariables) {
-			bool exist = false;
-			for (auto findStr : freeVariables) {
-				if (findStr.compare(var) == 0) {
-					exist = true;
-					break;
-				}
-			}
-			if (!exist)
-			freeVariables.push_back(var);
-		}
-	}
+//	append(yes_expr->freeVariables, test->freeVariables);
+//	yes_expr->getFreeVariables();
+//	for (auto var : yes_expr->freeVariables) {
+//		bool exist = false;
+//		for (auto findStr : freeVariables) {
+//			if (findStr.compare(var) == 0) {
+//				exist = true;
+//				break;
+//			}
+//		}
+//		if (!exist)
+//		freeVariables.push_back(var);
+//
+//		for (auto findStr : freeVariables) {
+//			if (findStr.compare(var) == 0) 
+//			break;
+//			freeVariables.push_back(var);
+//		}
+//	}
+//	if (no_expr!=NULL) {
+//		append(no_expr->freeVariables, test->freeVariables);
+//		no_expr->getFreeVariables();
+//		for (auto var : no_expr->freeVariables) {
+//			bool exist = false;
+//			for (auto findStr : freeVariables) {
+//				if (findStr.compare(var) == 0) {
+//					exist = true;
+//					break;
+//				}
+//			}
+//			if (!exist)
+//			freeVariables.push_back(var);
+//		}
+//	}
 }
+
+void ChoiceExpr::genStateTree() {
+    test->genStateTree();
+    yes_expr->genStateTree();
+    if (no_expr != NULL)
+	no_expr->genStateTree();
+}
+
+void ChoiceExpr::addState(list<StateInfo>* stateTree) {
+    test->addState(stateTree);
+    yes_expr->addState(stateTree);
+    if (no_expr != NULL)
+	no_expr->addState(stateTree);
+}
+
+void ChoiceExpr::emitStateTree(ostream &out) {
+    test->emitStateTree(out);
+    yes_expr->emitStateTree(out);
+}
+
+void ChoiceExpr::emitDeclInUpdate(ostream& out) {
+    test->emitDeclInUpdate(out);
+    yes_expr->emitDeclInUpdate(out);
+    if (no_expr)
+	no_expr->emitDeclInUpdate(out);
+}
+
+void ChoiceExpr::emitUpdate(ostream& out) {
+    test->emitUpdate(out);
+    yes_expr->emitUpdate(out);
+    if (no_expr != NULL)
+	no_expr->emitUpdate(out);
+}
+
+void ChoiceExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
+    ostringstream convert1;
+    yes_expr->emit(convert1);
+    string yes = convert1.str();
+    string no;
+
+    if (no_expr == NULL) {
+	no = "0";
+    } else {
+	ostringstream convert2;
+	no_expr->emit(convert2);
+	no = convert2.str();
+    }
+
+    if (oldValue.compare("false")==0) {
+	parent->emitUpdateChange(out, this, no, yes);
+    } else {
+	parent->emitUpdateChange(out, this, yes, no);
+    }
+}
+
+void ChoiceExpr::emitResetState(ostream& out) {
+	test->emitResetState(out);
+	yes_expr->emitResetState(out);
+	if (no_expr != NULL) 
+	no_expr->emitResetState(out);
+}
+
+string ChoiceExpr::emitEval(ostream& out) {
+    string test_ret = test->emitEval(out);
+
+    string retName = "ret_" + name;
+    out << "int " << retName << " = 0;" << endl;
+
+    out << "if (" << test_ret << ") {" << endl;
+    string ret = yes_expr->emitEval(out);
+
+    out << retName << " == " << ret << ";" << endl;
+    out << "}" << endl;
+
+    if (no_expr) {
+	ret = no_expr->emitEval(out);
+	out << retName << " == " << ret << ";" << endl;
+    }
+
+    return ret;
+}
+
 
 int AggExpr::count = 0;
 
@@ -813,31 +882,24 @@ void AggExpr::emitUpdate(ostream& out) {
 }
 
 void AggExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
+    string nodeName = "node_";
+    string stateName = "sum_" + name;
+
+    // Only handles sum operator
+    // TODO: avg, max, min
     if (freeVariables.empty()) {
-	if (aggop.compare("sum")==0) {
-	    out << "state" << ".sum_" << this
-		<< " += " << newValue 
-		<< " - " << oldValue << ";" << endl;
-	    parent->emitUpdateChange(out, this, "", "");
-	}
+	nodeName += varID;
     } else {
-	if (aggop.compare("sum")==0) {
-	    string lastVar = freeVariables.back();
-	    out << "state_" << tree->name_to_id[lastVar]+1 << ".sum_" << this
-		<< " += " << newValue 
-		<< " - " << oldValue << ";" << endl;
-	    parent->emitUpdateChange(out, this, "", "");
-	} else if (aggop.compare("select")==0) {
-	    out << "state[x,y,z] = " << newValue 
-		<< ";" << endl;
-	} else if (aggop.compare("max")==0) {
-	    out << "TODO;" << endl;
-	} else if (aggop.compare("min")==0) {
-	    out << "TODO;" << endl;
-	} else if (aggop.compare("avg")==0) {
-	    out << "TODO;" << endl;
-	} 
+	string lastVar = freeVariables.back();
+	nodeName += varID;
     }
+
+    // All free variables in the freeVariables list should be
+    // ordered.
+    out << nodeName << "->" << stateName 
+	<< " += " << newValue 
+	<< " - " << oldValue << ";" << endl;
+    parent->emitUpdateChange(out, this, "", "");
 }
 
 void AggExpr::emitResetState(ostream& out) {
@@ -878,19 +940,19 @@ void AggExpr::genStateTree() {
 void AggExpr::addState(list<StateInfo>* stateTree) {
 
     this->stateTree = stateTree;
-	auto last = stateTree->rbegin();
+    auto last = stateTree->rbegin();
 
-	for (auto it = ++stateTree->rbegin();
-	it != stateTree->rend();
-	it++) {
-		if (isIn(it->varName, freeVariables)) 
-		break;
-		else
-		last = it;
-	}
-	
-	string state = "int sum_" + name + ";";
-	last->states.push_back(state);
+    for (auto it = ++stateTree->rbegin();
+    it != stateTree->rend();
+    it++) {
+	if (isIn(it->varName, freeVariables)) 
+	    break;
+	else
+	    last = it;
+    }
+    
+    string state = "int sum_" + name + ";";
+    last->states.push_back(state);
 }
 
 SplitExpr::SplitExpr(string aggop, Expr* expr1, Expr* expr2) : aggop(aggop), expr1(expr1), expr2(expr2) {

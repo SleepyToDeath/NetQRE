@@ -13,7 +13,7 @@
 
 //sfun int hh(int x, int y) = /.*[src==x].*/;
 
-sfun int hh(int x, int y) = sum{/.*[src==x].*/ | int x};
+//sfun int hh(int x, int y) = sum{/.*[src==x].*/ | int x};
 
 
 //sfun int getLast(int x) = /.*[src==x, dst==y]/;
@@ -47,3 +47,14 @@ sfun int hh(int x, int y) = sum{/.*[src==x].*/ | int x};
 // Test aggregation expressions
 
 //sfun int hh = sum{/.*[dst==y].*/ | ip y};
+
+//sfun int hh = sum{/.*[src==x, dst==y].*/ ? 1| ip y};
+
+sfun int hh = /.*[src==x, dst==y].*/ ;
+
+//sfun int hh = /.*[src==x, dst==y].*/ ? 1;
+
+//sfun int hh = /.*[src==x, dst==y].*/ + /.*[src==x].*/;
+
+
+//sfun int test(int x, int y) = sum{/.*[src==x].*/+/[dst==y].*/ | int x};

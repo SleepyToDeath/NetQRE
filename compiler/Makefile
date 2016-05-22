@@ -101,3 +101,6 @@ clean:
 	rm -f heavy_hitter heavy_hitter_baseline superspreader superspreader_baseline entropy entropy_baseline bandwidth_recorder \
 		    heavy_hitter_timeinterval flood flood2 syn_flood syn_flood_baseline flow_num flow_num_baseline sip
 
+rc:
+	make clean
+	make compiler

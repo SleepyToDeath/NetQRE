@@ -89,6 +89,12 @@ void emitUpdate(ostream &out) {
     }
 }
 
+void emitEval(ostream &out) {
+    for (auto func : *func_list) {
+	func->emitEval(out);
+    }
+}
+
 int main(int argc, char **argv) {
     ++argv, --argc;  /* skip over program name */
     if ( argc > 0 )
@@ -123,6 +129,8 @@ int main(int argc, char **argv) {
     cout << "Emitting update code..." << endl;
     emitUpdate(out);
 
+    cout << "Emitting evaluation code..." << endl;
+    emitEval(out);
 
     out.close();
     return 0;

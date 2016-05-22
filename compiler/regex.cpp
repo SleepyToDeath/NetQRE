@@ -31,12 +31,7 @@ void RE::emit(ostream& out, string indent) {
 
 void RE::genStateTree() {
     Expr::genStateTree();
-
-    StateInfo si;
-    si.varName = "leaf";
-    si.typeName = "Node_" + name + "_leaf";
-    stateTree->push_back(si);
-
+    addLeafToStateTree();
     addState(stateTree);
 }
 
@@ -106,15 +101,17 @@ void RE::emitStateUpdate(ostream& out, TreeNode* predNode,
     out << "switch (" << nodeName << "->" << stateName
 	<< ") {" << endl;
     for (auto trans : predNode->transitions) {
-	void* from = trans.first;
-	void* to = trans.second;
-	out << "case " << ((State*)from)->id << ": " << endl
-	    << nodeName << "->" << stateName << " = " << ((State*)to)->id << ";" << endl;
+	State* from = (State*)trans.first;
+	State* to = (State*)trans.second;
+	out << "case " << from->id << ": " << endl
+	    << nodeName << "->" << stateName << " = " << to->id << ";" << endl;
 
 	if (online) {
-	cout << "DDDDDD" << endl;
-	    parent->emitUpdateChange(out, this, "old", "new");
-	    }
+	    if (from->isFinal && !to->isFinal)
+		parent->emitUpdateChange(out, this, "true", "false");
+	    if (!from->isFinal && to->isFinal)
+		parent->emitUpdateChange(out, this, "false", "true");
+	}
 
 	out << "break;" << endl;
     }
@@ -272,7 +269,7 @@ void RE::emitDataStructure(ostream& out, list<string>::iterator startit) {
 void RE::emitUpdate(ostream& out) {
     //emitUpdate(out, "state", tree->root); 
     
-    emitDeclInUpdate(out);
+    //emitDeclInUpdate(out);
     emitUpdate(out, this->stateTree->begin(), predTree->root, predTree->root, false); 
 }
 
@@ -740,7 +737,34 @@ void RE::emitUpdate(ostream& out,
 	return;
     }
 
-    // TODO decend the tree if var name does not match
+    // Decend the state list if var name does not match.
+    // Since the order of parameters of the predicate tree 
+    // and the state list is consistent, we can simply decend the state list 
+    // in a top-down fashion, until we reach the correct level in the state list 
+    if (stateIt->varName != predNode->name) {
+	string mapName = nodeName + "->state_map";
+	out << "for (" << itName << "=" << mapName << ".begin(); "
+	    << itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
+
+	auto nextStateIt = next(stateIt);
+	string childNodeName = "node_" + nextStateIt->varName;
+
+	out << childNodeName
+	    << " = &(" << itName << "->second);" << endl
+	    << endl;
+
+
+	emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+	out << "}" << endl;
+
+	out << childNodeName
+	    << " = &(" << nodeName << "->default_state);" << endl;
+
+	emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+
+	return;
+    }
+
     if (!isBranchDecided) {
 	for (auto it = predNode->childrenMap.begin();
 		it != predNode->childrenMap.end();
@@ -886,4 +910,58 @@ void RE::emitUpdateCheckBranchConsistency(
 		<< "->first != " << it->first;
 	}
     }
+}
+
+string RE::emitEval(ostream& out) {
+    string varName;
+    string itName;
+    string nodeName;
+    string mapName;
+    string childNodeName;
+
+    for (auto stateIt = stateTree->begin(); 
+	      stateIt != stateTree->end();
+	      stateIt++) {
+	varName = stateIt->varName;
+	itName = "it_" + stateIt->varName;
+	nodeName = "node_" + stateIt->varName;
+	mapName = nodeName + "->state_map";
+
+	auto nextStateIt = next(stateIt);
+	if (nextStateIt == stateTree->end())
+	    break;
+
+	string childNodeName = "node_" + nextStateIt->varName;
+
+	out << itName << " = "
+	    << nodeName << "->state_map.find(" << varName<< ");" << endl;
+	out << "if (" << itName
+	    << " == " << nodeName << "->state_map.end()) { " << endl;
+	out << itName << " = "
+	    << nodeName << "->default_state"
+	    << ";" << endl
+	    << "}" << endl;
+
+	out << childNodeName
+	    << " = &(" << itName << "->second);" << endl
+	    << endl;
+    }
+
+    string stateName = "state_" + this->name;
+    string retName = "ret_" + this->name;
+
+    out << "switch (" << nodeName << "->" << stateName
+	<< ") {" << endl;
+
+    for (auto state : fsm->finalStates) {
+	out << "case " << state->id << ": " << endl
+	    << retName << " = true;" << endl;
+	out << "break;" << endl;
+    }
+
+    out << "default:" << endl
+	<< retName << " = false;" << endl
+	<< "}" << endl;
+
+    return retName;
 }
