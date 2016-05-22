@@ -773,7 +773,8 @@ void RE::emitUpdate(ostream& out,
 	return;
     }
 
-    if (!isBranchDecided) {
+    //if (!isBranchDecided) {
+    if (stateIt->preChosen == 0) {
 	for (auto it = predNode->childrenMap.begin();
 		it != predNode->childrenMap.end();
 		it++) {
@@ -785,6 +786,7 @@ void RE::emitUpdate(ostream& out,
 		continue;
 
 	    emitUpdateAddNewBranch(out, itName, nodeName, field);
+	    stateIt->preChosen = 1;
 	    out << "if (";
 	    emitUpdateCheckBranchConsistency(out, itName, startPredNode, predNode);
 	    out << ") {" << endl;
@@ -796,7 +798,9 @@ void RE::emitUpdate(ostream& out,
 	if (child->hasStateTransition) {
 	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, false);
 	}
-    } else { // isBranchDecided == true
+    } 
+    //else { // isBranchDecided == true
+    else if (stateIt->preChosen == 1) { // isBranchDecided == true
 	if (predNode->childrenMap.empty()) {
 	    TreeNode* child = predNode->defaultNode;
 	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);

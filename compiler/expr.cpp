@@ -476,6 +476,7 @@ void PipeExpr::emitEvalAndUpdate(ostream& out, stateIterator stateIt) {
 	<< " = &(" << itName << "->second);" << endl
 	<< endl;
 
+    stateIt->preChosen = 1;
     //right->emit(rightOut, stateIt, true);
 
     if (stateIt->varName == lastVar) {
@@ -492,6 +493,7 @@ void PipeExpr::emitEvalAndUpdate(ostream& out, stateIterator stateIt) {
 	<< " = &(" << nodeName << "->default_state);" << endl
 	<< endl;
 
+    stateIt->preChosen = 0;
     //right->emit(rightOut, stateIt, true);
 
     if (stateIt->varName == lastVar) {
@@ -508,36 +510,41 @@ void PipeExpr::emitUpdate(ostream& out) {
     // This is an almost right version. ..
     left->emitUpdate(out);
 
+    for (auto stateIt = stateTree->begin(); stateIt != stateTree->end(); stateIt++)
+	stateIt->preChosen = 0;
+
     if (left->freeVariables.empty()) {
     } else {
 	string lastVar = left->freeVariables.back();
 	list<StateInfo>::iterator stateIt;
-	//emitEvalAndUpdate(out, stateTree->begin()); 
+	emitEvalAndUpdate(out, stateTree->begin()); 
 
-	for (stateIt = stateTree->begin(); stateIt != stateTree->end(); stateIt++) {
-	    string itName = "it_" + stateIt->varName;
-	    string nodeName = "node_" + stateIt->varName;
-	    string mapName = nodeName + "->state_map";
-
-	    out << "for (" << itName << "=" << mapName << ".begin(); "
-		<< itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
-
-	    auto nextStateIt = next(stateIt);
-	    string childNodeName = "node_" + nextStateIt->varName;
-
-	    out << childNodeName
-		<< " = &(" << itName << "->second);" << endl
-		<< endl;
-
-	    if (stateIt->varName == lastVar) {
-		out << "// eval for left" << endl;
-		left->emitEval(out, nextStateIt);
-		out << "// update for right" << endl;
-		right->emitUpdate(out);
-		out << "}" << endl;
-		break;
-	    }
-	}
+//	for (stateIt = stateTree->begin(); stateIt != stateTree->end(); stateIt++) {
+//	    string itName = "it_" + stateIt->varName;
+//	    string nodeName = "node_" + stateIt->varName;
+//	    string mapName = nodeName + "->state_map";
+//
+//	    out << "for (" << itName << "=" << mapName << ".begin(); "
+//		<< itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
+//
+//	    auto nextStateIt = next(stateIt);
+//	    string childNodeName = "node_" + nextStateIt->varName;
+//
+//	    out << childNodeName
+//		<< " = &(" << itName << "->second);" << endl
+//		<< endl;
+//
+//	    stateIt->preChosen = 1;
+//
+//	    if (stateIt->varName == lastVar) {
+//		out << "// eval for left" << endl;
+//		left->emitEval(out, nextStateIt);
+//		out << "// update for right" << endl;
+//		right->emitUpdate(out);
+//		out << "}" << endl;
+//		break;
+//	    }
+//	}
     }
 
 //    out << "last = ";

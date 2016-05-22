@@ -61,6 +61,7 @@ bool hh_update(Packet *last) {
 	    }
 	}
     }
+    // In 
     for (it_x=node_x->state_map.begin(); it_x!=node_x->state_map.end();it_x++) {
 	node_leaf = &(it_x->second);
 
@@ -77,11 +78,7 @@ bool hh_update(Packet *last) {
 	    ret_ == ;
 	}
 	// update for right
-	it_x = node_x->state_map.find(src);
-	if (it_x == node_x->state_map.end()) { 
-	    it_x = node_x->state_map.insert({src, node_x->default_state}).first;
-	}
-	if (true) {
+	if (it_x->first == src) {
 	    node_leaf = &(it_x->second);
 
 	    switch (node_leaf->state_re1) {
@@ -95,6 +92,42 @@ bool hh_update(Packet *last) {
 		    node_leaf->state_re1 = -1;
 		    break;
 	    }
+	}
+	else {
+	}
+    }
+    node_leaf = &(node_x->default_state);
+
+    // eval for left
+    switch (node_leaf->state_re0) {
+	case 1: 
+	    ret_re0 = true;
+	    break;
+	default:
+	    ret_re0 = false;
+    }
+    int ret_ = 0;
+    if (ret_re0) {
+	ret_ == ;
+    }
+    // update for right
+    it_x = node_x->state_map.find(src);
+    if (it_x == node_x->state_map.end()) { 
+	it_x = node_x->state_map.insert({src, node_x->default_state}).first;
+    }
+    if (true) {
+	node_leaf = &(it_x->second);
+
+	switch (node_leaf->state_re1) {
+	    case 0: 
+		node_leaf->state_re1 = 1;
+		break;
+	    case 1: 
+		node_leaf->state_re1 = 1;
+		break;
+	    default:
+		node_leaf->state_re1 = -1;
+		break;
 	}
     }
     return true;
