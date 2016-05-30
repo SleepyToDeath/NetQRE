@@ -1,60 +1,68 @@
-//sfun int f(int y) = {
-//    int x = 0;
-//    x
-//    }
+////sfun int f(int y) = {
+////    int x = 0;
+////    x
+////    }
+//
+////sfun int getFirst(int x, int y) = /[dst==y].*/;
+//
+//
+//// Basic case. Test emitUpdate function for RE.
+////sfun int hh(int x, int y) = /([src==x]|[dst==y])/;
+//
+//// Test emitUpdate function for RE, with star operations.
+//
+////sfun int hh(int x, int y) = /.*[src==x].*/;
+//
+////sfun int hh(int x, int y) = sum{/.*[src==x].*/ | int x};
+//
+//
+////sfun int getLast(int x) = /.*[src==x, dst==y]/;
+//
+//
+//
+//// Test emitUpdate function for RE, where a same parameter x
+//// appears multiple times. 
+//// This should force the compiler to generate a complete partition
+//// of all atomic predicates. 
+//
+////sfun int hh(int x, int y) = /[src==x, dst==x].*/;
+////sfun int hh(int x, int y) = /[src==x][dst==x].*/;
+//
+////sfun int hh(int x, int y) = /.*[src==x-1, dst==y].*/;
+//
+//// Test UnionRE, TODO: This is buggy.
+////sfun int hh(int x, int y) = /.*([src==x]|[dst==y]).*/;
+//
+////sfun int hh(int x, int y) = /.*[src==x, dst==y].*/ + 
+////    /.*[dst==y].*/;
+//
+////sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/ + 
+////    /.*[dst==y].*/ | int x};
+//
+////sfun int hh(int x, int y) = /.*[src==x, dst==y].*/ >> /.*[dst==y].*/;
+//
+////sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/ >> /.*[dst==y].*/ | int x};
+//
+//
+//// Test aggregation expressions
+//
+////sfun int hh = sum{/.*[dst==y].*/ | ip y};
+//
+////sfun int hh = sum{/.*[src==x, dst==y].*/ ? 1| ip y};
+//
+//sfun int hh = /.*[src==x, dst==y].*/ ;
+//
+////sfun int hh = /.*[src==x, dst==y].*/ ? 1;
+//
+////sfun int hh = /.*[src==x, dst==y].*/ + /.*[src==x].*/;
+//
+//
+////sfun int test(int x, int y) = sum{/.*[src==x].*/+/[dst==y].*/ | int x};
+//
 
-//sfun int getFirst(int x, int y) = /[dst==y].*/;
+// test stream composition
+sfun int hh = 
+  (/.*[src==x]/?last) >> (/.*[src==x].*/?1);
 
-
-// Basic case. Test emitUpdate function for RE.
-//sfun int hh(int x, int y) = /([src==x]|[dst==y])/;
-
-// Test emitUpdate function for RE, with star operations.
-
-//sfun int hh(int x, int y) = /.*[src==x].*/;
-
-//sfun int hh(int x, int y) = sum{/.*[src==x].*/ | int x};
-
-
-//sfun int getLast(int x) = /.*[src==x, dst==y]/;
-
-
-
-// Test emitUpdate function for RE, where a same parameter x
-// appears multiple times. 
-// This should force the compiler to generate a complete partition
-// of all atomic predicates. 
-
-//sfun int hh(int x, int y) = /[src==x, dst==x].*/;
-//sfun int hh(int x, int y) = /[src==x][dst==x].*/;
-
-//sfun int hh(int x, int y) = /.*[src==x-1, dst==y].*/;
-
-// Test UnionRE, TODO: This is buggy.
-//sfun int hh(int x, int y) = /.*([src==x]|[dst==y]).*/;
-
-//sfun int hh(int x, int y) = /.*[src==x, dst==y].*/ + 
-//    /.*[dst==y].*/;
-
-//sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/ + 
-//    /.*[dst==y].*/ | int x};
-
-//sfun int hh(int x, int y) = /.*[src==x, dst==y].*/ >> /.*[dst==y].*/;
-
-//sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/ >> /.*[dst==y].*/ | int x};
-
-
-// Test aggregation expressions
-
-//sfun int hh = sum{/.*[dst==y].*/ | ip y};
-
-//sfun int hh = sum{/.*[src==x, dst==y].*/ ? 1| ip y};
-
-sfun int hh = /.*[src==x, dst==y].*/ ;
-
-//sfun int hh = /.*[src==x, dst==y].*/ ? 1;
-
-//sfun int hh = /.*[src==x, dst==y].*/ + /.*[src==x].*/;
-
-
-//sfun int test(int x, int y) = sum{/.*[src==x].*/+/[dst==y].*/ | int x};
+//sfun int hh = 
+//  (/.*[src==x]/?last) ;

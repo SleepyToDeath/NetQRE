@@ -113,6 +113,8 @@ void RE::emitStateUpdate(ostream& out, TreeNode* predNode,
 		parent->emitUpdateChange(out, this, "false", "true");
 	}
 
+	parent->emitUpdateChange(out, this, "true", "false");
+
 	out << "break;" << endl;
     }
     out << "default:" << endl
