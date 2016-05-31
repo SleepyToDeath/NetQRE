@@ -739,30 +739,36 @@ void RE::emitUpdate(ostream& out,
 	return;
     }
 
+    auto nextStateIt = next(stateIt);
+    string childNodeName = "node_" + nextStateIt->varName;
+
     // Decend the state list if var name does not match.
     // Since the order of parameters of the predicate tree 
     // and the state list is consistent, we can simply decend the state list 
     // in a top-down fashion, until we reach the correct level in the state list 
     if (stateIt->varName != predNode->name) {
 	string mapName = nodeName + "->state_map";
-	out << "for (" << itName << "=" << mapName << ".begin(); "
-	    << itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
 
-	auto nextStateIt = next(stateIt);
-	string childNodeName = "node_" + nextStateIt->varName;
-
-	out << childNodeName
-	    << " = &(" << itName << "->second);" << endl
-	    << endl;
+	if (stateIt->preChosen != 0) {
+	    emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+	} else {
+	    out << "for (" << itName << "=" << mapName << ".begin(); "
+		<< itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
 
 
-	emitUpdate(out, nextStateIt, predNode, startPredNode, false);
-	out << "}" << endl;
+	    out << childNodeName
+		<< " = &(" << itName << "->second);" << endl
+		<< endl;
 
-	out << childNodeName
-	    << " = &(" << nodeName << "->default_state);" << endl;
 
-	emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+	    emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+	    out << "}" << endl;
+
+	    out << childNodeName
+		<< " = &(" << nodeName << "->default_state);" << endl;
+
+	    emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+	}
 
 	return;
     }
@@ -914,14 +920,14 @@ void RE::emitUpdateCheckBranchConsistency(
     }
 }
 
-string RE::emitEval(ostream& out) {
+string RE::emitEval(ostream& out, stateIterator startStateIt) {
     string varName;
     string itName;
     string nodeName;
     string mapName;
     string childNodeName;
 
-    for (auto stateIt = stateTree->begin(); 
+    for (auto stateIt = startStateIt;
 	      stateIt != stateTree->end();
 	      stateIt++) {
 	varName = stateIt->varName;

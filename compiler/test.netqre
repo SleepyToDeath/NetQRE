@@ -25,8 +25,8 @@
 //// This should force the compiler to generate a complete partition
 //// of all atomic predicates. 
 //
-////sfun int hh(int x, int y) = /[src==x, dst==x].*/;
-////sfun int hh(int x, int y) = /[src==x][dst==x].*/;
+//sfun int hh(int x, int y) = /[src==x, dst==x].*/;
+//sfun int hh(int x, int y) = /[src==x][dst==x].*/;
 //
 ////sfun int hh(int x, int y) = /.*[src==x-1, dst==y].*/;
 //
@@ -62,7 +62,43 @@
 
 // test stream composition
 sfun int hh = 
-  (/.*[src==x]/?last) >> (/.*[src==x].*/?1);
+  (/.*[src==x]/?last) >> /.*[src==x].*/;
 
 //sfun int hh = 
 //  (/.*[src==x]/?last) ;
+
+
+//    for (it_x=node_x->state_map.begin(); it_x!=node_x->state_map.end();it_x++) {
+//	node_leaf = &(it_x->second);
+//
+//	switch (node_leaf->state_re0) {
+//	    case 1: 
+//		ret_re0 = true;
+//		break;
+//	    default:
+//		ret_re0 = false;
+//	}
+//	int ret_ = 0;
+//	if (ret_re0) {
+//	    ret_ == last;
+//	}
+//
+//	//update
+//	if (it_x->first == src) {
+//	    switch (node_leaf->state_re1) {
+//		case 0: 
+//		    node_leaf->state_re1 = 1;
+//		    break;
+//		case 1: 
+//		    node_leaf->state_re1 = 1;
+//		    break;
+//		default:
+//		    node_leaf->state_re1 = -1;
+//		    break;
+//	    }
+//	}
+//
+//	return true;
+//    }
+
+

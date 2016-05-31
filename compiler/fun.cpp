@@ -86,7 +86,7 @@ string SFun::emitEval(ostream &out) {
     out << ") {" << endl;
    
     block->final_expr->emitDeclInUpdate(out);
-    block->final_expr->emitEval(out);
+    block->final_expr->emitEval(out, block->final_expr->stateTree->begin());
 
     out << "return " << "ret_" << block->final_expr->name
 	<< ";" <<endl;

@@ -457,6 +457,52 @@ void PipeExpr::addState(list<StateInfo>* stateTree) {
     right->addState(stateTree);
 }
 
+//TODO
+void PipeExpr::emitEvalAndUpdate(ostream& out, stateIterator stateIt) {
+    out << "// In " << endl;
+
+    string lastVar = left->freeVariables.back();
+    string itName = "it_" + stateIt->varName;
+    string nodeName = "node_" + stateIt->varName;
+    string mapName = nodeName + "->state_map";
+
+    out << "for (" << itName << "=" << mapName << ".begin(); "
+	<< itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
+
+    auto nextStateIt = next(stateIt);
+    string childNodeName = "node_" + nextStateIt->varName;
+
+    out << childNodeName
+	<< " = &(" << itName << "->second);" << endl
+	<< endl;
+
+    //right->emit(rightOut, stateIt, true);
+
+    if (stateIt->varName == lastVar) {
+	out << "// eval for left" << endl;
+	left->emitEval(out, nextStateIt);
+	out << "// update for right" << endl;
+	right->emitUpdate(out);
+    } else 
+	emitEvalAndUpdate(out, nextStateIt);
+
+    out << "}" << endl;
+
+    out << childNodeName
+	<< " = &(" << nodeName << "->default_state);" << endl
+	<< endl;
+
+    //right->emit(rightOut, stateIt, true);
+
+    if (stateIt->varName == lastVar) {
+	out << "// eval for left" << endl;
+	left->emitEval(out, nextStateIt);
+	out << "// update for right" << endl;
+	right->emitUpdate(out);
+    } else
+	emitEvalAndUpdate(out, nextStateIt);
+}
+
 void PipeExpr::emitUpdate(ostream& out) {
     cout << "PipeExpr: emitUpdate" << endl;
     // This is an almost right version. ..
@@ -466,6 +512,8 @@ void PipeExpr::emitUpdate(ostream& out) {
     } else {
 	string lastVar = left->freeVariables.back();
 	list<StateInfo>::iterator stateIt;
+	//emitEvalAndUpdate(out, stateTree->begin()); 
+
 	for (stateIt = stateTree->begin(); stateIt != stateTree->end(); stateIt++) {
 	    string itName = "it_" + stateIt->varName;
 	    string nodeName = "node_" + stateIt->varName;
@@ -482,15 +530,11 @@ void PipeExpr::emitUpdate(ostream& out) {
 		<< endl;
 
 	    if (stateIt->varName == lastVar) {
-		left->emitEval(out);
+		out << "// eval for left" << endl;
+		left->emitEval(out, nextStateIt);
+		out << "// update for right" << endl;
 		right->emitUpdate(out);
-
-		break;
-	    }
-
-	    out << "}" << endl;
-
-	    if (stateIt->varName == lastVar) {
+		out << "}" << endl;
 		break;
 	    }
 	}
@@ -812,19 +856,23 @@ void ChoiceExpr::emitResetState(ostream& out) {
 }
 
 string ChoiceExpr::emitEval(ostream& out) {
-    string test_ret = test->emitEval(out);
+    emitEval(out, this->stateTree->begin());
+}
+
+string ChoiceExpr::emitEval(ostream& out, stateIterator startStateIt) {
+    string test_ret = test->emitEval(out, startStateIt);
 
     string retName = "ret_" + name;
     out << "int " << retName << " = 0;" << endl;
 
     out << "if (" << test_ret << ") {" << endl;
-    string ret = yes_expr->emitEval(out);
+    string ret = yes_expr->emitEval(out, startStateIt);
 
     out << retName << " == " << ret << ";" << endl;
     out << "}" << endl;
 
     if (no_expr) {
-	ret = no_expr->emitEval(out);
+	ret = no_expr->emitEval(out, startStateIt);
 	out << retName << " == " << ret << ";" << endl;
     }
 

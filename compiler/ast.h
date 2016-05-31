@@ -14,8 +14,10 @@ struct StateInfo {
     string typeName;
     int mapType = 0;
     list<string> states;
+    int preChosen = 0;
 };
 
+typedef list<StateInfo>::iterator stateIterator ;
 
 class Node {
     public:
@@ -33,6 +35,7 @@ class Node {
 	virtual void emitUpdate(ostream&) {};
 	virtual void emitUpdateChange(ostream&, Node*, string, string) {}
 	virtual void emitResetState(ostream&) {};
+	virtual string emitEval(ostream&, stateIterator) {return "";}
 	virtual string emitEval(ostream&) {return "";}
 	virtual void emit(ostream&, string="") {}
 	virtual void genStateTree() {};
@@ -79,8 +82,6 @@ class Expr : public Node {
 	virtual void emitStateTree(ostream&);
 	virtual void addLeafToStateTree();
 	virtual void emitDeclInUpdate(ostream&); 
-	// back-propagate for stream compisition
-	virtual void emitUpdateCompose(ostream&, Node*, string, string) {}
 };
 
 // values
@@ -303,6 +304,7 @@ class ChoiceExpr : public Expr {
 	virtual void emitUpdate(ostream&);
 	void emitUpdateChange(ostream&, Node*, string, string);
 	virtual void emitResetState(ostream&);
+	virtual string emitEval(ostream&, stateIterator);
 	virtual string emitEval(ostream&);
 };
 
@@ -386,6 +388,7 @@ class PipeExpr : public Expr {
 	virtual void emitDataStructureType(ostream&, int);
 	virtual void genStateTree();
 	virtual void addState(list<StateInfo>*);
+	void emitEvalAndUpdate(ostream&, stateIterator);
 };
 
 
@@ -547,7 +550,7 @@ class RE : public Expr {
 		TreeNode* endPredNode);
 	virtual void addScopeToVariables(string) {};
 
-	virtual string emitEval(ostream&);
+	virtual string emitEval(ostream&, stateIterator);
 };
 
 class SingleRE : public RE {
