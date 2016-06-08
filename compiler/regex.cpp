@@ -800,7 +800,7 @@ void RE::emitUpdate(ostream& out,
 	}
     } 
     //else { // isBranchDecided == true
-    else if (stateIt->preChosen == 1) { // isBranchDecided == true
+    else if (stateIt->preChosen == 1) { 
 	if (predNode->childrenMap.empty()) {
 	    TreeNode* child = predNode->defaultNode;
 	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
@@ -823,6 +823,46 @@ void RE::emitUpdate(ostream& out,
 	    child = it->second;
 
 	    out << "else if (" << itName << "->first == " << field << ") {" << endl;
+	    if (child->hasStateTransition) {
+		emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
+	    }
+	    out << "}" << endl;
+	}
+
+	child = predNode->defaultNode;
+	out << "else {" << endl;
+	if (child->hasStateTransition) {
+	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
+	}
+
+	out << "}" << endl;
+    }
+    else if (stateIt->preChosen == -1) {
+	if (predNode->childrenMap.empty()) {
+	    TreeNode* child = predNode->defaultNode;
+	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
+	    return;
+	}
+
+	auto it = predNode->childrenMap.begin();
+	string field = it->first;
+	TreeNode* child = it->second;
+
+	out << "if (" << nodeName << "->state_map.find(" << field << ") == "
+	    << nodeName << "->state_map.end()) {" << endl;
+
+	if (child->hasStateTransition) {
+	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
+	}
+	out << "}" << endl;
+	++it;
+	for (; it != predNode->childrenMap.end(); it++) {
+	    field = it->first;
+	    child = it->second;
+
+	    out << "else if (" << nodeName << "->state_map.find(" << field << ") == "
+		<< nodeName << "->state_map.end()) {" << endl;
+
 	    if (child->hasStateTransition) {
 		emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
 	    }

@@ -493,7 +493,7 @@ void PipeExpr::emitEvalAndUpdate(ostream& out, stateIterator stateIt) {
 	<< " = &(" << nodeName << "->default_state);" << endl
 	<< endl;
 
-    stateIt->preChosen = 0;
+    stateIt->preChosen = -1;
     //right->emit(rightOut, stateIt, true);
 
     if (stateIt->varName == lastVar) {
@@ -1040,120 +1040,120 @@ void AggExpr::addState(list<StateInfo>* stateTree) {
 }
 
 SplitExpr::SplitExpr(string aggop, Expr* expr1, Expr* expr2) : aggop(aggop), expr1(expr1), expr2(expr2) {
-	expr1->parent = this;
-	expr2->parent = this;
+    expr1->parent = this;
+    expr2->parent = this;
 }
 
 void SplitExpr::getFreeVariables() {
-	append(expr1->freeVariables, freeVariables);
-	append(expr2->freeVariables, freeVariables);
+    append(expr1->freeVariables, freeVariables);
+    append(expr2->freeVariables, freeVariables);
 
-	expr1->getFreeVariables();
-	for (string var : expr1->freeVariables) {
-		freeVariables.push_back(var);
+    expr1->getFreeVariables();
+    for (string var : expr1->freeVariables) {
+	freeVariables.push_back(var);
+    }
+    expr2->getFreeVariables();
+    for (string var : expr2->freeVariables) {
+	bool exist = false;
+	for (string var2 : freeVariables) {
+	    if (var2.compare(var)==0) {
+		exist = true;
+		break;
+	    }
 	}
-	expr2->getFreeVariables();
-	for (string var : expr2->freeVariables) {
-		bool exist = false;
-		for (string var2 : freeVariables) {
-			if (var2.compare(var)==0) {
-				exist = true;
-				break;
-			}
-		}
-		if (!exist)
-		freeVariables.push_back(var);
-	}
+	if (!exist)
+	    freeVariables.push_back(var);
+    }
 }
 
 void SplitExpr::emitDataStructureType(ostream& out, int level) {
-	expr1->emitDataStructureType(out, level);
-	expr2->emitDataStructureType(out, level);
+    expr1->emitDataStructureType(out, level);
+    expr2->emitDataStructureType(out, level);
 }
 
 void SplitExpr::emitCheck(ostream& out, int level) {
-	expr1->emitCheck(out, level);
-	expr2->emitCheck(out, level);
+    expr1->emitCheck(out, level);
+    expr2->emitCheck(out, level);
 }
 
 IterExpr::IterExpr(string aggop, Expr* expr) : aggop(aggop), expr(expr) {
-	expr->parent = this;
+    expr->parent = this;
 }
 
 void IterExpr::getFreeVariables() {
-	append(expr->freeVariables, freeVariables);
-	expr->getFreeVariables();
-	for (string var : expr->freeVariables) {
-		freeVariables.push_back(var);
-	}
+    append(expr->freeVariables, freeVariables);
+    expr->getFreeVariables();
+    for (string var : expr->freeVariables) {
+	    freeVariables.push_back(var);
+    }
 }
 
 void IterExpr::emitDataStructureType(ostream& out, int level) {
-	if (freeVariables.empty()) {
-		if (level==0) {
-			out << "int sum_" << this 
-			<< " = 0;" << endl;
-		}
-	} else {
-		string var = freeVariables.back();
-		if (tree->name_to_id[var]+1 == level) {
-			out << "int sum_" << this 
-			<< " = 0;" << endl;
-		}
+    if (freeVariables.empty()) {
+	if (level==0) {
+	    out << "int sum_" << this 
+		<< " = 0;" << endl;
 	}
-	expr->emitDataStructureType(out, level);
+    } else {
+	string var = freeVariables.back();
+	if (tree->name_to_id[var]+1 == level) {
+	    out << "int sum_" << this 
+		<< " = 0;" << endl;
+	}
+    }
+    expr->emitDataStructureType(out, level);
 }
 
 void IterExpr::emitCheck(ostream& out, int level) {
-	if (level < 0) {
-		out << "int ret_sum_" << this 
-		<< " = 0;"
-		<< endl;
-		return;
-	}
+    if (level < 0) {
+	out << "int ret_sum_" << this 
+	    << " = 0;"
+	    << endl;
+	return;
+    }
 
-	if (freeVariables.empty()) {
-		if (level==0) {
-			out << "ret_sum_" << this;
-			out << " = " << "state";
-			out << ".sum_" << this << ";"
-			<< endl;
-		}
-		return;
-	}
-
-	string var = freeVariables.back();
-	if (tree->name_to_id[var]+1 == level) {
-		out << "ret_sum_" << this 
-		<< " = " << "state_" << level
-		<< ".sum_" << this << ";"
+    if (freeVariables.empty()) {
+	if (level==0) {
+	    out << "ret_sum_" << this;
+	    out << " = " << "state";
+	    out << ".sum_" << this << ";"
 		<< endl;
 	}
-	//    expr->emitCheck(out, level);
+	return;
+    }
+
+    string var = freeVariables.back();
+    if (tree->name_to_id[var]+1 == level) {
+	out << "ret_sum_" << this 
+	    << " = " << "state_" << level
+	    << ".sum_" << this << ";"
+	    << endl;
+    }
+    //    expr->emitCheck(out, level);
 }
 
 void IterExpr::emitUpdate(ostream& out) {
-	expr->emitUpdate(out);
+    expr->emitUpdate(out);
 }
 
 void IterExpr::emit(ostream& out, string indent) {
-	out << "ret_sum_" << this;
+    out << "ret_sum_" << this;
 }
 
 void IterExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
-	if (freeVariables.empty()) {
-		if (aggop=="sum") {
-			out << "state" << ".sum_" << this 
-			<< "+=" << newValue << ";" << endl;
-		}
-	} else {
-		string lastVar = freeVariables.back();
-		int level = tree->name_to_id[lastVar]+1;
-		if (aggop=="sum") {
-			out << "state_" << level << ".sum_" << this 
-			<< "+=" << newValue << ";" << endl;
-		}
+    if (freeVariables.empty()) {
+	if (aggop=="sum") {
+	    out << "state" << ".sum_" << this 
+		<< "+=" << newValue << ";" << endl;
 	}
-	expr->emitResetState(out);
-	parent->emitUpdateChange(out, this, "", "");
+    } else {
+	string lastVar = freeVariables.back();
+	int level = tree->name_to_id[lastVar]+1;
+	if (aggop=="sum") {
+	    out << "state_" << level << ".sum_" << this 
+		<< "+=" << newValue << ";" << endl;
+	}
+    }
+    expr->emitResetState(out);
+    parent->emitUpdateChange(out, this, "", "");
 }

@@ -111,11 +111,7 @@ bool hh_update(Packet *last) {
 	ret_ == ;
     }
     // update for right
-    it_x = node_x->state_map.find(src);
-    if (it_x == node_x->state_map.end()) { 
-	it_x = node_x->state_map.insert({src, node_x->default_state}).first;
-    }
-    if (true) {
+    if (node_x->state_map.find(src) == node_x->state_map.end()) {
 	node_leaf = &(it_x->second);
 
 	switch (node_leaf->state_re1) {
@@ -129,6 +125,8 @@ bool hh_update(Packet *last) {
 		node_leaf->state_re1 = -1;
 		break;
 	}
+    }
+    else {
     }
     return true;
 }
