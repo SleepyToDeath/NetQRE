@@ -83,19 +83,19 @@ void Expr::emitDeclInUpdate(ostream& out) {
 ValExpr::ValExpr(double value) : value(value) {}
 
 double ValExpr::getValue() {
-	return value;
+    return value;
 }
 
 void ValExpr::emit(ostream & out, string indent) {
-	out << indent << value;
+    out << indent << value;
 }
 
 void ValExpr::emitUpdateCode(ostream & out, string indent) {
-	out << indent << value;
+    out << indent << value;
 }
 
 void ValExpr::emitProcessCode(ostream & out, string indent) {
-	out << indent << value;
+    out << indent << value;
 }
 
 string ValExpr::emitEval(ostream & out) {
@@ -107,15 +107,15 @@ string ValExpr::emitEval(ostream & out) {
 BoolExpr::BoolExpr(bool value) : value(value) {}
 
 void BoolExpr::emit(ostream & out, string indent) {
-	out << indent << value;
+    out << indent << value;
 }
 
 IdExpr::IdExpr(string id) : id(id) {}
 
 void IdExpr::emitUpdate(ostream& out) {
-	if (funTable.find(id)!=funTable.end()) {
-		out << id << "_update(last);" << endl;
-	} 
+    if (funTable.find(id)!=funTable.end()) {
+	    out << id << "_update(last);" << endl;
+    } 
 }
 
 void IdExpr::emit(ostream & out, string indent) {
