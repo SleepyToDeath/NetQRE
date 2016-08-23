@@ -1,1 +1,0 @@
-sfun int allip = sum{.*[srcip==x].*?1| IP x};

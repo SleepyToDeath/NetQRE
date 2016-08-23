@@ -1742,7 +1742,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 108 "grammar.y"
-    {printf("()"); (yyval.exp) = (yyvsp[(2) - (3)].exp);}
+    {printf("()\n"); (yyval.exp) = (yyvsp[(2) - (3)].exp);}
     break;
 
   case 25:
@@ -1858,7 +1858,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 130 "grammar.y"
-    {(yyval.exp) = new ChoiceExpr((yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp), NULL);}
+    {printf("Choice with 2 exprs\n"); (yyval.exp) = new ChoiceExpr((yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp), NULL);}
     break;
 
   case 41:

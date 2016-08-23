@@ -2,6 +2,7 @@
 #define _UTIL_H
 #include <string>
 #include <list>
+#include <sstream>
 using namespace std;
 
 inline bool isIn(string var, list<string> &strList) {
@@ -52,6 +53,12 @@ inline bool is_number(const std::string& s)
     std::string::const_iterator it = s.begin();
     while (it != s.end() && std::isdigit(*it)) ++it;
     return !s.empty() && it == s.end();
+}
+
+inline string toString(int n) {
+    ostringstream convert;
+    convert << n;
+    return convert.str();
 }
 
 #endif

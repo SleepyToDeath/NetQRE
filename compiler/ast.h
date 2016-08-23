@@ -12,9 +12,22 @@ struct StateInfo {
     string varName;
     string varType;
     string typeName;
+
+    // The name of the iterator
+    string itName;
+    // The name of the node (instance)
+    string nodeName;
+
     int mapType = 0;
     list<string> states;
     int preChosen = 0;
+
+    StateInfo(string var="", /* expr name */string name="") {
+	varName = var;
+	typeName = "Node_" + name + "_" + var;
+	itName = "it_" + name + "_" + var;
+	nodeName = "node_" + name + "_" + var;
+    }
 };
 
 typedef list<StateInfo>::iterator stateIterator ;
@@ -120,6 +133,8 @@ class IdExpr : public Expr {
 	virtual void emit(ostream&, string="");
 	virtual void emitUpdate(ostream&);
 	virtual void addScopeToVariables(string);
+ 
+	virtual string emitEval(ostream&);
 };
 
 
@@ -149,6 +164,8 @@ class FunCallExpr : public Expr {
 	virtual void emitUpdate(ostream&);
 	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitCheck(ostream&, int);
+
+	virtual string emitEval(ostream&);
 };
 
 // constructor for 2 operator expr
@@ -284,6 +301,8 @@ class ChoiceExpr : public Expr {
 	Expr* yes_expr;
 	Expr* no_expr;
 
+	static int count;
+
     public:
 	ChoiceExpr(Expr*,Expr*,Expr*);
 	virtual void emit(ostream&, string="");
@@ -317,6 +336,10 @@ class AggExpr : public Expr {
 	string varID;
 	string varType;
 
+	// indicating the position of the 
+	// state in the stateTree
+	list<StateInfo>::reverse_iterator stateLocation;
+
     public:
 	static int count;
 
@@ -333,7 +356,7 @@ class AggExpr : public Expr {
 	virtual void emitCheck(ostream&, int);
 	virtual void genStateTree();
 	virtual void addState(list<StateInfo>*);
-	//	virtual void emitStateTree(ostream&);
+	virtual string emitEval(ostream&);
 };
 
 // agg{split(e1,e2)}
@@ -342,6 +365,11 @@ class SplitExpr : public Expr {
 	string aggop;
 	Expr* expr1;
 	Expr* expr2;
+
+    protected:
+	// indicating the position of the 
+	// state in the stateTree
+	list<StateInfo>::reverse_iterator stateLocation;
 
     public:
 	SplitExpr(string,Expr*,Expr*);
@@ -360,16 +388,26 @@ class IterExpr : public Expr {
 	string aggop;
 	Expr* expr;
 
+	// indicating the position of the 
+	// state in the stateTree
+	list<StateInfo>::reverse_iterator stateLocation;
+
+	static int count;
+
     public:
 	IterExpr(string, Expr*);
 	//	virtual void emit(ostream&, string="");
 	virtual void getFreeVariables();
 	//virtual void addScopeToVariables(string);
+	virtual void genStateTree();
+	virtual void addState(list<StateInfo>*);
 	virtual void emitUpdate(ostream&);
 	virtual void emitUpdateChange(ostream&, Node*, string, string);
 	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitCheck(ostream&, int);
 	virtual void emit(ostream&, string="");
+
+	virtual string emitEval(ostream&);
 };
 
 class PipeExpr : public Expr {
@@ -510,6 +548,11 @@ class RE : public Expr {
 	Tree *predTree;
 	FSM* fsm;
 
+	// indicating the position of the 
+	// state in the stateTree
+	list<StateInfo>::reverse_iterator stateLocation;
+
+
     public:
 	RE() {}
 	virtual void emit(ostream&, string=""); 
@@ -550,6 +593,7 @@ class RE : public Expr {
 		TreeNode* endPredNode);
 	virtual void addScopeToVariables(string) {};
 
+	virtual string emitEval(ostream&);
 	virtual string emitEval(ostream&, stateIterator);
 };
 
@@ -608,6 +652,7 @@ class StarRE : public RE {
 	virtual FSM* toFSM(Tree*);
 	virtual void getFreeVariables();
 	virtual void addScopeToVariables(string);
+	virtual void genPredTree();
 };
 
 void emitPred(list<Expr*>*, ostream&, string);

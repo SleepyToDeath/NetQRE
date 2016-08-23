@@ -61,8 +61,8 @@
 //
 
 // test stream composition
-sfun int hh = 
-  (/.*[src==x]/?last) >> /.*[src==x].*/;
+//sfun int hh = 
+//  (/.*[src==x]/?last) >> /.*[src==x].*/;
 
 //sfun int hh = 
 //  (/.*[src==x]/?last) ;

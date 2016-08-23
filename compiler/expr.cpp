@@ -15,6 +15,8 @@ void Expr::genStateTree() {
 	StateInfo si;
 	si.varName = var;
 	si.typeName = "Node_" + name + "_" + var;
+	si.itName = "it_" + name + "_" + var;
+	si.nodeName = "node_" + name + "_" + var;
 	stateTree->push_back(si);
     }
 }
@@ -26,6 +28,8 @@ void Expr::addLeafToStateTree() {
     StateInfo si;
     si.varName = "leaf";
     si.typeName = "Node_" + name + "_" + "leaf";
+    si.itName = "it_" + name + "_leaf";
+    si.nodeName = "node_" + name + "_leaf";
 
     stateTree->push_back(si);
 }
@@ -56,10 +60,14 @@ void Expr::emitStateTree(ostream& out) {
 	}
 
 	out << "unordered_map<int, " << lastIt->typeName << "> "
-	    << "stateMap;" << endl;
+	    << "state_map;" << endl;
 	out << lastIt->typeName << " default_state;" << endl;
 	out << "};" << endl;
     }
+
+    out << lastIt->typeName << " *" << lastIt->nodeName << " = new "
+	<< lastIt->typeName << "();"
+	<< endl << endl;
 }
 
 void Expr::emitDeclInUpdate(ostream& out) {
@@ -70,13 +78,14 @@ void Expr::emitDeclInUpdate(ostream& out) {
     auto nextIt = stateIt;
     nextIt++;
     for (; stateIt != stateTree->end() && nextIt != stateTree->end(); stateIt++, nextIt++) {
-	string itName = "it_" + stateIt->varName;
-	string nodeName = "node_" + nextIt->varName;
+	string itName = stateIt->itName;
+	string nodeName = nextIt->nodeName;
 
 	out << "unordered_map<int, " << nextIt->typeName << ">::iterator " 
 	<< itName << ";" << endl;
 	out << nextIt->typeName << " *" << nodeName << ";" << endl;
     }
+
     out << endl;
 }
 
@@ -113,32 +122,40 @@ void BoolExpr::emit(ostream & out, string indent) {
 IdExpr::IdExpr(string id) : id(id) {}
 
 void IdExpr::emitUpdate(ostream& out) {
-    if (funTable.find(id)!=funTable.end()) {
-	    out << id << "_update(last);" << endl;
+    if (funTable.find(id) != funTable.end()) {
+	out << id << "_update(last);" << endl;
     } 
 }
 
 void IdExpr::emit(ostream & out, string indent) {
-	// If a streaming func
-	if (funTable.find(id)!=funTable.end()) {
-		SFun *sfun = (SFun*)funTable[id];
-		out << id << '(';
-		if (sfun->arglist != NULL) {
-			for (list<Arg*>::iterator it=sfun->arglist->begin();
-			it!=sfun->arglist->end(); it++) {
-				out << (*it)->id;
-				out << ", ";
-			}
+    // If a streaming func
+    if (funTable.find(id)!=funTable.end()) {
+	SFun *sfun = (SFun*)funTable[id];
+	out << id << '(';
+	if (sfun->arglist != NULL) {
+		for (list<Arg*>::iterator it=sfun->arglist->begin();
+		it!=sfun->arglist->end(); it++) {
+			out << (*it)->id;
+			out << ", ";
 		}
-		out << "last)";
-	} else {
-		out << indent << id;
 	}
+	out << "last)";
+    } else {
+	out << indent << id;
+    }
 }
 
 void IdExpr::addScopeToVariables(string scope) {
 	//rename the id with the parent's scope
 	id = id+"_"+scope;
+}
+
+string IdExpr::emitEval(ostream & out) {
+    if (funTable.find(id)!=funTable.end()) {
+	return id + "_eval(last)";
+    } else {
+	return id;
+    }
 }
 
 MemExpr::MemExpr(Expr* expr, string id) : main_expr(expr), id(id) {
@@ -165,28 +182,28 @@ FunCallExpr::FunCallExpr(string id, list<Expr *> *args) : id(id), args(args) {
 }
 
 void FunCallExpr::emit(ostream & out, string indent) {
-	if (compose) {
-		funTable[id]->block->final_expr->emit(out);
-	} else {
-		out << indent << id << "(";
-		if (args != NULL) {
-			list<Expr*>::iterator it=args->begin();
-			(*it)->emit(out);
-			for (list<Expr*>::iterator it= ++args->begin(); it!=args->end(); it++) {
-				out << ",";
-				(*it)->emit(out);
-			}
-		}
-		out << ")";
+    if (compose) {
+	funTable[id]->block->final_expr->emit(out);
+    } else {
+	out << indent << id << "(";
+	if (args != NULL) {
+	    list<Expr*>::iterator it=args->begin();
+	    (*it)->emit(out);
+	    for (list<Expr*>::iterator it= ++args->begin(); it!=args->end(); it++) {
+		out << ",";
+		(*it)->emit(out);
+	    }
 	}
+	out << ")";
+    }
 }
 
 void FunCallExpr::getFreeVariables() {
-	for (auto expr : *args) {
-		append(expr->freeVariables, freeVariables);
-		expr->getFreeVariables();
-		append(freeVariables, expr->freeVariables);
-	}
+    for (auto expr : *args) {
+	append(expr->freeVariables, freeVariables);
+	expr->getFreeVariables();
+	append(freeVariables, expr->freeVariables);
+    }
 }
 
 void FunCallExpr::addScopeToVariables(string scope) {
@@ -216,6 +233,19 @@ void FunCallExpr::emitCheck(ostream& out, int level) {
 		expr->emitCheck(out, level);
 	}
 }
+
+string FunCallExpr::emitEval(ostream & out) {
+    string ret = id + "_eval(";
+    for (auto it = args->begin(); it != args->end();
+	it++) {
+	ret = ret + (*it)->emitEval(out) + ", ";
+    }
+	
+    ret = ret + "last)";
+
+    return  ret;
+}
+
 
 BiopExpr::BiopExpr(Expr* expr1, Expr* expr2) : left(expr1), right(expr2) {
 	expr1->parent = this;
@@ -271,8 +301,8 @@ void BiopExpr::genStateTree() {
 void BiopExpr::addState(list<StateInfo>* stateTree) {
 
     this->stateTree = stateTree;
-	left->addState(stateTree);
-	right->addState(stateTree);
+    left->addState(stateTree);
+    right->addState(stateTree);
 }
 
 void BiopExpr::emitStateTree(ostream &out) {
@@ -462,15 +492,15 @@ void PipeExpr::emitEvalAndUpdate(ostream& out, stateIterator stateIt) {
     out << "// In " << endl;
 
     string lastVar = left->freeVariables.back();
-    string itName = "it_" + stateIt->varName;
-    string nodeName = "node_" + stateIt->varName;
+    string itName = stateIt->itName;
+    string nodeName = stateIt->nodeName;
     string mapName = nodeName + "->state_map";
 
     out << "for (" << itName << "=" << mapName << ".begin(); "
 	<< itName << "!=" << mapName << ".end();" << itName << "++) {" << endl;
 
     auto nextStateIt = next(stateIt);
-    string childNodeName = "node_" + nextStateIt->varName;
+    string childNodeName = nextStateIt->nodeName;
 
     out << childNodeName
 	<< " = &(" << itName << "->second);" << endl
@@ -592,16 +622,16 @@ UnaryExpr::UnaryExpr(Expr* expr) : sub_expr(expr) {
 }
 
 void UnaryExpr::emitUpdate(ostream& out) {
-	sub_expr->emitUpdate(out);
+    sub_expr->emitUpdate(out);
 }
 
 void UnaryExpr::getFreeVariables() {
-	append(sub_expr->freeVariables, freeVariables);
+    append(sub_expr->freeVariables, freeVariables);
 
-	sub_expr->getFreeVariables();
-	for (string var : sub_expr->freeVariables) {
-		freeVariables.push_back(var);
-	}
+    sub_expr->getFreeVariables();
+    for (string var : sub_expr->freeVariables) {
+	freeVariables.push_back(var);
+    }
 }
 
 void UnaryExpr::emitDataStructureType(ostream& out, int level) {
@@ -636,19 +666,19 @@ IfExpr::IfExpr(Expr* test, Block* block1, Block* block2) : test(test), then_bloc
 }
 
 void IfExpr::getFreeVariables() {
-	append(test->freeVariables, freeVariables);
-	append(then_block->final_expr->freeVariables, freeVariables);
-	if (else_block != NULL) {
-		append(else_block->final_expr->freeVariables, freeVariables);
-	}
+    append(test->freeVariables, freeVariables);
+    append(then_block->final_expr->freeVariables, freeVariables);
+    if (else_block != NULL) {
+	append(else_block->final_expr->freeVariables, freeVariables);
+    }
 
-	test->getFreeVariables();
-	append(then_block->final_expr->freeVariables, test->freeVariables);
-	then_block->final_expr->getFreeVariables();
-	if (else_block != NULL) {
-		append(else_block->final_expr->freeVariables, test->freeVariables);
-		else_block->final_expr->getFreeVariables();
-	}
+    test->getFreeVariables();
+    append(then_block->final_expr->freeVariables, test->freeVariables);
+    then_block->final_expr->getFreeVariables();
+    if (else_block != NULL) {
+	append(else_block->final_expr->freeVariables, test->freeVariables);
+	else_block->final_expr->getFreeVariables();
+    }
 }
 
 void IfExpr::addScopeToVariables(string scope) {
@@ -679,53 +709,57 @@ void IfExpr::emit(ostream& out, string indent) {
 }
 
 void IfExpr::emitDataStructure(ostream& out) {
-	test->emitDataStructure(out);
-	then_block->final_expr->emitDataStructure(out);
-	if (else_block != NULL)
-	else_block->final_expr->emitDataStructure(out);
+    test->emitDataStructure(out);
+    then_block->final_expr->emitDataStructure(out);
+    if (else_block != NULL)
+    else_block->final_expr->emitDataStructure(out);
 }
 
 void IfExpr::emitDataStructureType(ostream& out, int level) {
-	test->emitDataStructureType(out, level);
-	then_block->final_expr->emitDataStructureType(out, level);
-	if (else_block != NULL)
-	else_block->final_expr->emitDataStructureType(out, level);
+    test->emitDataStructureType(out, level);
+    then_block->final_expr->emitDataStructureType(out, level);
+    if (else_block != NULL)
+    else_block->final_expr->emitDataStructureType(out, level);
 }
 
 
 void IfExpr::emitUpdate(ostream& out) {
-	test->emitUpdate(out);
-	then_block->final_expr->emitUpdate(out);
-	if (else_block != NULL)
-	else_block->final_expr->emitUpdate(out);
+    test->emitUpdate(out);
+    then_block->final_expr->emitUpdate(out);
+    if (else_block != NULL)
+    else_block->final_expr->emitUpdate(out);
 }
 
 void IfExpr::emitCheck(ostream& out, int level) {
-	test->emitCheck(out, level);
-	then_block->final_expr->emitCheck(out, level);
-	if (else_block != NULL)
-	else_block->final_expr->emitCheck(out, level);
+    test->emitCheck(out, level);
+    then_block->final_expr->emitCheck(out, level);
+    if (else_block != NULL)
+    else_block->final_expr->emitCheck(out, level);
 }
 
+int ChoiceExpr::count = 0;
+
 ChoiceExpr::ChoiceExpr(Expr* test, Expr* expr1, Expr* expr2) : test(test), yes_expr(expr1), no_expr(expr2) {
-	test->parent = this;
-	expr1->parent = this;
-	if (expr2 != NULL)
+    test->parent = this;
+    expr1->parent = this;
+    if (expr2 != NULL)
 	expr2->parent = this;
+
+    name = "cex" + to_string(count++);
 }
 
 void ChoiceExpr::emit(ostream& out, string indent) {
-	out << "(";
-	test->emit(out, indent);
-	out << ")";
-	out << " ? ";
-	yes_expr->emit(out);
-	if (no_expr != NULL) {
-		out << " : ";
-		no_expr->emit(out);
-	} else {
-		out << " : 0";
-	}
+    out << "(";
+    test->emit(out, indent);
+    out << ")";
+    out << " ? ";
+    yes_expr->emit(out);
+    if (no_expr != NULL) {
+	out << " : ";
+	no_expr->emit(out);
+    } else {
+	out << " : 0";
+    }
 }
 
 void ChoiceExpr::emitDataStructureType(ostream& out, int level) {
@@ -744,10 +778,10 @@ void ChoiceExpr::emitDataStructure(ostream& out) {
 
 
 void ChoiceExpr::emitCheck(ostream& out, int level) {
-	test->emitCheck(out, level);
-	yes_expr->emitCheck(out, level);
-	if (no_expr != NULL) 
-	no_expr->emitCheck(out, level);
+    test->emitCheck(out, level);
+    yes_expr->emitCheck(out, level);
+    if (no_expr != NULL) 
+    no_expr->emitCheck(out, level);
 }
 
 
@@ -765,6 +799,14 @@ void ChoiceExpr::getFreeVariables() {
 	if (!exist)
 	    freeVariables.push_back(var);
     }
+    yes_expr->getFreeVariables();
+    mergeTo(freeVariables, yes_expr->freeVariables);
+
+    if (no_expr != NULL) {
+	no_expr->getFreeVariables();
+	mergeTo(freeVariables, no_expr->freeVariables);
+    }
+
     //	append(yes_expr->freeVariables, test->freeVariables);
     //	yes_expr->getFreeVariables();
     //	for (auto var : yes_expr->freeVariables) {
@@ -863,7 +905,22 @@ void ChoiceExpr::emitResetState(ostream& out) {
 }
 
 string ChoiceExpr::emitEval(ostream& out) {
-    emitEval(out, this->stateTree->begin());
+    string test_ret = test->emitEval(out);
+
+    string retName = "ret_" + name;
+    out << "int " << retName << " = 0;" << endl;
+    out << "if (" << test_ret << ") {" << endl;
+    string ret = yes_expr->emitEval(out);
+
+    out << retName << " = " << ret << ";" << endl;
+    out << "}" << endl;
+
+    if (no_expr) {
+	ret = no_expr->emitEval(out);
+	out << retName << " = " << ret << ";" << endl;
+    }
+
+    return retName;
 }
 
 string ChoiceExpr::emitEval(ostream& out, stateIterator startStateIt) {
@@ -890,75 +947,75 @@ string ChoiceExpr::emitEval(ostream& out, stateIterator startStateIt) {
 int AggExpr::count = 0;
 
 AggExpr::AggExpr(string aggop, Expr* expr, string varID) : aggop(aggop), expr(expr), varID(varID) {
-	expr->parent = this;
+    expr->parent = this;
 }
 
 AggExpr::AggExpr(string aggop, Expr* expr, string varID, string varType) : aggop(aggop), expr(expr), varID(varID), varType(varType) {
-	expr->parent = this;
-	name = "agg" + to_string(count++);
+    expr->parent = this;
+    name = "agg" + to_string(count++);
 }
 
 //TODO
 void AggExpr::emit(ostream& out, string indent) {
-	out << "ret_sum_" << this;
+    out << "ret_sum_" << this;
 }
 
 void AggExpr::emitDataStructureType(ostream& out, int level) {
-	if (freeVariables.empty()) {
-		if (level==0) {
-			out << "int sum_" << this 
-			<< " = 0;" << endl;
-		}
-	} else {
-		string var = freeVariables.back();
-		if (tree->name_to_id[var]+1 == level) {
-			out << "int sum_" << this 
-			<< " = 0;" << endl;
-		}
-	}
-	expr->emitDataStructureType(out, level);
+    if (freeVariables.empty()) {
+	    if (level==0) {
+		    out << "int sum_" << this 
+		    << " = 0;" << endl;
+	    }
+    } else {
+	    string var = freeVariables.back();
+	    if (tree->name_to_id[var]+1 == level) {
+		    out << "int sum_" << this 
+		    << " = 0;" << endl;
+	    }
+    }
+    expr->emitDataStructureType(out, level);
 }
 
 void AggExpr::emitCheck(ostream& out, int level) {
-	if (level < 0) {
-		out << "int ret_sum_" << this << " = 0;"
-		<< endl;
-		return;
-	}
+    if (level < 0) {
+	    out << "int ret_sum_" << this << " = 0;"
+	    << endl;
+	    return;
+    }
 
-	if (freeVariables.empty()) {
-		if (level==0) {
-			out << "ret_sum_" << this 
-			<< " = " << "state" 
-			<< ".sum_" << this << ";"
-			<< endl;
-		}
-	} else {
-		string var = freeVariables.back();
-		if (tree->name_to_id[var]+1 == level) {
-			out << "ret_sum_" << this 
-			<< " = " << "state_" << level
-			<< ".sum_" << this << ";"
-			<< endl;
-		}
-	}
-	//expr->emitCheck(out, level);
+    if (freeVariables.empty()) {
+	    if (level==0) {
+		    out << "ret_sum_" << this 
+		    << " = " << "state" 
+		    << ".sum_" << this << ";"
+		    << endl;
+	    }
+    } else {
+	    string var = freeVariables.back();
+	    if (tree->name_to_id[var]+1 == level) {
+		    out << "ret_sum_" << this 
+		    << " = " << "state_" << level
+		    << ".sum_" << this << ";"
+		    << endl;
+	    }
+    }
+    //expr->emitCheck(out, level);
 }
 
 
 void AggExpr::getFreeVariables() {
-	append(expr->freeVariables, freeVariables);
-	expr->getFreeVariables();
-	for (auto var : expr->freeVariables) {
-	    if (var.compare(varID)!=0)
-		freeVariables.push_back(var);
-	}
+    append(expr->freeVariables, freeVariables);
+    expr->getFreeVariables();
+    for (auto var : expr->freeVariables) {
+	if (var.compare(varID)!=0)
+	    freeVariables.push_back(var);
+    }
 }
 
 void AggExpr::addScopeToVariables(string scope) {
-	//call the expr's addScopeToVariables with parents scope 
-	//along with it's own name
-	expr->addScopeToVariables(scope+"_"+name);
+    //call the expr's addScopeToVariables with parents scope 
+    //along with it's own name
+    expr->addScopeToVariables(scope+"_"+name);
 }
 
 void AggExpr::emitUpdate(ostream& out) {
@@ -966,17 +1023,11 @@ void AggExpr::emitUpdate(ostream& out) {
 }
 
 void AggExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
-    string nodeName = "node_";
+    string nodeName = stateLocation->nodeName;
     string stateName = "sum_" + name;
 
     // Only handles sum operator
     // TODO: avg, max, min
-    if (freeVariables.empty()) {
-	nodeName += varID;
-    } else {
-	string lastVar = freeVariables.back();
-	nodeName += varID;
-    }
 
     // All free variables in the freeVariables list should be
     // ordered.
@@ -987,34 +1038,29 @@ void AggExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, strin
 }
 
 void AggExpr::emitResetState(ostream& out) {
-	string lastVar = freeVariables.back();
-	int level = tree->name_to_id[lastVar]+1;
-	if (aggop.compare("sum")==0) {
-		out << "state_" << level << ".sum_" << this
-		<< " = 0;" << endl;
-		expr->emitResetState(out);
-	} else if (aggop.compare("select")==0) {
-		out << "TODO;" << endl;
-	} else if (aggop.compare("max")==0) {
-		out << "TODO;" << endl;
-	} else if (aggop.compare("min")==0) {
-		out << "TODO;" << endl;
-	} else if (aggop.compare("avg")==0) {
-		out << "TODO;" << endl;
-	} 
+    string lastVar = freeVariables.back();
+    int level = tree->name_to_id[lastVar]+1;
+    if (aggop.compare("sum")==0) {
+	    out << "state_" << level << ".sum_" << this
+	    << " = 0;" << endl;
+	    expr->emitResetState(out);
+    } else if (aggop.compare("select")==0) {
+	    out << "TODO;" << endl;
+    } else if (aggop.compare("max")==0) {
+	    out << "TODO;" << endl;
+    } else if (aggop.compare("min")==0) {
+	    out << "TODO;" << endl;
+    } else if (aggop.compare("avg")==0) {
+	    out << "TODO;" << endl;
+    } 
 }
 
 void AggExpr::genStateTree() {
     Expr::genStateTree();
-    StateInfo si;
-    si.varName = varID;
-    si.typeName = "Node_" + name + "_" + varID;
+    StateInfo si(varID, name);
     stateTree->push_back(si);
 
-    StateInfo si2;
-    si2.varName = "leaf";
-    si2.typeName = "Node_" + name + "_" + "leaf";
-    stateTree->push_back(si2);
+    addLeafToStateTree();
 
     addState(stateTree);
 
@@ -1035,8 +1081,57 @@ void AggExpr::addState(list<StateInfo>* stateTree) {
 	    last = it;
     }
     
-    string state = "int sum_" + name + ";";
+    string state = "int sum_" + name + " = 0;";
     last->states.push_back(state);
+
+    stateLocation = last;
+}
+
+string AggExpr::emitEval(ostream& out) {
+    string varName;
+    string itName;
+    string nodeName;
+    string mapName;
+    string childNodeName;
+
+    for (auto stateIt = stateTree->begin();
+	      stateIt != stateTree->end();
+	      stateIt++) {
+	varName = stateIt->varName;
+	itName = stateIt->itName;
+	nodeName = stateIt->nodeName;
+	mapName = nodeName + "->state_map";
+
+	auto nextStateIt = next(stateIt);
+	if (nextStateIt == stateTree->end())
+	    break;
+
+	string childNodeName = nextStateIt->nodeName;
+
+	out << itName << " = "
+	    << nodeName << "->state_map.find(" << varName<< ");" << endl;
+	out << "if (" << itName
+	    << " == " << nodeName << "->state_map.end()) { " << endl;
+
+	out << childNodeName << " = &"
+	    << nodeName << "->default_state"
+	    << ";" << endl
+	    << "} else {" << endl;
+
+	out << childNodeName
+	    << " = &(" << itName << "->second);" << endl
+	    << endl;
+
+	out << "}" << endl;
+    }
+
+    string stateName = "sum_" + this->name;
+    string retName = "ret_" + this->name;
+
+    out << "int " << retName << " = "
+	<< nodeName << "->" << stateName << ";" << endl;
+
+    return retName;
 }
 
 SplitExpr::SplitExpr(string aggop, Expr* expr1, Expr* expr2) : aggop(aggop), expr1(expr1), expr2(expr2) {
@@ -1076,8 +1171,11 @@ void SplitExpr::emitCheck(ostream& out, int level) {
     expr2->emitCheck(out, level);
 }
 
+int IterExpr::count = 0;
+
 IterExpr::IterExpr(string aggop, Expr* expr) : aggop(aggop), expr(expr) {
     expr->parent = this;
+    name = "iter" + to_string(count++);
 }
 
 void IterExpr::getFreeVariables() {
@@ -1141,19 +1239,104 @@ void IterExpr::emit(ostream& out, string indent) {
 }
 
 void IterExpr::emitUpdateChange(ostream& out, Node* child, string oldValue, string newValue) {
-    if (freeVariables.empty()) {
-	if (aggop=="sum") {
-	    out << "state" << ".sum_" << this 
-		<< "+=" << newValue << ";" << endl;
-	}
-    } else {
-	string lastVar = freeVariables.back();
-	int level = tree->name_to_id[lastVar]+1;
-	if (aggop=="sum") {
-	    out << "state_" << level << ".sum_" << this 
-		<< "+=" << newValue << ";" << endl;
-	}
+    string nodeName = stateLocation->nodeName;
+
+    if (aggop=="sum") {
+	string stateName = "sum_" + name;
+	out << nodeName << "->" << stateName 
+	    << " += " << newValue << ";" << endl;
     }
+
+//    if (freeVariables.empty()) {
+//	if (aggop=="sum") {
+//	    string stateName = "sum_" + name;
+//	    out << "state" << ".sum_" << name
+//		<< "+=" << newValue << ";" << endl;
+//	}
+//    } else {
+//	string lastVar = freeVariables.back();
+//	int level = tree->name_to_id[lastVar]+1;
+//	if (aggop=="sum") {
+//	    out << "state_" << level << ".sum_" << this 
+//		<< "+=" << newValue << ";" << endl;
+//	}
+//    }
     expr->emitResetState(out);
     parent->emitUpdateChange(out, this, "", "");
+}
+
+void IterExpr::genStateTree() {
+    Expr::genStateTree();
+    addLeafToStateTree();
+
+    addState(stateTree);
+
+    expr->addState(stateTree);
+}
+
+void IterExpr::addState(list<StateInfo>* stateTree) {
+    this->stateTree = stateTree;
+    auto last = stateTree->rbegin();
+
+    for (auto it = ++stateTree->rbegin();
+    it != stateTree->rend();
+    it++) {
+	if (isIn(it->varName, freeVariables)) 
+	    break;
+	else
+	    last = it;
+    }
+    
+    string state = "int sum_" + name + " = 0;";
+    last->states.push_back(state);
+
+    stateLocation = last;
+}
+
+string IterExpr::emitEval(ostream& out) {
+    string varName;
+    string itName;
+    string nodeName;
+    string mapName;
+    string childNodeName;
+    auto startStateIt = stateTree->begin();
+
+    for (auto stateIt = startStateIt;
+	      stateIt != stateTree->end();
+	      stateIt++) {
+	varName = stateIt->varName;
+	itName = stateIt->itName;
+	nodeName = stateIt->nodeName;
+	mapName = nodeName + "->state_map";
+
+	auto nextStateIt = next(stateIt);
+	if (nextStateIt == stateTree->end())
+	    break;
+
+	string childNodeName = nextStateIt->nodeName;
+
+	out << itName << " = "
+	    << nodeName << "->state_map.find(" << varName<< ");" << endl;
+	out << "if (" << itName
+	    << " == " << nodeName << "->state_map.end()) { " << endl;
+
+	out << childNodeName << " = &"
+	    << nodeName << "->default_state"
+	    << ";" << endl
+	    << "} else {" << endl;
+
+	out << childNodeName
+	    << " = &(" << itName << "->second);" << endl
+	    << endl;
+
+	out << "}" << endl;
+    }
+
+    string stateName = "sum_" + this->name;
+    string retName = "ret_" + this->name;
+
+    out << "int " << retName << " = 0;" << endl;
+    out << retName << " = " << nodeName << "->" << stateName << ";" << endl;
+
+    return retName;
 }

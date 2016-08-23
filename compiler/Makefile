@@ -10,6 +10,9 @@ RM = /bin/rm -f
 
 default: apps
 
+sim:
+	g++ a.cpp -o sim -I library -std=c++0x -O3
+
 apps: heavy_hitter heavy_hitter_baseline superspreader superspreader_baseline entropy entropy_baseline bandwidth_recorder \
 			heavy_hitter_timeinterval flood flood2 syn_flood syn_flood_baseline flow_num flow_num_baseline sip
 dupack: apps/dupack.cpp

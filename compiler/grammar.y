@@ -105,7 +105,7 @@ expr	    : NUM {$$ = new ValExpr($1); printf("new num\n");}
 	    | ID '(' ')'{$$ = new FunCallExpr($1, NULL);} /* not sure */
 	    | ID '(' expr_list ')'{$$ = new FunCallExpr($1, $3);} /* not sure */
 	    | expr '.' ID {$$ = new MemExpr($1, $3);} /* not sure */
-	    | '(' expr ')' {printf("()"); $$ = $2;}
+	    | '(' expr ')' {printf("()\n"); $$ = $2;}
 	    | expr '+' expr {printf("reduce +\n"); $$ = new PlusExpr($1, $3);}
 	    | expr '-' expr {$$ = new MinusExpr($1, $3);}
 	    | expr '*' expr {$$ = new TimesExpr($1, $3);}
@@ -127,7 +127,7 @@ expr	    : NUM {$$ = new ValExpr($1); printf("new num\n");}
 	      {
 		$$ = new IfExpr($3, $5, NULL);
 	      }
-	    | expr '?' expr {$$ = new ChoiceExpr($1, $3, NULL);}
+	    | expr '?' expr {printf("Choice with 2 exprs\n"); $$ = new ChoiceExpr($1, $3, NULL);}
 	    | expr '?' expr ':' expr {printf("Choice re\n"); $$ = new ChoiceExpr($1, $3, $5);}
 	    | '/' re '/' {printf("re expr\n"); $$ = $2; $$->setName(); re_list->push_back($2);}
 	    | agg_expr {$$ = $1;}

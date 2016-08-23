@@ -47,7 +47,7 @@ void getFreeVariables() {
     for (auto re : *re_list) {
 	append(variables, re->freeVariables);
 	for (auto s : re->freeVariables) {
-		cout << s << " ";
+	    cout << s << " ";
 	}
 	cout << endl;
     }
@@ -95,6 +95,17 @@ void emitEval(ostream &out) {
     }
 }
 
+void addExternalInfo(ostream& out, string file) {
+    ifstream f(file);
+    string line;
+
+    while (getline(f, line)) {
+	out << line << endl;
+    }
+
+    f.close();
+}
+
 int main(int argc, char **argv) {
     ++argv, --argc;  /* skip over program name */
     if ( argc > 0 )
@@ -117,14 +128,17 @@ int main(int argc, char **argv) {
     cout << "Getting parameters..." << endl;
     getFreeVariables();
 
-    cout << "Emiting state tree..." << endl;
-    emitStateTree(out);
-
     cout << "Generating predicate tree..." << endl;
     genPredTree();
 
     cout << "Generating FSM..." << endl;
     genFSM();
+
+    cout << "Adding information at the beginning..." << endl;
+    addExternalInfo(out, "pre.cpp");
+
+    cout << "Emiting state tree..." << endl;
+    emitStateTree(out);
 
     cout << "Emitting update code..." << endl;
     emitUpdate(out);
@@ -132,6 +146,9 @@ int main(int argc, char **argv) {
     cout << "Emitting evaluation code..." << endl;
     emitEval(out);
 
+    cout << "Adding information at the end..." << endl;
+    addExternalInfo(out, "post.cpp");
+    
     out.close();
     return 0;
 }

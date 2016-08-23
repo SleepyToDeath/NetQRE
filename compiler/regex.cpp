@@ -48,8 +48,10 @@ void RE::addState(list<StateInfo>* stateTree) {
 	    last = it;
     }
     
-    string state = "int state_" + name + ";";
+    string state = "int state_" + name + " = " + toString(fsm->initState->id) + ";";
     last->states.push_back(state);
+
+    stateLocation = last;
 }
 
 void RE::genPredTree() {
@@ -97,7 +99,7 @@ void RE::simplifyPredTree(TreeNode* node) {
 void RE::emitStateUpdate(ostream& out, TreeNode* predNode, 
 			list<StateInfo>::iterator stateIt) {
     string stateName = "state_" + this->name;
-    string nodeName = "node_" + stateIt->varName;
+    string nodeName = stateIt->nodeName;
     out << "switch (" << nodeName << "->" << stateName
 	<< ") {" << endl;
     for (auto trans : predNode->transitions) {
@@ -113,7 +115,7 @@ void RE::emitStateUpdate(ostream& out, TreeNode* predNode,
 		parent->emitUpdateChange(out, this, "false", "true");
 	}
 
-	parent->emitUpdateChange(out, this, "true", "false");
+	// parent->emitUpdateChange(out, this, "true", "false");
 
 	out << "break;" << endl;
     }
@@ -454,16 +456,13 @@ void RE::emitUpdate(ostream& out, string DSname, TreeNode *node) {
 //    }
 }
 
+// TODO 6/27
 void RE::emitResetState(ostream& out) {
-    if (freeVariables.empty()) {
-	out << "state" << ".state_" << this
-	    << " = " << fsm->initState << ";" << endl;
-	return;
-    }
-    string lastVar = freeVariables.back();
-    int level = tree->name_to_id[lastVar]+1;
-    out << "state_" << level << ".state_" << this
-	<< " = " << fsm->initState << ";" << endl;
+    string nodeName = stateLocation->nodeName;
+    string stateName = "state_" + name;
+
+    out << nodeName << "->" << stateName 
+	<< " = " << fsm->initState->id << ";" << endl;
 }
 
 FSM* SingleRE::toFSM(Tree *tree) {
@@ -606,6 +605,13 @@ FSM* StarRE::toFSM(Tree *tree) {
     return fsm;
 }
 
+void StarRE::genPredTree() {
+    RE::genPredTree();
+    re->predTree = predTree;
+    re->genPredTree();
+}
+
+
 UnionRE::UnionRE(RE* re1, RE* re2) : re1(re1), re2(re2) {}
 
 //void UnionRE::emit(ostream& out, string indent) {
@@ -728,8 +734,8 @@ void RE::emitUpdate(ostream& out,
 		    TreeNode *startPredNode,
 		    bool isBranchDecided) {
 
-    string itName = "it_" + stateIt->varName;
-    string nodeName = "node_" + stateIt->varName;
+    string itName = stateIt->itName;
+    string nodeName = stateIt->nodeName;
 
     if (!predNode->hasStateTransition)
 	return;
@@ -740,7 +746,7 @@ void RE::emitUpdate(ostream& out,
     }
 
     auto nextStateIt = next(stateIt);
-    string childNodeName = "node_" + nextStateIt->varName;
+    string childNodeName = nextStateIt->nodeName;
 
     // Decend the state list if var name does not match.
     // Since the order of parameters of the predicate tree 
@@ -782,11 +788,13 @@ void RE::emitUpdate(ostream& out,
 	    string field = it->first;
 	    TreeNode* child = it->second;
 
+	  
+	    emitUpdateAddNewBranch(out, itName, nodeName, field);
+	    stateIt->preChosen = 1;
+
 	    if (!child->hasStateTransition)
 		continue;
 
-	    emitUpdateAddNewBranch(out, itName, nodeName, field);
-	    stateIt->preChosen = 1;
 	    out << "if (";
 	    emitUpdateCheckBranchConsistency(out, itName, startPredNode, predNode);
 	    out << ") {" << endl;
@@ -887,15 +895,15 @@ void RE::emitUpdateNextPredNode(
 	TreeNode* startPredNode,
 	bool isBranchDecided) {
 
-    string itName = "it_" + stateIt->varName;
-    string nodeName = "node_" + stateIt->varName;
+    string itName = stateIt->itName;
+    string nodeName = stateIt->nodeName;
 
     if (child->name == predNode->name) {
 	emitUpdate(out, stateIt, child, startPredNode, isBranchDecided);
     } else {
 	auto nextStateIt = next(stateIt);
-	string childNodeName = "node_" + nextStateIt->varName;
-	string itName = "it_" + stateIt->varName;
+	string childNodeName = nextStateIt->nodeName;
+	string itName = stateIt->itName;
 
 	if (isBranchDecided) {
 	    out << childNodeName
@@ -904,7 +912,7 @@ void RE::emitUpdateNextPredNode(
 
 	    emitUpdate(out, nextStateIt, child, child, false);
 	} else {
-	    string childNodeName = "node_" + next(stateIt)->varName;
+	    string childNodeName = next(stateIt)->nodeName;
 
 	    out << childNodeName
 		<< " = &(" << nodeName << "->default_state);" << endl
@@ -964,6 +972,10 @@ void RE::emitUpdateCheckBranchConsistency(
     }
 }
 
+string RE::emitEval(ostream& out) {
+    return emitEval(out, stateTree->begin());
+}
+
 string RE::emitEval(ostream& out, stateIterator startStateIt) {
     string varName;
     string itName;
@@ -975,32 +987,37 @@ string RE::emitEval(ostream& out, stateIterator startStateIt) {
 	      stateIt != stateTree->end();
 	      stateIt++) {
 	varName = stateIt->varName;
-	itName = "it_" + stateIt->varName;
-	nodeName = "node_" + stateIt->varName;
+	itName = stateIt->itName;
+	nodeName = stateIt->nodeName;
 	mapName = nodeName + "->state_map";
 
 	auto nextStateIt = next(stateIt);
 	if (nextStateIt == stateTree->end())
 	    break;
 
-	string childNodeName = "node_" + nextStateIt->varName;
+	string childNodeName = nextStateIt->nodeName;
 
 	out << itName << " = "
 	    << nodeName << "->state_map.find(" << varName<< ");" << endl;
 	out << "if (" << itName
 	    << " == " << nodeName << "->state_map.end()) { " << endl;
-	out << itName << " = "
+
+	out << childNodeName << " = &"
 	    << nodeName << "->default_state"
 	    << ";" << endl
-	    << "}" << endl;
+	    << "} else {" << endl;
 
 	out << childNodeName
 	    << " = &(" << itName << "->second);" << endl
 	    << endl;
+
+	out << "}" << endl;
     }
 
     string stateName = "state_" + this->name;
     string retName = "ret_" + this->name;
+
+    out << "bool " << retName << ";" << endl;
 
     out << "switch (" << nodeName << "->" << stateName
 	<< ") {" << endl;

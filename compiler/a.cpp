@@ -1,140 +1,81 @@
+#include <unordered_map>
+#include <iostream>
+#include <tuple>
+
+using namespace std;
+
+typedef int IP;
+
+struct Packet {
+    int src = 0;
+    int dst = 0;
+};
 // leaf
-struct Node__leaf{
-    int state_re0;
-    int state_re1;
+struct Node_agg0_leaf{
+int state_re0 = 0;
 };
 // x
-struct Node__x{
-    unordered_map<int, Node__leaf> stateMap;
-    Node__leaf default_state;
+struct Node_agg0_x{
+int sum_agg0 = 0;
+unordered_map<int, Node_agg0_leaf> state_map;
+Node_agg0_leaf default_state;
 };
-bool hh_update(Packet *last) {
-    unordered_map<int, Node__leaf>::iterator it_x;
-    Node__leaf *node_leaf;
+Node_agg0_x *node_agg0_x = new Node_agg0_x();
 
-    it_x = node_x->state_map.find(src);
-    if (it_x == node_x->state_map.end()) { 
-	it_x = node_x->state_map.insert({src, node_x->default_state}).first;
-    }
-    if (true) {
-	node_leaf = &(it_x->second);
+bool main_update(Packet *last) {
+unordered_map<int, Node_agg0_leaf>::iterator it_agg0_x;
+Node_agg0_leaf *node_agg0_leaf;
 
-	switch (node_leaf->state_re0) {
-	    case 0: 
-		node_leaf->state_re0 = 1;
-		break;
-	    case 1: 
-		node_leaf->state_re0 = 1;
-		break;
-	    default:
-		node_leaf->state_re0 = -1;
-		break;
-	}
-    }
-    node_leaf = &(node_x->default_state);
+it_agg0_x = node_agg0_x->state_map.find(src);
+if (it_agg0_x == node_agg0_x->state_map.end()) { 
+it_agg0_x = node_agg0_x->state_map.insert({src, node_agg0_x->default_state}).first;
+}
+if (true) {
+node_agg0_leaf = &(it_agg0_x->second);
 
-    switch (node_leaf->state_re0) {
-	case 0: 
-	    node_leaf->state_re0 = 0;
-	    break;
-	case 1: 
-	    node_leaf->state_re0 = 0;
-	    break;
-	default:
-	    node_leaf->state_re0 = -1;
-	    break;
-    }
-    for (it_x = node_x->state_map.begin(); it_x != node_x->state_map.end(); it_x++) {
-	if (true && it_x->first != src) {
-	    node_leaf = &(it_x->second);
-
-	    switch (node_leaf->state_re0) {
-		case 0: 
-		    node_leaf->state_re0 = 0;
-		    break;
-		case 1: 
-		    node_leaf->state_re0 = 0;
-		    break;
-		default:
-		    node_leaf->state_re0 = -1;
-		    break;
-	    }
-	}
-    }
-    // In 
-    for (it_x=node_x->state_map.begin(); it_x!=node_x->state_map.end();it_x++) {
-	node_leaf = &(it_x->second);
-
-	// eval for left
-	switch (node_leaf->state_re0) {
-	    case 1: 
-		ret_re0 = true;
-		break;
-	    default:
-		ret_re0 = false;
-	}
-	int ret_ = 0;
-	if (ret_re0) {
-	    ret_ == ;
-	}
-	// update for right
-	if (it_x->first == src) {
-	    node_leaf = &(it_x->second);
-
-	    switch (node_leaf->state_re1) {
-		case 0: 
-		    node_leaf->state_re1 = 1;
-		    break;
-		case 1: 
-		    node_leaf->state_re1 = 1;
-		    break;
-		default:
-		    node_leaf->state_re1 = -1;
-		    break;
-	    }
-	}
-	else {
-	}
-    }
-    node_leaf = &(node_x->default_state);
-
-    // eval for left
-    switch (node_leaf->state_re0) {
-	case 1: 
-	    ret_re0 = true;
-	    break;
-	default:
-	    ret_re0 = false;
-    }
-    int ret_ = 0;
-    if (ret_re0) {
-	ret_ == ;
-    }
-    // update for right
-    if (node_x->state_map.find(src) == node_x->state_map.end()) {
-	node_leaf = &(it_x->second);
-
-	switch (node_leaf->state_re1) {
-	    case 0: 
-		node_leaf->state_re1 = 1;
-		break;
-	    case 1: 
-		node_leaf->state_re1 = 1;
-		break;
-	    default:
-		node_leaf->state_re1 = -1;
-		break;
-	}
-    }
-    else {
-    }
-    return true;
+switch (node_agg0_leaf->state_re0) {
+case 0: 
+node_agg0_leaf->state_re0 = 1;
+node_agg0_x->sum_agg0 += 1 - 0;
+break;
+case 1: 
+node_agg0_leaf->state_re0 = 1;
+break;
+default:
+node_agg0_leaf->state_re0 = -1;
+break;
+}
+}
+return true;
 }
 
-int hh_eval(Packet* last) {
-    unordered_map<int, Node__leaf>::iterator it_x;
-    Node__leaf *node_leaf;
+int main_eval(Packet* last) {
+unordered_map<int, Node_agg0_leaf>::iterator it_agg0_x;
+Node_agg0_leaf *node_agg0_leaf;
 
-    return ret_;
+it_agg0_x = node_agg0_x->state_map.find(x);
+if (it_agg0_x == node_agg0_x->state_map.end()) { 
+node_agg0_leaf = &node_agg0_x->default_state;
+} else {
+node_agg0_leaf = &(it_agg0_x->second);
+
+}
+int ret_agg0 = node_agg0_leaf->sum_agg0;
+return ret_agg0;
 }
 
+Packet pkt;
+
+int main() {
+    while (true) {
+	cout << "src = ";
+	cin >> pkt.src;
+	
+	cout << "dst = ";
+	cin >> pkt.dst;
+
+	smain_update(&pkt);
+	cout << "result is: \t" << smain_eval(&pkt) << endl;
+    }
+    return 1;
+}
