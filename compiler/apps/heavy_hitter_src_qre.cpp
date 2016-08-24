@@ -32,24 +32,6 @@ Node_0 state;
 
 long result = 0;
 
-void _update_state(unsigned long srcIP) {
-  struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
-  unsigned long srcIP = iph->ip_src.s_addr;
-  unsigned long dstIP = iph->ip_dst.s_addr;
-
-  std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
-  if (it == state.state_map.end()) { 
-    it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
-  } 
-  Node_1 *state_1 = &(it->second);
-
-  if (state_1->state == 0) {
-    state_1->state = 1;
-    state_1->sum += 1;
-    state_1->state = 0;
-  }
-}
-
 void _update_state(u_char *packet) {
   struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
   unsigned long srcIP = iph->ip_src.s_addr;
