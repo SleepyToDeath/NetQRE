@@ -15,6 +15,25 @@
 using namespace std;
 
 #define ETHERNET_LINK_OFFSET 14
+//#define BUF_SIZE 2685075
+
+// 1 threads
+//#define BUF_SIZE 37306496
+
+// 4 threads
+//#define BUF_SIZE 10503169
+
+// 8 threads
+#define BUF_SIZE 6064873
+
+// 10 threads
+//#define BUF_SIZE 3900523
+
+// 12 threads
+//#define BUF_SIZE 3535575
+
+// 16 threads
+//#define BUF_SIZE 3788257
 
 long packet_cnt = 0;
 bool debug_mode = false;
@@ -40,31 +59,41 @@ long result = 0;
 
 
 //vector<list<u_char*>> queues;
-vector<list<unsigned long>*> queues;
+
+vector<int> len;
+
+//vector<unsigned long*> queues;
+vector<vector<unsigned long>*> queues;
 
 void _update_state(u_char *packet);
 
 
 void* thread_run(void *threadid) {
+  struct timeval start, end;
+
+  gettimeofday(&start, NULL);
+
+  
   long tid = (long)threadid;
 
-  list<unsigned long> *queue = queues[tid];
+  //unsigned long *queue = queues[tid];
+  vector<unsigned long> *queue = queues[tid];
+
+  int length = len[tid];
 
   Node_0 state;
+  unsigned long  count;
   
-//  cout << "thread " << tid << " running." << endl;
-  for (auto qit = queue->begin(); qit != queue->end(); qit++) {
-  //while (!queue->empty()) {
-      //u_char* packet = queues[tid].front();
-      //unsigned long packet = queue->front();
-      //queue->pop_front();
-
-      
+  for (int l=0; l<length; l++) {
 //      struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
 //      unsigned long srcIP = iph->ip_src.s_addr;
 //      unsigned long dstIP = iph->ip_dst.s_addr;
 
-      unsigned long srcIP = *qit;
+      unsigned long srcIP = (*queue)[l];
+
+//      for (int i=1; i<100; i++)
+//	  //count += srcIP % i;
+//	  count += 1000 % i;
 
       std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
       if (it == state.state_map.end()) { 
@@ -79,31 +108,18 @@ void* thread_run(void *threadid) {
       }
 
   }
+ 
 
+  gettimeofday(&end, NULL);
+
+  long time_spent = end.tv_sec * 1000000 + end.tv_usec
+	      - (start.tv_sec * 1000000 + start.tv_usec);
+
+  printf("Thread %ld takes %ld seconds, processes %d packets. Each packet takes %f us.\n", 
+	tid, time_spent, length, (double)(time_spent)/(length));
+//cout << count << endl;
   cout << "thread " << tid << " exit." << endl;
   pthread_exit(NULL);
-}
-
-//void _update_state(u_char *packet) {
-//  struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
-//  unsigned long srcIP = iph->ip_src.s_addr;
-//  unsigned long dstIP = iph->ip_dst.s_addr;
-//
-//  std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
-//  if (it == state.state_map.end()) { 
-//    it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
-//  } 
-//  Node_1 *state_1 = &(it->second);
-//
-//  if (state_1->state == 0) {
-//    state_1->state = 1;
-//    state_1->sum += 1;
-//    state_1->state = 0;
-//  }
-//}
-
-void _output_result() {
-  printf("Processed %ld packets. Result is %ld\n", packet_cnt, result);
 }
 
 static void close() {
@@ -130,6 +146,7 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
   unsigned long srcIP = iph->ip_src.s_addr;
 
   long tid = srcIP % num_threads;
+  // long tid = packet_cnt % num_threads;
   // put this packet into the thread's queue
 
   //u_char* packet2 = 
@@ -137,6 +154,9 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
 
   //queues[tid].push_back(packet);
   queues[tid]->push_back(srcIP);
+  len[tid]++;
+
+  //queues[tid][len[tid]++] = srcIP;
 }
 
 int main(int argc, char *argv[]) {
@@ -180,10 +200,14 @@ int main(int argc, char *argv[]) {
 
 
   queues.resize(num_threads);
+  len.resize(num_threads);
 
   // init queues
   for (int i=0; i < num_threads; i++) {
-    queues[i] = new list<unsigned long>();
+    //queues[i] = new vector<unsigned long>(BUF_SIZE);
+    queues[i] = new vector<unsigned long>;
+    // queues[i] = new unsigned long[BUF_SIZE];
+    len[i] = 0;
   }
 
   for (int i=0; i<loop_num; i++) {
@@ -201,23 +225,34 @@ int main(int argc, char *argv[]) {
 
   for (int tid=0; tid<num_threads; tid++) {
     cout << "queue " << tid << ":  " 
-	 << queues[tid] << " size: " << queues[tid]->size()
+	 << queues[tid] << " size: " << len[tid]
 	 << endl;
   }
 
 
 
   // create joinable threads
+  int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
+  printf("Number of processors: %d\n", numberOfProcessors);
+
+
   vector<pthread_t> threads(num_threads);
 
   pthread_attr_t attr;
+
+  cpu_set_t cpus;
+
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   int rc;
   for(int i=0; i < num_threads; i++ ){
       std::cout << "main() : creating thread, " << i << std::endl;
-      rc = pthread_create(&(threads[i]), NULL, 
+      CPU_ZERO(&cpus);
+      CPU_SET(i, &cpus);
+      pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+
+      rc = pthread_create(&(threads[i]), &attr,
 	      thread_run, (void *)i);
       if (rc){
 	  std::cout << "Error:unable to create thread," << rc 
@@ -226,7 +261,7 @@ int main(int argc, char *argv[]) {
       }
   }
 
-  pthread_attr_destroy(&attr);
+//pthread_attr_destroy(&attr);
 
   void *status;
   for (int tid = 0; tid < num_threads; tid++) {
