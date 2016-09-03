@@ -85,6 +85,9 @@ void* thread_run(void *threadid) {
 
   // int length = len[tid];
 
+  int sajal=0;
+  int val=0;
+
   Node_0 state;
   unsigned long  count;
   
@@ -95,17 +98,59 @@ void* thread_run(void *threadid) {
 //      unsigned long dstIP = iph->ip_dst.s_addr;
 
       pthread_mutex_lock(&mutex_arr[tid]);                  //lock the variable buffer[i] and queue
-      if ( buffer_size[tid] == 0 ) {                
+      while ( buffer_size[tid] == 0 ) {      
+
+        // if (sajal > 17893861 && tid ==1) {
+        // }
+        // else if (sajal > 19412631 && tid ==0) {
+        // }
+        // else if (sajal > 9000000 && tid==2) {
+
+        // }
+        // else if (sajal > 9000000 && tid==3) {
+        // }
+
+        // if (sajal==10503168 && tid==0) {
+        //   break;
+        // }
+        // if (sajal==8927677 && tid==1) {
+        //   break;
+        // }
+        // if (sajal==8909463 && tid==2) {
+        //   break;
+        // }
+        // if (sajal==8966184 && tid==3) {
+        //   break;
+        // }
+
+        // if (sajal == 17893863 && tid ==1) {
+        //   break;
+        // }
+        // else if (sajal == 19412633 && tid ==0) {
+        //   break;
+        // }
+        // if (sajal==37306496 && tid==0) {
+        //   break;
+        // }
+
         pthread_cond_wait(&condc[tid], &mutex_arr[tid]);    //wait if it is 0
+
       }
-      unsigned long srcIP = (*queue)[0];
+
+      unsigned long srcIP = (*queue)[val++];
       buffer_size[tid]--;                               //decrement count by 1
       pthread_mutex_unlock(&mutex_arr[tid]);                //release variable
 
       //TODO : come up with a better exit condition
-      if ( srcIP == 0 ) {
+      if ( srcIP == 123456 ) {
         break;
       }
+
+      // if (sajal%1000000==0) {
+      //   cout << "thread : " << tid << " count : " << sajal << endl;
+      //   cout << srcIP << endl;
+      // }
+      sajal++;
 
 //      for (int i=1; i<100; i++)
 //	  //count += srcIP % i;
@@ -124,6 +169,8 @@ void* thread_run(void *threadid) {
       }
 
   }
+
+  cout << "Out of Loop in thread " << tid << endl;
  
 
   gettimeofday(&end, NULL);
@@ -131,9 +178,8 @@ void* thread_run(void *threadid) {
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
 	      - (start.tv_sec * 1000000 + start.tv_usec);
 
-  // printf("Thread %ld takes %ld seconds, processes %d packets. Each packet takes %f us.\n", 
-  // tid, time_spent, length, (double)(time_spent)/(length));
-  printf("Thread %ld takes %ld seconds.\n", tid, time_spent);
+  printf("Thread %ld takes %ld seconds, processes %d packets. Each packet takes %f us.\n", tid, time_spent, val, (double)(time_spent)/(val));
+  // printf("Thread %ld takes %ld seconds.\n", tid, time_spent);
 
 //cout << count << endl;
   cout << "thread " << tid << " exit." << endl;
@@ -185,6 +231,7 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
 }
 
 int main(int argc, char *argv[]) {
+
   pcap_t *handle;			/* Session handle */
   char *dev;			/* The device to sniff on */
   char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
@@ -213,8 +260,6 @@ int main(int argc, char *argv[]) {
     num_threads = atoi(argv[5]);
   }
 
-  cout << "s";
-
   if (strcmp(argv[1], "offline") == 0) {
     is_offline = true;
   } else if (strcmp(argv[1], "live") == 0) {
@@ -224,14 +269,11 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  cout << "sm";
-
   queues.resize(num_threads);                         //resizes queues (actual queues to each processor) to hold only num_threads elements
   len.resize(num_threads);                            //resizes len (size of each queue) to hold only num_threads elements
   mutex_arr.resize(num_threads);                          //resized mutex to hold only num_threads elements
   buffer_size.resize(num_threads);
-
-  cout << "sm2";
+  condc.resize(num_threads);
 
   // init queues
   for (int i=0; i < num_threads; i++) {
@@ -239,14 +281,13 @@ int main(int argc, char *argv[]) {
     queues[i] = new vector<unsigned long>;
     // queues[i] = new unsigned long[BUF_SIZE];
     len[i] = 0;
-
+  
     //init mutex[i] (mutex for thread i)
     pthread_mutex_init(&mutex_arr[i],NULL);
-    buffer_size[i]=0;
+    buffer_size[i]=0;   
     pthread_cond_init(&condc[i], NULL);
     // pthread_cond_init(&condp[i], NULL)
   }
-
 
   //Just print init data 
   for (int tid=0; tid<num_threads; tid++) {
@@ -257,7 +298,6 @@ int main(int argc, char *argv[]) {
   int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);         //gets nums of online/available CPUs
   printf("Number of processors: %d\n", numberOfProcessors);
 
-
   vector<pthread_t> threads(num_threads);
   pthread_attr_t attr;
   cpu_set_t cpus;
@@ -265,6 +305,9 @@ int main(int argc, char *argv[]) {
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
+
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
 
   //set a processor to a given thread and start thread 
   int rc;
@@ -284,9 +327,9 @@ int main(int argc, char *argv[]) {
 
   //pthread_attr_destroy(&attr);
 
-
   for (int i=0; i<loop_num; i++) {
     handle = pcap_open_offline(argv[2], errbuf);
+
     if (handle == NULL) {
       fprintf(stderr, "Couldn't open file %s: %s\n", argv[2], errbuf);
       return(1);
@@ -296,6 +339,17 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "pcap_loop exited with error.\n");
       exit(1);
     }
+  }
+
+  cout << "join" << endl;
+
+  //ending all threads
+  for (int i=0 ; i< num_threads ; i++) {
+    pthread_mutex_lock(&mutex_arr[i]);
+    queues[i]->push_back(123456);
+    buffer_size[i]++;
+    pthread_cond_signal(&condc[i]);
+    pthread_mutex_unlock(&mutex_arr[i]);
   }
 
   //join all threads
@@ -310,6 +364,11 @@ int main(int argc, char *argv[]) {
     std::cout << "  exiting with status :" << status << std::endl;
   }
   close();
+
+  gettimeofday(&end, NULL);
+  long time_spent = end.tv_sec * 1000000 + end.tv_usec - (start.tv_sec * 1000000 + start.tv_usec);
+  printf("Thread Main takes %ld useconds.\n", time_spent);
+
 
   /* And close the session */
   pcap_close(handle);
