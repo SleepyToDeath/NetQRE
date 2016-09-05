@@ -56,6 +56,8 @@ public:
 //vector<Node_0> state(num_threads);
 
 long result = 0;
+double avg_per_packet_time = 0;
+long max_time = 0;
 
 
 //vector<list<u_char*>> queues;
@@ -71,7 +73,6 @@ void _update_state(u_char *packet);
 void* thread_run(void *threadid) {
   struct timeval start, end;
 
-  gettimeofday(&start, NULL);
 
   
   long tid = (long)threadid;
@@ -79,33 +80,40 @@ void* thread_run(void *threadid) {
   //unsigned long *queue = queues[tid];
   vector<unsigned long> *queue = queues[tid];
 
-  int length = len[tid];
+  long length = len[tid];
 
   Node_0 state;
   unsigned long  count;
   
-  for (int l=0; l<length; l++) {
+  gettimeofday(&start, NULL);
+
+  for (long l=0; l<length; l++) {
 //      struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
 //      unsigned long srcIP = iph->ip_src.s_addr;
 //      unsigned long dstIP = iph->ip_dst.s_addr;
 
       unsigned long srcIP = (*queue)[l];
 
-//      for (int i=1; i<100; i++)
-//	  //count += srcIP % i;
-//	  count += 1000 % i;
+      //unsigned long srcIP = l;
+     // % 7754066;
 
-      std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
-      if (it == state.state_map.end()) { 
-	it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
-      } 
-      Node_1 *state_1 = &(it->second);
-
-      if (state_1->state == 0) {
-	state_1->state = 1;
-	state_1->sum += 1;
-	state_1->state = 0;
+      for (int i=1; i<1000; i++) {
+	  count += srcIP % i;
+	  count = count % 1000;
       }
+//	  //count += 1000 % i;
+
+//      std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
+//      if (it == state.state_map.end()) { 
+//	it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
+//      } 
+//      Node_1 *state_1 = &(it->second);
+//
+//      if (state_1->state == 0) {
+//	state_1->state = 1;
+//	state_1->sum += 1;
+//	state_1->state = 0;
+//      }
 
   }
  
@@ -115,10 +123,17 @@ void* thread_run(void *threadid) {
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
 	      - (start.tv_sec * 1000000 + start.tv_usec);
 
-  printf("Thread %ld takes %ld seconds, processes %d packets. Each packet takes %f us.\n", 
-	tid, time_spent, length, (double)(time_spent)/(length));
-//cout << count << endl;
-  cout << "thread " << tid << " exit." << endl;
+  double per_packet_time = (double)(time_spent)/(length);
+  avg_per_packet_time += per_packet_time;
+  if (max_time < time_spent)
+    max_time = time_spent;
+
+  printf("Thread %ld takes %ld seconds, processes %ld packets. Each packet takes %f us.\n",
+	  tid, time_spent, length, (double)(time_spent)/(length));
+
+  printf("count:%ld\n", count);
+  printf("Unique Ips :%ld\n", state.state_map.size());
+
   pthread_exit(NULL);
 }
 
@@ -146,7 +161,7 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
   unsigned long srcIP = iph->ip_src.s_addr;
 
   long tid = srcIP % num_threads;
-  // long tid = packet_cnt % num_threads;
+   //long tid = packet_cnt % num_threads;
   // put this packet into the thread's queue
 
   //u_char* packet2 = 
@@ -210,6 +225,9 @@ int main(int argc, char *argv[]) {
     len[i] = 0;
   }
 
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
+
   for (int i=0; i<loop_num; i++) {
     handle = pcap_open_offline(argv[2], errbuf);
     if (handle == NULL) {
@@ -223,11 +241,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  for (int tid=0; tid<num_threads; tid++) {
-    cout << "queue " << tid << ":  " 
-	 << queues[tid] << " size: " << len[tid]
-	 << endl;
-  }
+//  for (int tid=0; tid<num_threads; tid++) {
+//    cout << "queue " << tid << ":  " 
+//	 << queues[tid] << " size: " << len[tid]
+//	 << endl;
+//  }
 
 
 
@@ -246,10 +264,11 @@ int main(int argc, char *argv[]) {
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   int rc;
-  for(int i=0; i < num_threads; i++ ){
+  //for(int i=0; i < num_threads; i++ ){
+  for(int i=0; i < 1; i++ ){
       std::cout << "main() : creating thread, " << i << std::endl;
       CPU_ZERO(&cpus);
-      CPU_SET(i, &cpus);
+      CPU_SET(i*2, &cpus);
       pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
 
       rc = pthread_create(&(threads[i]), &attr,
@@ -273,6 +292,17 @@ int main(int argc, char *argv[]) {
     std::cout << "Main: completed thread id :" << tid << std::endl;
     std::cout << "  exiting with status :" << status << std::endl;
   }
+
+   gettimeofday(&end, NULL);
+ 
+   long time_spent = end.tv_sec * 1000000 + end.tv_usec
+               - (start.tv_sec * 1000000 + start.tv_usec);
+ 
+   printf("Total time:  %ld us.\n", time_spent);
+   printf("Max time:  %ld us.\n", max_time);
+ 
+   printf("Average per-packet processing time:  %f us.\n", avg_per_packet_time/num_threads);
+
   close();
 
   /* And close the session */

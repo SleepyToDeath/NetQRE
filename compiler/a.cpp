@@ -11,57 +11,98 @@ struct Packet {
     int dst = 0;
 };
 // leaf
-struct Node_agg0_leaf{
+struct Node_re0_leaf{
 int state_re0 = 0;
 };
 // x
-struct Node_agg0_x{
-int sum_agg0 = 0;
-unordered_map<int, Node_agg0_leaf> state_map;
-Node_agg0_leaf default_state;
+struct Node_re0_x{
+unordered_map<int, Node_re0_leaf> state_map;
+Node_re0_leaf default_state;
 };
-Node_agg0_x *node_agg0_x = new Node_agg0_x();
+Node_re0_x *node_re0_x = new Node_re0_x();
 
-bool main_update(Packet *last) {
-unordered_map<int, Node_agg0_leaf>::iterator it_agg0_x;
-Node_agg0_leaf *node_agg0_leaf;
+bool hh_update(Packet *last) {
+unordered_map<int, Node_re0_leaf>::iterator it_re0_x;
+Node_re0_leaf *node_re0_leaf;
 
-it_agg0_x = node_agg0_x->state_map.find(src);
-if (it_agg0_x == node_agg0_x->state_map.end()) { 
-it_agg0_x = node_agg0_x->state_map.insert({src, node_agg0_x->default_state}).first;
+
+it_re0_x = node_re0_x->state_map.find(src);
+if (it_re0_x == node_re0_x->state_map.end()) { 
+it_re0_x = node_re0_x->state_map.insert({src, node_re0_x->default_state}).first;
 }
 if (true) {
-node_agg0_leaf = &(it_agg0_x->second);
+node_re0_leaf = &(it_re0_x->second);
 
-switch (node_agg0_leaf->state_re0) {
+switch (node_re0_leaf->state_re0) {
 case 0: 
-node_agg0_leaf->state_re0 = 1;
-node_agg0_x->sum_agg0 += 1 - 0;
+node_re0_leaf->state_re0 = 1;
 break;
 case 1: 
-node_agg0_leaf->state_re0 = 1;
+node_re0_leaf->state_re0 = 1;
 break;
 default:
-node_agg0_leaf->state_re0 = -1;
+node_re0_leaf->state_re0 = -1;
 break;
+}
+}
+node_re0_leaf = &(node_re0_x->default_state);
+
+switch (node_re0_leaf->state_re0) {
+case 0: 
+node_re0_leaf->state_re0 = 0;
+break;
+case 1: 
+node_re0_leaf->state_re0 = 0;
+break;
+default:
+node_re0_leaf->state_re0 = -1;
+break;
+}
+for (it_re0_x = node_re0_x->state_map.begin(); it_re0_x != node_re0_x->state_map.end(); it_re0_x++) {
+if (true && it_re0_x->first != src) {
+node_re0_leaf = &(it_re0_x->second);
+
+switch (node_re0_leaf->state_re0) {
+case 0: 
+node_re0_leaf->state_re0 = 0;
+break;
+case 1: 
+node_re0_leaf->state_re0 = 0;
+break;
+default:
+node_re0_leaf->state_re0 = -1;
+break;
+}
 }
 }
 return true;
 }
 
-int main_eval(Packet* last) {
-unordered_map<int, Node_agg0_leaf>::iterator it_agg0_x;
-Node_agg0_leaf *node_agg0_leaf;
+int hh_eval(Packet* last) {
+unordered_map<int, Node_re0_leaf>::iterator it_re0_x;
+Node_re0_leaf *node_re0_leaf;
 
-it_agg0_x = node_agg0_x->state_map.find(x);
-if (it_agg0_x == node_agg0_x->state_map.end()) { 
-node_agg0_leaf = &node_agg0_x->default_state;
+
+it_re0_x = node_re0_x->state_map.find(x);
+if (it_re0_x == node_re0_x->state_map.end()) { 
+node_re0_leaf = &node_re0_x->default_state;
 } else {
-node_agg0_leaf = &(it_agg0_x->second);
+node_re0_leaf = &(it_re0_x->second);
 
 }
-int ret_agg0 = node_agg0_leaf->sum_agg0;
-return ret_agg0;
+bool ret_re0;
+switch (node_re0_leaf->state_re0) {
+case 1: 
+ret_re0 = true;
+break;
+default:
+ret_re0 = false;
+}
+int ret_cex0 = 0;
+if (ret_re0) {
+ret_cex0 = last;
+}
+return ret_cex0;
 }
 
 Packet pkt;

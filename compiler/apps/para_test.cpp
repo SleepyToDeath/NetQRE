@@ -36,6 +36,9 @@ public:
 
 long result = 0;
 
+double avg_per_packet_time = 0;
+long max_time = 0;
+
 vector<unsigned long> queue;
 
 void* thread_run(void *threadid) {
@@ -77,9 +80,14 @@ void* thread_run(void *threadid) {
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
 	      - (start.tv_sec * 1000000 + start.tv_usec);
 
+  double per_packet_time = (double)(time_spent)/(count);
+  avg_per_packet_time += per_packet_time;
+  if (max_time < time_spent)
+      max_time = time_spent;
+
   printf("Thread %ld takes %ld seconds, processes %ld packets. Each packet takes %f us.\n", 
 	tid, time_spent, count, (double)(time_spent)/(count));
-  cout << "thread " << tid << " exit." << endl;
+
   pthread_exit(NULL);
 }
 
@@ -200,6 +208,10 @@ int main(int argc, char *argv[]) {
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
 	      - (start.tv_sec * 1000000 + start.tv_usec);
 
+  printf("Total time:  %ld us.\n", time_spent);
+
+  printf("Average per-packet processing time:  %f us.\n", avg_per_packet_time/num_threads);
+  printf("Max processing time:  %ld us.\n", max_time);
   printf("Total time:  %ld us.\n", time_spent);
 
 
