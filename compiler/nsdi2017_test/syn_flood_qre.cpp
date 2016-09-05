@@ -1,43 +1,29 @@
+#include <sys/time.h>
 #include <pcap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string>
 #include <string.h>
 #include <arpa/inet.h>
-#include <linux_compat.h>
+#include "linux_compat.h"
+#include <vector>
+#include <unordered_set>
 #include <unordered_map>
-#include <string>
-#include <errno.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <iostream>
+
+using namespace std;
 
 #define ETHERNET_LINK_OFFSET 14
 
-FILE *file = NULL;
-int sockfd = 0;
-struct sockaddr_in server_addr;
-int addr_len = sizeof(server_addr);
 long packet_cnt = 0;
 bool debug_mode = false;
+int loop_num = 1;
 
 // leaf level
-class Node_6 {
-public:
-  int state;
-};
-
-// y
-class Node_5 {
-public:
-  std::unordered_map<unsigned int, Node_6> state_map;
-  Node_6 default_state;
-};
-
-// x
 class Node_4 {
 public:
-  std::unordered_map<unsigned int, Node_5> state_map;
-  Node_5 default_state;
+  int state;
 };
 
 // srcPort
@@ -71,44 +57,11 @@ public:
 
 Node_0 state;
 
-int alert_count_threshold = 10000;
 
-void _check_state(u_char *packet, unsigned long time_sec) {
-  struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
-  unsigned long srcIP = iph->ip_src.s_addr;
-  unsigned long dstIP = iph->ip_dst.s_addr;
 
-  if (iph->ip_p != IPPROTO_TCP)
-    return;
+std::vector<u_char*> pkt_queue;
 
-  std::unordered_map<unsigned long, Node_1>::iterator it1 = state.state_map.find(dstIP);
-  if (it1 == state.state_map.end()) { 
-    it1 = state.state_map.insert(std::pair<unsigned long, Node_1>(dstIP, state.default_state)).first;
-  } 
-  Node_1 *state_1 = &(it1->second);
-
-  std::unordered_map<unsigned long, Node_2>::iterator it2 = state_1->state_map.find(srcIP);
-  if (it2 == state_1->state_map.end()) { 
-    it2 = state_1->state_map.insert(std::pair<unsigned long, Node_2>(srcIP, state_1->default_state)).first;
-  } 
-  Node_2 *state_2 = &(it2->second);
-
-  if (state_2->total_sum > alert_count_threshold) {
-    struct sockaddr_in sa, da;
-    char src_str[INET_ADDRSTRLEN], dst_str[INET_ADDRSTRLEN];
-    sa.sin_addr.s_addr = srcIP;
-    da.sin_addr.s_addr = dstIP;
-    inet_ntop(AF_INET, &(sa.sin_addr), src_str, INET_ADDRSTRLEN);
-    inet_ntop(AF_INET, &(da.sin_addr), dst_str, INET_ADDRSTRLEN);
-    fprintf(file, "block traffic from %s to %s because syn count is %u\n", src_str, dst_str, state_2->total_sum);
-
-    char buffer[100];
-    int n = sprintf(buffer, "%s %s\r\n", src_str, dst_str);
-    sendto(sockfd, buffer, n, 0, (sockaddr *)&server_addr, (socklen_t)addr_len);
-  }
-}
-
-void _update_state(u_char *packet, unsigned long time_sec) {
+void update(u_char * packet) {
   struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
   unsigned long srcIP = iph->ip_src.s_addr;
   unsigned long dstIP = iph->ip_dst.s_addr;
@@ -119,11 +72,9 @@ void _update_state(u_char *packet, unsigned long time_sec) {
   struct lin_tcphdr* tcph = (struct lin_tcphdr *) (packet + ETHERNET_LINK_OFFSET + iph->ip_hl * 4);
   unsigned short srcPort = tcph->source;
   unsigned short dstPort = tcph->dest;
-  unsigned int seq = ntohl(tcph->seq);
-  unsigned int ack_seq = ntohl(tcph->ack_seq);
 
-	// SYN
-	if (tcph->syn == 1 && tcph->ack == 0) {
+  // SYN
+  if (tcph->syn == 1 && tcph->ack == 0) {
     std::unordered_map<unsigned long, Node_1>::iterator it1 = state.state_map.find(dstIP);
     if (it1 == state.state_map.end()) {
       it1 = state.state_map.insert(std::pair<unsigned long, Node_1>(dstIP, state.default_state)).first;
@@ -148,30 +99,11 @@ void _update_state(u_char *packet, unsigned long time_sec) {
     }
     Node_4 *state_4 = &(it4->second);
 
-    std::unordered_map<unsigned int, Node_5>::iterator it5 = state_4->state_map.find(seq);
-    if (it5 == state_4->state_map.end()) { 
-      it5 = state_4->state_map.insert(std::pair<unsigned int, Node_5>(seq, state_4->default_state)).first;
-    }
-    Node_5 *state_5 = &(it5->second);
+    state_4->state = 1;
+  }
 
-    std::unordered_map<unsigned int, Node_6>::iterator it6 = state_5->state_map.begin();
-    while(it6 != state_5->state_map.end()) {
-      if (it6->second.state == 0) {
-        it6->second.state = 1;
-      }
-      it6++;
-    }
-    
-    state_2->total_sum += 1;
-    Node_6 *state_6 = &(state_5->default_state);
-    if (state_6->state == 0) {
-      state_6->state = 1;
-      //fprintf(file, "%lu:%hu->%lu:%hu is %d\n", srcIP, srcPort, dstIP, dstPort, state_2->total_sum);
-    }
-	}
-
-	// SYN-ACK
-	if (tcph->syn == 1 && tcph->ack == 1) {
+  // SYN-ACK
+  if (tcph->syn == 1 && tcph->ack == 1) {
     std::unordered_map<unsigned long, Node_1>::iterator it1 = state.state_map.find(srcIP);
     if (it1 == state.state_map.end()) {
       it1 = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.default_state)).first;
@@ -196,26 +128,12 @@ void _update_state(u_char *packet, unsigned long time_sec) {
     }
     Node_4 *state_4 = &(it4->second);
 
-    std::unordered_map<unsigned int, Node_5>::iterator it5 = state_4->state_map.find(ack_seq - 1);
-    if (it5 == state_4->state_map.end()) { 
-      it5 = state_4->state_map.insert(std::pair<unsigned int, Node_5>(ack_seq - 1, state_4->default_state)).first;
-    }
-    Node_5 *state_5 = &(it5->second);
+    if (state_4->state == 1)
+      state_4->state = 2;
+  }
 
-    std::unordered_map<unsigned int, Node_6>::iterator it6 = state_5->state_map.find(seq);
-    if (it6 == state_5->state_map.end()) { 
-      it6 = state_5->state_map.insert(std::pair<unsigned int, Node_6>(seq, state_5->default_state)).first;
-    }
-    Node_6 *state_6 = &(it6->second);
-
-    if (state_6->state == 1) {
-      state_6->state = 2;
-      //state_2->total_sum += 1;
-    }
-	}
-
-	// ACK
-	if (tcph->syn == 0 && tcph->ack == 1) {
+  // ACK
+  if (tcph->syn == 0 && tcph->ack == 1) {
     std::unordered_map<unsigned long, Node_1>::iterator it1 = state.state_map.find(dstIP);
     if (it1 == state.state_map.end()) {
       it1 = state.state_map.insert(std::pair<unsigned long, Node_1>(dstIP, state.default_state)).first;
@@ -240,73 +158,54 @@ void _update_state(u_char *packet, unsigned long time_sec) {
     }
     Node_4 *state_4 = &(it4->second);
 
-    std::unordered_map<unsigned int, Node_5>::iterator it5 = state_4->state_map.begin();
-    while(it5 != state_4->state_map.end()) {
-      Node_5 *state_5 = &(it5->second);
-
-      std::unordered_map<unsigned int, Node_6>::iterator it6 = state_5->state_map.find(ack_seq - 1);
-      if (it6 == state_5->state_map.end()) { 
-        it6 = state_5->state_map.insert(std::pair<unsigned int, Node_6>(ack_seq - 1, state_5->default_state)).first;
-      }
-      Node_6 *state_6 = &(it6->second);
-
-      if (state_6->state == 2) {
-        state_6->state = 3;
-        state_2->total_sum -= 1;
-      }
-      it5++;
-    }
-	}
+    if (state_4->state == 2)
+      state_4->state = 0;
+  }
 }
 
 static void close() {
-  fflush(file);
-  fclose(file);
-  close(sockfd);
-  //158.130.56.11 = 188252830
-  //158.130.56.12 = 205030046
+  printf("Processed %ld packets. \n", packet_cnt);
+  //printf("34435 : %lu\n 3014787072 : %lu\n", stateMap[34435], stateMap[3014787072]);
+  printf("Unique srcIP:  %lu\n", state.state_map.size());
   printf("Exit now.\n");
+}
+
+
+
+void run() {
+  printf("Starting ...\n");
+
+  long len = pkt_queue.size();
+
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
+
+  for (int j=0; j<loop_num; j++)
+    for (long i=0; i<len; i++) {
+      update(pkt_queue[i]);
+    }
+
+  gettimeofday(&end, NULL);
+
+  long time_spent = end.tv_sec * 1000000 + end.tv_usec
+    - (start.tv_sec * 1000000 + start.tv_usec);
+
+  double per_packet_time = (double)(time_spent)/(len);
+
+  printf("Runtime: %ld seconds, processes %ld packets. Each packet takes %f us.\n",
+      time_spent, len, per_packet_time);
 }
 
 static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, u_char *packet) { 
   packet_cnt += 1;
-  if (packet_cnt % 100 == 0 && debug_mode) {
+  if (packet_cnt % 1000000 == 0 && debug_mode) {
     printf("In progress: %ld packets\n", packet_cnt);
   }
-  unsigned long time_sec = header->ts.tv_sec + header->ts.tv_usec/1000000;
-  _update_state(packet, time_sec);
-  _check_state(packet, time_sec);
-}
 
-void openSocket() {
-  struct sockaddr_in myaddr;
-  int port = 50000;
-  // TODO: make this configurable
-  std::string server_ip = "158.130.56.12";
+  u_char* pkt = (u_char *)malloc(header->caplen);
+  memcpy(pkt, packet, header->caplen);
 
-  /*---Open socket for streaming---*/
-  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    fprintf(file, "Socket can not be opened\n");
-    fflush(file);
-    return;
-  }
-
-  myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  myaddr.sin_port = htons(0);
-  bind(sockfd, (struct sockaddr *) &myaddr, sizeof(myaddr));
-
-  /*---Initialize server address/port struct---*/
-  memset(&server_addr, 0, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(port);
-  inet_pton(AF_INET, server_ip.c_str(), &server_addr.sin_addr);
-
-  /*
-  std::string data = "Start\r\n";
-  int len = sendto(sockfd, data.c_str(), strlen(data.c_str()), 0, (sockaddr *)&server_addr, (socklen_t)addr_len);
-  fprintf(file, "sent message of length %d to %s\n", len, server_ip.c_str());
-  fflush(file);
-  */
+  pkt_queue.push_back(pkt);
 }
 
 int main(int argc, char *argv[]) {
@@ -318,11 +217,7 @@ int main(int argc, char *argv[]) {
   bpf_u_int32 net;		/* Our IP */
   struct pcap_pkthdr header;	/* The header that pcap gives us */
   const u_char *packet;		/* The actual packet */
-  int loop_num = 1;
   bool is_offline = true;
-
-  file = fopen("syn_flood.log", "w");
-  openSocket();
 
   if (argc < 3) {
     printf("Usage: ./main mode path_to_file [loop_num] [debug_mode]\n");
@@ -347,7 +242,6 @@ int main(int argc, char *argv[]) {
   }
 
   if (is_offline) {
-    for (int i=0; i<loop_num; i++) {
       handle = pcap_open_offline(argv[2], errbuf);
       if (handle == NULL) {
         fprintf(stderr, "Couldn't open file %s: %s\n", argv[2], errbuf);
@@ -358,7 +252,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "pcap_loop exited with error.\n");
         exit(1);
       }
-    }
+
+      run();
   } else {
      handle = pcap_open_live(argv[2], 65535, 1, 10, errbuf);
      if (handle == NULL) {
@@ -378,3 +273,4 @@ int main(int argc, char *argv[]) {
 
   return(0);
 }
+
