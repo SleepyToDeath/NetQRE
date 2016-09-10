@@ -5,57 +5,45 @@
 #include <math.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include "linux_compat.h"
 #include <vector>
-#include <unordered_map>
+#include "netqre.h"
 
-#define ETHERNET_LINK_OFFSET 14
-
+//#define ETHERNET_LINK_OFFSET 14
+//
 long packet_cnt = 0;
 bool debug_mode = false;
 int loop_num = 1;
 
-std::unordered_map<unsigned long, long> state;
-std::vector<lin_ip> pkt_queue;
-
-void update(lin_ip &packet) {
-    unsigned long srcIP = packet.ip_src.s_addr;
-
-    std::unordered_map<unsigned long, long>::iterator it = state.find(srcIP);
-    if (it == state.end()) { 
-	it = state.insert(std::pair<unsigned long, long>(srcIP, 0)).first;
-    }
-
-    it->second += 1;
+std::vector<u_char*> pkt_queue;
+void clear() {
+  long len = pkt_queue.size();
+  for (long i=0; i<len; i++) {
+    free(pkt_queue[i]);
+  }
 }
 
 void run() {
-    long len = pkt_queue.size();
+  printf("Starting ...\n");
 
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+  long len = pkt_queue.size();
 
-    for (int j=0; j<loop_num; j++)
-	for (long i=0; i<len; i++) {
-	    update(pkt_queue[i]);
-	}
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
 
-    gettimeofday(&end, NULL);
+  for (int j=0; j<loop_num; j++)
+    for (long i=0; i<len; i++) {
+      update(pkt_queue[i]);
+    }
+
+  gettimeofday(&end, NULL);
 
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
-              - (start.tv_sec * 1000000 + start.tv_usec);
+    - (start.tv_sec * 1000000 + start.tv_usec);
 
   double per_packet_time = (double)(time_spent)/(len);
 
-  printf("Runtime: %ld seconds, processes %ld packets. Each packet takes %f us.\n",
-        time_spent, len, per_packet_time);
-}
-
-static void close() {
-  printf("Processed %ld packets. \n", packet_cnt);
-  printf("34435 : %lu\n 3014787072 : %lu\n", state[34435], state[3014787072]);
-  printf("Unique srcIP:  %lu\n", state.size());
-  printf("Exit now.\n");
+  printf("Runtime: %ld useconds, processes %ld packets. Each packet takes %f us.\n",
+      time_spent, len, per_packet_time);
 }
 
 static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, u_char *packet) { 
@@ -64,12 +52,15 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
     printf("In progress: %ld packets\n", packet_cnt);
   }
 
-  struct lin_ip ip_pkt;
+  struct lin_ip* iph = (struct lin_ip*) (packet + l2offset);
 
-  struct lin_ip* iph = (struct lin_ip*) (packet + ETHERNET_LINK_OFFSET);
-  memcpy(&ip_pkt, iph, sizeof(lin_ip));
+  // only push IPv4 packets into the queue
+  if (iph->ip_v == 4) {
+    u_char* pkt = (u_char *)malloc(header->caplen);
+    memcpy(pkt, packet, header->caplen);
 
-  pkt_queue.push_back(ip_pkt);
+    pkt_queue.push_back(pkt);
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -112,11 +103,19 @@ int main(int argc, char *argv[]) {
         return(1);
       }
 
+      // set the l2 offset for ethernet frames
+      if (pcap_datalink(handle)==DLT_EN10MB)
+	l2offset = 14;
+      else 
+	// if not ethernet, assuem the offset is 0
+	l2offset = 0;
+
       if (pcap_loop(handle, -1, (pcap_handler) handleCapturedPacket, NULL) < 0) {
         fprintf(stderr, "pcap_loop exited with error.\n");
         exit(1);
       }
 
+      // run the application code
       run();
   } else {
      handle = pcap_open_live(argv[2], 65535, 1, 10, errbuf);
@@ -134,6 +133,8 @@ int main(int argc, char *argv[]) {
 
   /* And close the session */
   pcap_close(handle);
+
+  clear();
 
   return(0);
 }
