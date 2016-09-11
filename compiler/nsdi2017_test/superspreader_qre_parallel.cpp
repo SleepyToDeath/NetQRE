@@ -151,7 +151,7 @@ void* thread_run(void *threadID) {
   pthread_cond_signal(&finish_cv);
   pthread_mutex_unlock(&finish_mutex);
 
-  printf("Exit now.\n");
+  // printf("Exit now.\n");
 
   long time_spent = end.tv_sec * 1000000 + end.tv_usec - (start.tv_sec * 1000000 + start.tv_usec);
 
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
 
   int rc;
   for (int i=0; i<num_threads; i++) {
-    std::cout << "main() : creating thread, " << i << std::endl;
+    // std::cout << "main() : creating thread, " << i << std::endl;
     rc = pthread_create(&(threads[i]), NULL, thread_run , (void *)i);
   }
 
