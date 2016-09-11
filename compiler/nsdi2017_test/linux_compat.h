@@ -4,6 +4,14 @@
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 
+#define ETHER_ADDR_LEN 6
+
+struct sniff_ethernet {
+    u_char ether_dhost[ETHER_ADDR_LEN]; /* Destination host address */
+    u_char ether_shost[ETHER_ADDR_LEN]; /* Source host address */
+    u_short ether_type; /* IP? ARP? RARP? etc */
+};
+
 struct lin_iphdr {
 #if BYTE_ORDER == LITTLE_ENDIAN
       uint8_t ihl:4, version:4;

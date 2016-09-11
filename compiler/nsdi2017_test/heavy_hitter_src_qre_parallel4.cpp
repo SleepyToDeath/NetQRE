@@ -16,6 +16,10 @@ using namespace std;
 
 #define ETHERNET_LINK_OFFSET 14
 
+//#define BUF_SIZE 7579249
+//#define BUF_SIZE 10503169
+#define BUF_SIZE 19086957
+
 int l2offset = 0;
 
 long packet_cnt = 0;
@@ -24,11 +28,30 @@ int num_threads = 5;
 
 int loop_num = 1;
 
-std::vector<u_char*> pkt_queue;
+typedef std::vector<u_char*> PKT_QUEUE;
+vector<PKT_QUEUE *> thread_queue;
+
+struct thread_info {
+  int tid;
+  pthread_cond_t queue_cv;
+  pthread_mutex_t queue_lock;
+
+  thread_info() {
+    pthread_mutex_init(&queue_lock, NULL);
+    pthread_cond_init(&queue_cv, NULL);
+  }
+};
+
+vector<thread_info*> infos;
+
+vector<long> len;
+
+vector<u_char*> input_queue;
+
 void clear() {
-  long len = pkt_queue.size();
-  for (long i=0; i<len; i++) {
-    free(pkt_queue[i]);
+  long len = input_queue.size();
+  for (int i = 0; i < len; i++) {
+      free(input_queue[i]);
   }
 }
 
@@ -58,13 +81,20 @@ int finish_count = 0;
 pthread_cond_t start_cv;
 pthread_cond_t finish_cv;
 
-void* thread_run(void *threadid) {
 
-  long tid = (long)threadid;
-  long length = pkt_queue.size();
+void* thread_run(void *threadid) {
+  //long tid = (long)threadid;
+  thread_info *info = (thread_info*) threadid;
+  long tid = info->tid;
+  printf("thread %ld starts\n", tid);
+
+  PKT_QUEUE *pkt_queue = thread_queue[tid];
+  long *length = &len[tid];
 
   Node_0 state;
   unsigned long  count = 0;
+  unsigned long  wait = 0;
+  unsigned long  l = 0;
 
   struct timeval start, end;
 
@@ -74,31 +104,42 @@ void* thread_run(void *threadid) {
   }
   pthread_mutex_unlock(&start_mutex);
 
+//  usleep(600000);
 
+  // start processing 
   gettimeofday(&start, NULL);
 
-  for (int i=0; i<loop_num; i++) {
-    for (long l=0; l<length; l++) {
+  while (l < BUF_SIZE) {
+    //pthread_mutex_lock(&info->queue_lock);
+    while (l == *length) {
+//     // wait ++;
+//      //usleep(9000);
+//      //usleep(364452);
+//  printf(" %ld \n", l);
+      pthread_cond_wait(&(info->queue_cv), &(info->queue_lock));
+    }
+    //pthread_mutex_unlock(&info->queue_lock);
 
-      u_char* packet = pkt_queue[l];
-      struct lin_ip* iph = (struct lin_ip*) (packet);
-      unsigned long srcIP = iph->ip_src.s_addr;
+    u_char* packet = (*pkt_queue)[l];
+    if (packet == NULL)
+      break;
 
-      if (srcIP % num_threads != tid)
-	continue;
+    l = (l+1);
 
-      //count++;
-      std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
-      if (it == state.state_map.end()) { 
-	it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
-      } 
-      Node_1 *state_1 = &(it->second);
+    struct lin_ip* iph = (struct lin_ip*) (packet);
+    unsigned long srcIP = iph->ip_src.s_addr;
 
-      if (state_1->state == 0) {
-	state_1->state = 1;
-	state_1->sum += 1;
-	state_1->state = 0;
-      }
+    //count++;
+    std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
+    if (it == state.state_map.end()) { 
+      it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
+    } 
+    Node_1 *state_1 = &(it->second);
+
+    if (state_1->state == 0) {
+      state_1->state = 1;
+      state_1->sum += 1;
+      state_1->state = 0;
     }
   }
 
@@ -110,16 +151,16 @@ void* thread_run(void *threadid) {
   pthread_mutex_unlock(&finish_mutex);
 
 
-  //  printf("Processed %ld packets. \n", packet_cnt);
+  printf("Thread %ld Processed %ld packets. \n", tid, count);
+  printf("Thread %ld waited %ld times. \n", tid, wait );
   // printf("34435 : %lu\n 3014787072 : %lu\n", state.state_map[34435].sum, state.state_map[3014787072].sum);
-  // printf("Unique srcIP:  %lu\n", state.state_map.size());
-  printf("Exit now.\n");
+  printf("Thread %ld has unique srcIP:  %lu\n", tid, state.state_map.size());
   //
   //
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
     - (start.tv_sec * 1000000 + start.tv_usec);
   //
-  //  printf("Thread runtime:  %ld us.\n", time_spent);
+  printf("Thread %ld runtime:  %ld us.\n", tid, time_spent);
 
   if (time_spent > max_time)
     max_time = time_spent;
@@ -154,7 +195,31 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
     u_char* pkt = (u_char *)malloc(header->caplen);
     memcpy(pkt, packet, header->caplen);
 
-    pkt_queue.push_back(pkt);
+    input_queue.push_back(pkt);
+  }
+}
+
+void dispatch() {
+  for (long i = 0; i < input_queue.size(); i++) {
+    u_char* pkt = input_queue[i];
+    struct lin_ip* iph = (struct lin_ip*) (pkt + l2offset);
+    unsigned long srcIP = iph->ip_src.s_addr;
+    long tid = srcIP % num_threads;
+
+    
+    //pthread_mutex_lock(&info->queue_lock);
+    (*thread_queue[tid])[len[tid]] = (pkt);
+    len[tid] = (len[tid]+1) % BUF_SIZE;
+    //pthread_cond_signal(&(infos[tid]->queue_cv));
+    //pthread_mutex_unlock(&info->queue_lock);
+
+  }
+
+  for (int tid = 0; tid < num_threads; tid++) {
+    (*thread_queue[tid])[len[tid]] = NULL;
+    len[tid] = (len[tid]+1) % BUF_SIZE;
+
+    pthread_cond_signal(&(infos[tid]->queue_cv));
   }
 }
 
@@ -210,16 +275,32 @@ int main(int argc, char *argv[]) {
     // if not ethernet, assuem the offset is 0
     l2offset = 0;
 
+
+
+
+  // initialize queue for each thread
+  vector<pthread_t> threads(num_threads);
+  thread_queue.resize(num_threads);
+  len.resize(num_threads);
+  infos.resize(num_threads);
+
+  for(int i=0; i < num_threads; i++ ) {
+    std::cout << "main() : creating thread queue for thread " << i << std::endl;
+    thread_queue[i] = new PKT_QUEUE(BUF_SIZE);
+    infos[i] = new thread_info();
+    infos[i]->tid = i;
+    len[i] = 0;
+  }
+
   if (pcap_loop(handle, -1, (pcap_handler) handleCapturedPacket, NULL) < 0) {
     fprintf(stderr, "pcap_loop exited with error.\n");
     exit(1);
   }
 
-  struct timeval start, end;
 
 
   // create joinable threads
-  vector<pthread_t> threads(num_threads);
+  struct timeval start, end, mid;
 
   pthread_mutex_init(&start_mutex, NULL);
   pthread_mutex_init(&finish_mutex, NULL);
@@ -241,7 +322,8 @@ int main(int argc, char *argv[]) {
     pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
 
     rc = pthread_create(&(threads[i]), &attr, 
-	thread_run, (void *)i);
+	thread_run, (void *)infos[i]);
+
     //    if (rc){
     //        std::cout << "Error:unable to create thread," << rc 
     //      	    << std::endl;
@@ -252,10 +334,13 @@ int main(int argc, char *argv[]) {
   pthread_attr_destroy(&attr);
 
   pthread_mutex_lock(&start_mutex);
-  to_start = 1;
   gettimeofday(&start, NULL);
+  to_start = 1;
   pthread_cond_broadcast(&start_cv);
   pthread_mutex_unlock(&start_mutex);
+
+  dispatch();
+  gettimeofday(&mid, NULL);
 
   pthread_mutex_lock(&finish_mutex);
   while (finish_count < num_threads) {
@@ -283,6 +368,10 @@ int main(int argc, char *argv[]) {
   printf("Max processing time:  %ld us.\n", max_time);
   printf("Total time:  %ld us.\n", time_spent);
 
+  time_spent = mid.tv_sec * 1000000 + mid.tv_usec
+    - (start.tv_sec * 1000000 + start.tv_usec);
+
+  printf("Dispatch time:  %ld us.\n", time_spent);
 
   close();
 

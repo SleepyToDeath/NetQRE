@@ -4,19 +4,17 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <list>
 #include <vector>
 #include <arpa/inet.h>
-#include <unordered_map>
 #include <pthread.h>
 #include <iostream>
-#include "linux_compat.h"
+#include "netqre.h"
 
 using namespace std;
 
 #define ETHERNET_LINK_OFFSET 14
 
-int l2offset = 0;
+#define BUF_SIZE 19086957
 
 long packet_cnt = 0;
 bool debug_mode = false;
@@ -24,27 +22,13 @@ int num_threads = 5;
 
 int loop_num = 1;
 
-std::vector<u_char*> pkt_queue;
-void clear() {
-  long len = pkt_queue.size();
-  for (long i=0; i<len; i++) {
-    free(pkt_queue[i]);
-  }
-}
+vector<PKT_QUEUE *> thread_queue;
 
-// y
-class Node_1 {
-  public:
-    long sum = 0;
-    int state = 0;
-};
+vector<long> len;
 
-// x
-class Node_0 {
-  public:
-    std::unordered_map<unsigned long, Node_1> state_map;
-    Node_1 node_1_default;
-};
+vector<u_char*> input_queue;
+
+void* thread_run(void*);
 
 double avg_per_packet_time = 0;
 long max_time = 0;
@@ -58,86 +42,15 @@ int finish_count = 0;
 pthread_cond_t start_cv;
 pthread_cond_t finish_cv;
 
-void* thread_run(void *threadid) {
-
-  long tid = (long)threadid;
-  long length = pkt_queue.size();
-
-  Node_0 state;
-  unsigned long  count = 0;
-
-  struct timeval start, end;
-
-  pthread_mutex_lock(&start_mutex);
-  while (to_start==0) {
-    pthread_cond_wait(&start_cv, &start_mutex);
+void clear() {
+  long len = input_queue.size();
+  for (int i = 0; i < len; i++) {
+      free(input_queue[i]);
   }
-  pthread_mutex_unlock(&start_mutex);
-
-
-  gettimeofday(&start, NULL);
-
-  for (int i=0; i<loop_num; i++) {
-    for (long l=0; l<length; l++) {
-
-      u_char* packet = pkt_queue[l];
-      struct lin_ip* iph = (struct lin_ip*) (packet);
-      unsigned long srcIP = iph->ip_src.s_addr;
-
-      if (srcIP % num_threads != tid)
-	continue;
-
-      //count++;
-      std::unordered_map<unsigned long, Node_1>::iterator it = state.state_map.find(srcIP);
-      if (it == state.state_map.end()) { 
-	it = state.state_map.insert(std::pair<unsigned long, Node_1>(srcIP, state.node_1_default)).first;
-      } 
-      Node_1 *state_1 = &(it->second);
-
-      if (state_1->state == 0) {
-	state_1->state = 1;
-	state_1->sum += 1;
-	state_1->state = 0;
-      }
-    }
-  }
-
-  gettimeofday(&end, NULL);
-
-  pthread_mutex_lock(&finish_mutex);
-  finish_count++;
-  pthread_cond_signal(&finish_cv);
-  pthread_mutex_unlock(&finish_mutex);
-
-
-  //  printf("Processed %ld packets. \n", packet_cnt);
-  // printf("34435 : %lu\n 3014787072 : %lu\n", state.state_map[34435].sum, state.state_map[3014787072].sum);
-  // printf("Unique srcIP:  %lu\n", state.state_map.size());
-  printf("Exit now.\n");
-  //
-  //
-  long time_spent = end.tv_sec * 1000000 + end.tv_usec
-    - (start.tv_sec * 1000000 + start.tv_usec);
-  //
-  //  printf("Thread runtime:  %ld us.\n", time_spent);
-
-  if (time_spent > max_time)
-    max_time = time_spent;
-
-  pthread_exit(NULL);
 }
 
-static void close() {
+void close() {
   printf("Processed %ld packets. \n", packet_cnt);
-
-  //  long count = 0;
-  //  for (int tid=0; tid<num_threads; tid++) 
-  //      for (auto it = state.state_map.begin(); it != state.state_map.end(); it++) {
-  //	count += it->second.sum;
-  //      }
-  //
-  //  printf("Total number of packets in map: %ld \n", count);
-
   printf("Exit now.\n");
 }
 
@@ -154,8 +67,22 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
     u_char* pkt = (u_char *)malloc(header->caplen);
     memcpy(pkt, packet, header->caplen);
 
-    pkt_queue.push_back(pkt);
+    input_queue.push_back(pkt);
   }
+}
+
+void dispatch() {
+  //cout << "size " << input_queue.size() << endl;
+  for (long i = 0; i < input_queue.size(); i++) {
+    u_char* pkt = input_queue[i];
+    struct lin_ip* iph = (struct lin_ip*) (pkt + l2offset);
+    unsigned long srcIP = iph->ip_src.s_addr;
+    long tid = srcIP % num_threads;
+
+    //thread_queue[srcIP % num_threads]->push_back(pkt);
+    (*thread_queue[tid])[len[tid]++] = (pkt);
+  }
+  //cout << "done" << endl;
 }
 
 
@@ -210,16 +137,29 @@ int main(int argc, char *argv[]) {
     // if not ethernet, assuem the offset is 0
     l2offset = 0;
 
+
+
+
+  // initialize queue for each thread
+  vector<pthread_t> threads(num_threads);
+  thread_queue.resize(num_threads);
+  len.resize(num_threads);
+
+  for(int i=0; i < num_threads; i++ ){
+    std::cout << "main() : creating thread queue for thread " << i << std::endl;
+    thread_queue[i] = new PKT_QUEUE(BUF_SIZE);
+    len[i] = 0;
+  }
+
   if (pcap_loop(handle, -1, (pcap_handler) handleCapturedPacket, NULL) < 0) {
     fprintf(stderr, "pcap_loop exited with error.\n");
     exit(1);
   }
 
-  struct timeval start, end;
 
 
   // create joinable threads
-  vector<pthread_t> threads(num_threads);
+  struct timeval start, end;
 
   pthread_mutex_init(&start_mutex, NULL);
   pthread_mutex_init(&finish_mutex, NULL);
@@ -252,8 +192,11 @@ int main(int argc, char *argv[]) {
   pthread_attr_destroy(&attr);
 
   pthread_mutex_lock(&start_mutex);
-  to_start = 1;
+
   gettimeofday(&start, NULL);
+  dispatch();
+
+  to_start = 1;
   pthread_cond_broadcast(&start_cv);
   pthread_mutex_unlock(&start_mutex);
 

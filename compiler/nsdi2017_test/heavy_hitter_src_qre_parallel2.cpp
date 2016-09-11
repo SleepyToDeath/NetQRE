@@ -24,11 +24,16 @@ int num_threads = 5;
 
 int loop_num = 1;
 
-std::vector<u_char*> pkt_queue;
+typedef std::vector<u_char*> PKT_QUEUE;
+vector<PKT_QUEUE *> thread_queue;
+
 void clear() {
-  long len = pkt_queue.size();
-  for (long i=0; i<len; i++) {
-    free(pkt_queue[i]);
+  long len = thread_queue.size();
+  for (int idx = 0; idx < len; idx++) {
+    PKT_QUEUE *pkt_queue = thread_queue[idx];
+    for (long i = 0; i < pkt_queue->size(); i++) {
+      free((*pkt_queue)[i]);
+    }
   }
 }
 
@@ -61,7 +66,8 @@ pthread_cond_t finish_cv;
 void* thread_run(void *threadid) {
 
   long tid = (long)threadid;
-  long length = pkt_queue.size();
+  PKT_QUEUE *pkt_queue = thread_queue[tid];
+  long length = pkt_queue->size();
 
   Node_0 state;
   unsigned long  count = 0;
@@ -80,7 +86,7 @@ void* thread_run(void *threadid) {
   for (int i=0; i<loop_num; i++) {
     for (long l=0; l<length; l++) {
 
-      u_char* packet = pkt_queue[l];
+      u_char* packet = (*pkt_queue)[l];
       struct lin_ip* iph = (struct lin_ip*) (packet);
       unsigned long srcIP = iph->ip_src.s_addr;
 
@@ -112,14 +118,13 @@ void* thread_run(void *threadid) {
 
   //  printf("Processed %ld packets. \n", packet_cnt);
   // printf("34435 : %lu\n 3014787072 : %lu\n", state.state_map[34435].sum, state.state_map[3014787072].sum);
-  // printf("Unique srcIP:  %lu\n", state.state_map.size());
-  printf("Exit now.\n");
+  printf("Thread %ld has unique srcIP:  %lu\n", tid, state.state_map.size());
   //
   //
   long time_spent = end.tv_sec * 1000000 + end.tv_usec
     - (start.tv_sec * 1000000 + start.tv_usec);
   //
-  //  printf("Thread runtime:  %ld us.\n", time_spent);
+  printf("Thread %ld runtime:  %ld us.\n", tid, time_spent);
 
   if (time_spent > max_time)
     max_time = time_spent;
@@ -151,10 +156,12 @@ static void handleCapturedPacket(u_char* arg, const struct pcap_pkthdr *header, 
 
   // only push IPv4 packets into the queue
   if (iph->ip_v == 4) {
+    unsigned long srcIP = iph->ip_src.s_addr;
+
     u_char* pkt = (u_char *)malloc(header->caplen);
     memcpy(pkt, packet, header->caplen);
 
-    pkt_queue.push_back(pkt);
+    thread_queue[srcIP % num_threads]->push_back(pkt);
   }
 }
 
@@ -210,16 +217,31 @@ int main(int argc, char *argv[]) {
     // if not ethernet, assuem the offset is 0
     l2offset = 0;
 
+
+
+
+  // initialize queue for each thread
+  vector<pthread_t> threads(num_threads);
+  thread_queue.resize(num_threads);
+
+  for(int i=0; i < num_threads; i++ ){
+    std::cout << "main() : creating thread queue for thread " << i << std::endl;
+    thread_queue[i] = new PKT_QUEUE();
+  }
+
+
+
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
+
   if (pcap_loop(handle, -1, (pcap_handler) handleCapturedPacket, NULL) < 0) {
     fprintf(stderr, "pcap_loop exited with error.\n");
     exit(1);
   }
 
-  struct timeval start, end;
 
 
   // create joinable threads
-  vector<pthread_t> threads(num_threads);
 
   pthread_mutex_init(&start_mutex, NULL);
   pthread_mutex_init(&finish_mutex, NULL);
@@ -253,7 +275,6 @@ int main(int argc, char *argv[]) {
 
   pthread_mutex_lock(&start_mutex);
   to_start = 1;
-  gettimeofday(&start, NULL);
   pthread_cond_broadcast(&start_cv);
   pthread_mutex_unlock(&start_mutex);
 
