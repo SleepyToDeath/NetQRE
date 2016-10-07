@@ -2,6 +2,8 @@ heavy_hitter:
 	g++ heavy_hitter_src_baseline.cpp main.cpp -lpcap -o heavy_hitter_src -std=c++0x -O3
 heavy_hitter_qre:
 	g++ heavy_hitter_src_qre.cpp main.cpp -lpcap -o heavy_hitter_src_qre -std=c++0x -O3
+heavy_hitter_src_opensketch:
+	g++ main.cpp ~/opensketch/simulation/dataPlane.cc heavy_hitter_src_opensketch.cpp ~/opensketch/simulation/taskHeavyHitters.cc ~/opensketch/simulation/task.cc ~/opensketch/simulation/sketchCountMin.cc  ~/opensketch/simulation/sketch.cc ~/opensketch/simulation/os_counterrevanalyze.cc ~/opensketch/simulation/os_mangler.cc ~/opensketch/simulation/os_galoisField.cc ~/opensketch/simulation/common.cc -lpcap -o heavy_hitter_src_opensketch -O3 -I ~/opensketch/simulation
 heavy_hitter_qre_parallel:
 	g++ heavy_hitter_src_qre_parallel.cpp -lpcap -lpthread -o heavy_hitter_src_qre_parallel -std=c++0x -O3
 heavy_hitter_qre_parallel2:
@@ -16,6 +18,8 @@ superspreader:
 	g++ superspreader_baseline.cpp main.cpp -lpcap -o superspreader -std=c++0x -O3
 superspreader_qre:
 	g++ superspreader_qre.cpp main.cpp -lpcap -o superspreader_qre -std=c++0x -O3
+superspreader_opensketch:
+	g++ main.cpp ~/opensketch/simulation/dataPlane.cc superspreader_opensketch.cpp ~/opensketch/simulation/taskHeavyHitters.cc ~/opensketch/simulation/taskSuperSpreaders.cc ~/opensketch/simulation/task.cc ~/opensketch/simulation/sketchBitmap.cc  ~/opensketch/simulation/sketchCountMin.cc  ~/opensketch/simulation/sketch.cc ~/opensketch/simulation/os_counterrevanalyze.cc ~/opensketch/simulation/os_mangler.cc ~/opensketch/simulation/os_galoisField.cc ~/opensketch/simulation/common.cc -lpcap -o superspreader_opensketch -O3 -I ~/opensketch/simulation
 superspreader_qre_parallel:
 	g++ superspreader_qre_parallel2.cpp main_parallel.cpp -lpcap -lpthread -o superspreader_qre_parallel -std=c++0x -O3
 

@@ -11,6 +11,7 @@ static int l2offset = 0;
 typedef std::vector<u_char*> PKT_QUEUE;
 
 void update(u_char * packet);
+void init();
 void close();
  
 

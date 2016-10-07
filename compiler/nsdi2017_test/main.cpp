@@ -115,6 +115,9 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
 
+      // initialize the application code
+      init();
+
       // run the application code
       run();
   } else {

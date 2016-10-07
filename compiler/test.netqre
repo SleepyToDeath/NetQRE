@@ -39,7 +39,11 @@
 ////sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/ + 
 ////    /.*[dst==y].*/ | int x};
 //
-////sfun int hh(int x, int y) = /.*[src==x, dst==y].*/ >> /.*[dst==y].*/;
+sfun int hh(int x, int y) = /.*[src==x, dst==y].*/ >> /.*[dst==y].*/;
+
+//sfun int hh(int x) = /.*[src==x, dst==x].*/;
+
+
 //
 ////sfun int hh(int x, int y) = sum{/.*[src==x, dst==y].*/ >> /.*[dst==y].*/ | int x};
 //
@@ -64,8 +68,8 @@
 //sfun int hh = 
 //  (/.*[src==x]/?last) >> /.*[src==x].*/;
 
-sfun int hh = 
-  (/.*[src==x]/?last) ;
+//sfun int hh = 
+//  (/.*[src==x]/?last) ;
 
 
 //    for (it_x=node_x->state_map.begin(); it_x!=node_x->state_map.end();it_x++) {

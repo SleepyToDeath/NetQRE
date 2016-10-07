@@ -14,7 +14,7 @@ extern FILE *yyin;
 extern int yyparse();
 
 // settings
-// substitude every functions for its call
+// substitude every functions for its call if compose=true
 bool compose = false;
 // evaluate agg functions online
 bool online = true;

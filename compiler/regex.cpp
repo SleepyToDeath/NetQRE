@@ -98,6 +98,7 @@ void RE::simplifyPredTree(TreeNode* node) {
 
 void RE::emitStateUpdate(ostream& out, TreeNode* predNode, 
 			list<StateInfo>::iterator stateIt) {
+
     string stateName = "state_" + this->name;
     string nodeName = stateIt->nodeName;
     out << "switch (" << nodeName << "->" << stateName
@@ -123,6 +124,7 @@ void RE::emitStateUpdate(ostream& out, TreeNode* predNode,
 	<< nodeName << "->" << stateName << " = -1;" << endl
 	<< "break;" << endl
 	<< "}" << endl;
+
 }
 
 
@@ -274,7 +276,13 @@ void RE::emitUpdate(ostream& out) {
     //emitUpdate(out, "state", tree->root); 
     
     //emitDeclInUpdate(out);
+
+    // cache current preChosen values
+    list<int> preChosenCache = getPreChosenList();
+
     emitUpdate(out, this->stateTree->begin(), predTree->root, predTree->root, false); 
+
+    setPreChosenList(preChosenCache);
 }
 
 
@@ -456,7 +464,6 @@ void RE::emitUpdate(ostream& out, string DSname, TreeNode *node) {
 //    }
 }
 
-// TODO 6/27
 void RE::emitResetState(ostream& out) {
     string nodeName = stateLocation->nodeName;
     string stateName = "state_" + name;
@@ -704,12 +711,12 @@ void ConcatRE::getFreeVariables() {
 }
 
 void ConcatRE::addScopeToVariables(string scope) {
-	re1->addScopeToVariables(scope);
+    re1->addScopeToVariables(scope);
     re2->addScopeToVariables(scope);
 }
 
 void UnionRE::addScopeToVariables(string scope) {
-	re1->addScopeToVariables(scope);
+    re1->addScopeToVariables(scope);
     re2->addScopeToVariables(scope);
 }
 
@@ -722,7 +729,7 @@ void StarRE::getFreeVariables() {
 }
 
 void StarRE::addScopeToVariables(string scope) {
-	re->addScopeToVariables(scope);
+    re->addScopeToVariables(scope);
 }
 
 //TODO : 
@@ -734,14 +741,18 @@ void RE::emitUpdate(ostream& out,
 		    TreeNode *startPredNode,
 		    bool isBranchDecided) {
 
+
     string itName = stateIt->itName;
     string nodeName = stateIt->nodeName;
 
     if (!predNode->hasStateTransition)
 	return;
 
+    emitUpdateEnteringState(out, this, stateIt);
+
     if (predNode->isLeaf()) {
 	emitStateUpdate(out, predNode, stateIt);
+	emitUpdateLeavingState(out, this, stateIt);
 	return;
     }
 
@@ -768,6 +779,8 @@ void RE::emitUpdate(ostream& out,
 
 
 	    emitUpdate(out, nextStateIt, predNode, startPredNode, false);
+
+
 	    out << "}" << endl;
 
 	    out << childNodeName
@@ -776,6 +789,7 @@ void RE::emitUpdate(ostream& out,
 	    emitUpdate(out, nextStateIt, predNode, startPredNode, false);
 	}
 
+	emitUpdateLeavingState(out, this, stateIt);
 	return;
     }
 
@@ -788,7 +802,9 @@ void RE::emitUpdate(ostream& out,
 	    string field = it->first;
 	    TreeNode* child = it->second;
 
-	  
+	    // TODO: add checks to determine whether to add new branch
+	    // can add each node a summary for a statful expr
+	    // telling whether its state is at -1
 	    emitUpdateAddNewBranch(out, itName, nodeName, field);
 	    stateIt->preChosen = 1;
 
@@ -812,6 +828,8 @@ void RE::emitUpdate(ostream& out,
 	if (predNode->childrenMap.empty()) {
 	    TreeNode* child = predNode->defaultNode;
 	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
+
+	    emitUpdateLeavingState(out, this, stateIt);
 	    return;
 	}
 
@@ -849,6 +867,8 @@ void RE::emitUpdate(ostream& out,
 	if (predNode->childrenMap.empty()) {
 	    TreeNode* child = predNode->defaultNode;
 	    emitUpdateNextPredNode(out, stateIt, predNode, child, startPredNode, true);
+
+	    emitUpdateLeavingState(out, this, stateIt);
 	    return;
 	}
 
@@ -885,6 +905,8 @@ void RE::emitUpdate(ostream& out,
 
 	out << "}" << endl;
     }
+
+    emitUpdateLeavingState(out, this, stateIt);
 }
 
 void RE::emitUpdateNextPredNode(
@@ -906,9 +928,11 @@ void RE::emitUpdateNextPredNode(
 	string itName = stateIt->itName;
 
 	if (isBranchDecided) {
-	    out << childNodeName
-	    << " = &(" << itName << "->second);" << endl
-	    << endl;
+	// if (stateIt->preChosen != 0) {
+	    //if (nextStateIt->preChosen == 0)
+		out << childNodeName
+		    << " = &(" << itName << "->second);" << endl
+		    << endl;
 
 	    emitUpdate(out, nextStateIt, child, child, false);
 	} else {

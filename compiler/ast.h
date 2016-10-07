@@ -31,6 +31,7 @@ struct StateInfo {
 };
 
 typedef list<StateInfo>::iterator stateIterator ;
+typedef list<StateInfo>::reverse_iterator rstateIterator ;
 
 class Node {
     public:
@@ -47,6 +48,8 @@ class Node {
     public:
 	virtual void emitUpdate(ostream&) {};
 	virtual void emitUpdateChange(ostream&, Node*, string, string) {}
+	virtual void emitUpdateEnteringState(ostream&, Node*, stateIterator) {}
+	virtual void emitUpdateLeavingState(ostream&, Node*, stateIterator) {}
 	virtual void emitResetState(ostream&) {};
 	virtual string emitEval(ostream&, stateIterator) {return "";}
 	virtual string emitEval(ostream&) {return "";}
@@ -95,6 +98,12 @@ class Expr : public Node {
 	virtual void emitStateTree(ostream&);
 	virtual void addLeafToStateTree();
 	virtual void emitDeclInUpdate(ostream&); 
+	virtual void emitUpdateEnteringState(ostream&, Node*, stateIterator);
+	virtual void emitUpdateLeavingState(ostream&, Node*, stateIterator);
+	virtual rstateIterator getLastStateNode();
+
+	virtual list<int> getPreChosenList();
+	virtual void setPreChosenList(list<int>);
 };
 
 // values
@@ -366,6 +375,8 @@ class SplitExpr : public Expr {
 	Expr* expr1;
 	Expr* expr2;
 
+	static int count;
+
     protected:
 	// indicating the position of the 
 	// state in the stateTree
@@ -380,6 +391,14 @@ class SplitExpr : public Expr {
 	//	void emitUpdateChange(ostream&, Node*, string, string);
 	virtual void emitDataStructureType(ostream&, int);
 	virtual void emitCheck(ostream&, int);
+
+
+	virtual void genStateTree();
+	virtual void addState(list<StateInfo>*);
+	virtual void emitUpdate(ostream&);
+	virtual void emitUpdateChange(ostream&, Node*, string, string);
+	virtual void emitUpdateEnteringState(ostream&, Node*, stateIterator);
+	virtual void emitUpdateLeavingState(ostream&, Node*, stateIterator);
 };
 
 // agg{iter(e1)}

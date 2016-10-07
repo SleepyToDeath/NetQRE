@@ -85,7 +85,7 @@ netqrec.o: ast.h netqrec.cpp
 	${CCC} -c netqrec.cpp ../core2/tree.cpp ../core2/fsm.cpp -o y.tab.o -std=c++11 
 
 ast.o: ast.cpp ast.h
-	${CCC} -c ast.cpp -std=c++11
+	${CCC} -c ast.cpp -std=c++11 -D DEBUG_MODE
 
 y.tab.o: grammar.y
 	${YACC} ${YFLAGS} grammar.y

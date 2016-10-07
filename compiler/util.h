@@ -5,6 +5,12 @@
 #include <sstream>
 using namespace std;
 
+#ifdef DEBUG_MODE
+#define DEBUG(x)    x
+#else
+#define DEBUG(x)
+#endif
+
 inline bool isIn(string var, list<string> &strList) {
     for (string str : strList) {
 	if (str.compare(var) == 0)
@@ -27,6 +33,7 @@ inline void mergeTo(list<string>& first, const list<string>& second) {
     }
 }
 
+// append unique elements in second to first
 inline void append(list<string>& first, const list<string>& second) {
     for (const string var : second) {
 	bool exist = false;
