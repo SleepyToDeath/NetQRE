@@ -1,0 +1,623 @@
+Run flow_num_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 2 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  4077961 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  4077961 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4077961 us.
+Total time:  4078070 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  4091102 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  4091104 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4091104 us.
+Total time:  4091223 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  7026901 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  7026904 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  7026904 us.
+Total time:  7027084 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  7015109 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  7015111 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  7015111 us.
+Total time:  7015296 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  4099766 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  4099755 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4099766 us.
+Total time:  4099884 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run flow_num_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 2 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  2035416 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  2035496 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  2035496 us.
+Total time:  2035543 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  4557412 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  4557412 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4557412 us.
+Total time:  4557608 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  2054089 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  2054087 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  2054089 us.
+Total time:  2054214 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  4493123 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  4493125 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4493125 us.
+Total time:  4493318 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  4484366 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  4484350 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4484366 us.
+Total time:  4484569 us.
+Processed 37306496 packets. 
+Exit now.
+Run flow_num_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 3 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  4524593 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  4524542 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  4524542 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4524593 us.
+Total time:  4524695 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  8039721 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  8039754 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  8039681 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  8039754 us.
+Total time:  8039908 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  8451272 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  8451293 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  8451287 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  8451293 us.
+Total time:  8451425 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  8681989 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  8682006 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  8681990 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  8682006 us.
+Total time:  8682181 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  5869682 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  5869692 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  5869719 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  5869719 us.
+Total time:  5869828 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run flow_num_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 3 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  2283981 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  2283988 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  2283987 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  2283988 us.
+Total time:  2284103 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  2310510 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  2310507 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  2310515 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  2310515 us.
+Total time:  2310613 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  5640799 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  5640798 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  5640798 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  5640799 us.
+Total time:  5640968 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  5398419 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  5398406 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  5398389 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  5398419 us.
+Total time:  5398591 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  5501266 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  5501243 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  5501271 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  5501271 us.
+Total time:  5501453 us.
+Processed 37306496 packets. 
+Exit now.
+Run flow_num_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 4 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  4900634 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  4900635 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  4900587 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  4900637 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  4900637 us.
+Total time:  4900684 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  10917504 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  10917514 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  10917478 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  10917473 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  10917514 us.
+Total time:  10917681 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  10996235 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  10996350 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  10996256 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  10996351 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  10996351 us.
+Total time:  10996498 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  10992432 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  10992434 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  10992430 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  10992375 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  10992434 us.
+Total time:  10992592 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  11133450 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  11133444 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  11133420 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  11133448 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  11133450 us.
+Total time:  11133617 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run flow_num_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 4 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  124995
+Exit now.
+Thread 3 runtime:  3182372 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  3182402 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  3182388 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  3182406 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  3182406 us.
+Total time:  3182531 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  124995
+Exit now.
+Thread 3 runtime:  3140031 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  3140106 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  3140112 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  3140101 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  3140112 us.
+Total time:  3140182 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  6837532 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  6837539 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  6837536 us.
+Unique srcIP:  124995
+Exit now.
+Thread 3 runtime:  6837453 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  6837539 us.
+Total time:  6837640 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  3106846 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  3106844 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  3106846 us.
+Unique srcIP:  124995
+Exit now.
+Thread 3 runtime:  3106774 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  3106846 us.
+Total time:  3106960 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Unique srcIP:  124995
+Exit now.
+Thread 3 runtime:  5620033 us.
+Unique srcIP:  124995
+Exit now.
+Thread 1 runtime:  5620033 us.
+Unique srcIP:  124995
+Exit now.
+Thread 0 runtime:  5620033 us.
+Unique srcIP:  124995
+Exit now.
+Thread 2 runtime:  5620034 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  5620034 us.
+Total time:  5620231 us.
+Processed 37306496 packets. 
+Exit now.
+Run flow_num_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 5 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  5578504 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  5578495 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  5578541 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  5578497 us.
+Unique srcIP:  1085
+Exit now.
+Thread 4 runtime:  5578529 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  5578541 us.
+Total time:  5578609 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  12358058 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  12358065 us.
+Unique srcIP:  1085
+Exit now.
+Thread 4 runtime:  12357927 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  12358073 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  12358053 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  12358073 us.
+Total time:  12358257 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  10142098 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  10142096 us.
+Unique srcIP:  1085
+Exit now.
+Thread 4 runtime:  10142016 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  10142047 us.
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  10142104 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  10142104 us.
+Total time:  10142198 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Unique srcIP:  1085
+Exit now.
+Thread 1 runtime:  11160229 us.
+Unique srcIP:  1085
+Exit now.
+Thread 0 runtime:  11160238 us.
+Unique srcIP:  1085
+Exit now.
+Thread 3 runtime:  11160188 us.
+Unique srcIP:  1085
+Exit now.
+Thread 2 runtime:  11160223 us.
+Unique srcIP:  1085
+Exit now.
+Thread 4 runtime:  11160191 us.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  11160238 us.
+Total time:  11160353 us.
+Processed 49447211 packets. 
+Exit now.

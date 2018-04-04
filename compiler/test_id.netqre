@@ -1,0 +1,6 @@
+sfun int count = sum{iter(/./?1)};
+
+sfun int test(int x) = /[src==x]*/? count;
+
+sfun main = test(2);
+

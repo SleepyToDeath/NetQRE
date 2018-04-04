@@ -1,0 +1,372 @@
+Number of processors: 40
+main() : creating thread, 0
+Thread 0 takes 15733963 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Total time:  20984979 us.
+Average per-packet processing time:  0.421749 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+Thread 1 takes 6598740 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 7050742 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Total time:  10785771 us.
+Average per-packet processing time:  0.365987 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Thread 0 takes 5761873 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 5968052 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 6167518 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Total time:  9507205 us.
+Average per-packet processing time:  0.479747 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Thread 3 takes 3382558 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 3421286 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 3649218 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 3803181 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Total time:  6991948 us.
+Average per-packet processing time:  0.383675 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Thread 2 takes 3215338 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 3278312 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 3346184 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 3409514 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 3727514 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Total time:  6937445 us.
+Average per-packet processing time:  0.455081 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Thread 3 takes 2893909 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2961876 seconds, processes 0 packets. Each packet takes inf us.
+Thread 5 takes 3009615 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 3127279 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 3342048 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 3414074 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Total time:  6413172 us.
+Average per-packet processing time:  0.503066 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Thread 2 takes 2156754 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 2225419 seconds, processes 0 packets. Each packet takes inf us.
+Thread 5 takes 2268071 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 2320449 seconds, processes 0 packets. Each packet takes inf us.
+Thread 6 takes 2368184 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 2375728 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2414209 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Main: completed thread id :6
+  exiting with status :0
+Total time:  5284314 us.
+Average per-packet processing time:  0.432369 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Thread 1 takes 1929573 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 2032763 seconds, processes 0 packets. Each packet takes inf us.
+Thread 5 takes 2045506 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2109777 seconds, processes 0 packets. Each packet takes inf us.
+Thread 6 takes 2186454 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 2215700 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 2320066 seconds, processes 0 packets. Each packet takes inf us.
+Thread 7 takes 2353173 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Main: completed thread id :6
+  exiting with status :0
+Main: completed thread id :7
+  exiting with status :0
+Total time:  5305129 us.
+Average per-packet processing time:  0.464351 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Thread 5 takes 2030129 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 2084463 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2100339 seconds, processes 0 packets. Each packet takes inf us.
+Thread 8 takes 2131890 seconds, processes 0 packets. Each packet takes inf us.
+Thread 7 takes 2330565 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 2346703 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 2371455 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 2412828 seconds, processes 0 packets. Each packet takes inf us.
+Thread 6 takes 2412573 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Main: completed thread id :6
+  exiting with status :0
+Main: completed thread id :7
+  exiting with status :0
+Main: completed thread id :8
+  exiting with status :0
+Total time:  5346952 us.
+Average per-packet processing time:  0.542051 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+main() : creating thread, 9
+Thread 9 takes 1998593 seconds, processes 0 packets. Each packet takes inf us.
+Thread 5 takes 2162726 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 2233896 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 2242575 seconds, processes 0 packets. Each packet takes inf us.
+Thread 7 takes 2258370 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 2258899 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 2290909 seconds, processes 0 packets. Each packet takes inf us.
+Thread 8 takes 2322411 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2323073 seconds, processes 0 packets. Each packet takes inf us.
+Thread 6 takes 2335580 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Main: completed thread id :6
+  exiting with status :0
+Main: completed thread id :7
+  exiting with status :0
+Main: completed thread id :8
+  exiting with status :0
+Main: completed thread id :9
+  exiting with status :0
+Total time:  5117313 us.
+Average per-packet processing time:  0.601506 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+main() : creating thread, 9
+main() : creating thread, 10
+Thread 9 takes 2189460 seconds, processes 0 packets. Each packet takes inf us.
+Thread 7 takes 2276441 seconds, processes 0 packets. Each packet takes inf us.
+Thread 6 takes 2296018 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 2308981 seconds, processes 0 packets. Each packet takes inf us.
+Thread 5 takes 2318846 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2351793 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 2364356 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 2378183 seconds, processes 0 packets. Each packet takes inf us.
+Thread 8 takes 2388006 seconds, processes 0 packets. Each packet takes inf us.
+Thread 10 takes 2515103 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 2539960 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Main: completed thread id :6
+  exiting with status :0
+Main: completed thread id :7
+  exiting with status :0
+Main: completed thread id :8
+  exiting with status :0
+Main: completed thread id :9
+  exiting with status :0
+Main: completed thread id :10
+  exiting with status :0
+Total time:  5273390 us.
+Average per-packet processing time:  0.694960 us.
+Processed 37306496 packets. 
+Exit now.
+Number of processors: 40
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+main() : creating thread, 9
+main() : creating thread, 10
+main() : creating thread, 11
+Thread 11 takes 1854935 seconds, processes 0 packets. Each packet takes inf us.
+Thread 2 takes 1963728 seconds, processes 0 packets. Each packet takes inf us.
+Thread 7 takes 2167251 seconds, processes 0 packets. Each packet takes inf us.
+Thread 5 takes 2168066 seconds, processes 0 packets. Each packet takes inf us.
+Thread 9 takes 2223362 seconds, processes 0 packets. Each packet takes inf us.
+Thread 6 takes 2235126 seconds, processes 0 packets. Each packet takes inf us.
+Thread 3 takes 2253165 seconds, processes 0 packets. Each packet takes inf us.
+Thread 10 takes 2253415 seconds, processes 0 packets. Each packet takes inf us.
+Thread 4 takes 2327149 seconds, processes 0 packets. Each packet takes inf us.
+Thread 8 takes 2333349 seconds, processes 0 packets. Each packet takes inf us.
+Thread 1 takes 2344690 seconds, processes 0 packets. Each packet takes inf us.
+Thread 0 takes 2417722 seconds, processes 0 packets. Each packet takes inf us.
+Main: completed thread id :0
+  exiting with status :0
+Main: completed thread id :1
+  exiting with status :0
+Main: completed thread id :2
+  exiting with status :0
+Main: completed thread id :3
+  exiting with status :0
+Main: completed thread id :4
+  exiting with status :0
+Main: completed thread id :5
+  exiting with status :0
+Main: completed thread id :6
+  exiting with status :0
+Main: completed thread id :7
+  exiting with status :0
+Main: completed thread id :8
+  exiting with status :0
+Main: completed thread id :9
+  exiting with status :0
+Main: completed thread id :10
+  exiting with status :0
+Main: completed thread id :11
+  exiting with status :0
+Total time:  5228021 us.
+Average per-packet processing time:  0.713205 us.
+Processed 37306496 packets. 
+Exit now.

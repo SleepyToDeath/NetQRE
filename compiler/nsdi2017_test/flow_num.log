@@ -1,0 +1,44 @@
+Run flow_num on /home/yifei/ddostrace.20070804_142436.pcap 5 times.
+Starting ...
+Runtime: 3755059 useconds, processes 49447211 packets. Each packet takes 0.075941 us.
+Unique srcIP:  1085
+Exit now.
+Starting ...
+Runtime: 3835659 useconds, processes 49447211 packets. Each packet takes 0.077571 us.
+Unique srcIP:  1085
+Exit now.
+Starting ...
+Runtime: 3840081 useconds, processes 49447211 packets. Each packet takes 0.077660 us.
+Unique srcIP:  1085
+Exit now.
+Starting ...
+Runtime: 3742993 useconds, processes 49447211 packets. Each packet takes 0.075697 us.
+Unique srcIP:  1085
+Exit now.
+Starting ...
+Runtime: 3831368 useconds, processes 49447211 packets. Each packet takes 0.077484 us.
+Unique srcIP:  1085
+Exit now.
+
+
+Run flow_num on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap 5 times.
+Starting ...
+Runtime: 1680250 useconds, processes 37181292 packets. Each packet takes 0.045191 us.
+Unique srcIP:  124995
+Exit now.
+Starting ...
+Runtime: 1672985 useconds, processes 37181292 packets. Each packet takes 0.044995 us.
+Unique srcIP:  124995
+Exit now.
+Starting ...
+Runtime: 1709206 useconds, processes 37181292 packets. Each packet takes 0.045970 us.
+Unique srcIP:  124995
+Exit now.
+Starting ...
+Runtime: 1702426 useconds, processes 37181292 packets. Each packet takes 0.045787 us.
+Unique srcIP:  124995
+Exit now.
+Starting ...
+Runtime: 1703550 useconds, processes 37181292 packets. Each packet takes 0.045817 us.
+Unique srcIP:  124995
+Exit now.

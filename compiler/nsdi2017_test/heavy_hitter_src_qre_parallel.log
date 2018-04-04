@@ -1,0 +1,1312 @@
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 2 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1435829 us.
+Total time:  1435962 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1406837 us.
+Total time:  1406989 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1413425 us.
+Total time:  1413565 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1410603 us.
+Total time:  1410734 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1434940 us.
+Total time:  1435088 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 2 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1241272 us.
+Total time:  1241434 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1242797 us.
+Total time:  1242971 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1236624 us.
+Total time:  1236786 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1242116 us.
+Total time:  1242261 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1218296 us.
+Total time:  1218530 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 3 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1064296 us.
+Total time:  1064455 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1079803 us.
+Total time:  1079927 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1077726 us.
+Total time:  1077846 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1109607 us.
+Total time:  1109742 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1062468 us.
+Total time:  1062578 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 3 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  1021488 us.
+Total time:  1021664 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  957424 us.
+Total time:  957573 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  954707 us.
+Total time:  954878 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  946693 us.
+Total time:  946820 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  966280 us.
+Total time:  966473 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 4 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  991778 us.
+Total time:  991937 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  953713 us.
+Total time:  953936 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  953837 us.
+Total time:  954138 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  942422 us.
+Total time:  942570 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  913014 us.
+Total time:  913156 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 4 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  838827 us.
+Total time:  838981 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  844538 us.
+Total time:  844701 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  867903 us.
+Total time:  868068 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  859723 us.
+Total time:  860190 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  821506 us.
+Total time:  821675 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 5 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  912357 us.
+Total time:  912545 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  871465 us.
+Total time:  871609 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  838849 us.
+Total time:  839001 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  865665 us.
+Total time:  865813 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  823025 us.
+Total time:  823056 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 5 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  703152 us.
+Total time:  703311 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  708367 us.
+Total time:  708403 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  741164 us.
+Total time:  741209 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  751085 us.
+Total time:  751212 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  735823 us.
+Total time:  735928 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 6 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  834104 us.
+Total time:  834158 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  834672 us.
+Total time:  834734 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  848138 us.
+Total time:  848206 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  833072 us.
+Total time:  833131 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  829797 us.
+Total time:  829862 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 6 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  657700 us.
+Total time:  657758 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  702068 us.
+Total time:  702120 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  700448 us.
+Total time:  700518 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  705467 us.
+Total time:  705532 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  667790 us.
+Total time:  667811 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 7 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  735474 us.
+Total time:  735572 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  712896 us.
+Total time:  712933 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  732045 us.
+Total time:  732132 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  736631 us.
+Total time:  737227 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  726909 us.
+Total time:  727012 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 7 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  662819 us.
+Total time:  662876 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  671228 us.
+Total time:  671276 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  673282 us.
+Total time:  673406 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  704634 us.
+Total time:  704701 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  688903 us.
+Total time:  688953 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 8 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  784905 us.
+Total time:  784941 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  803167 us.
+Total time:  803220 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  783883 us.
+Total time:  783959 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  806486 us.
+Total time:  806573 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  799487 us.
+Total time:  799631 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 8 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  704442 us.
+Total time:  704524 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  699828 us.
+Total time:  699974 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  731355 us.
+Total time:  731480 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  755562 us.
+Total time:  755652 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  717536 us.
+Total time:  717583 us.
+Processed 37306496 packets. 
+Exit now.
+Run heavy_hitter_src_qre_parallel on /home/yifei/ddostrace.20070804_142436.pcap with 9 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  764078 us.
+Total time:  764147 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  762574 us.
+Total time:  762786 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  744521 us.
+Total time:  744772 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  771303 us.
+Total time:  771356 us.
+Processed 49447211 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  774946 us.
+Total time:  775081 us.
+Processed 49447211 packets. 
+Exit now.
+
+
+Run heavy_hitter_src_qre_parallel on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap with 9 threads 5 times.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  630177 us.
+Total time:  630358 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  601245 us.
+Total time:  601375 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  633683 us.
+Total time:  633783 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  615470 us.
+Total time:  615562 us.
+Processed 37306496 packets. 
+Exit now.
+main() : creating thread, 0
+main() : creating thread, 1
+main() : creating thread, 2
+main() : creating thread, 3
+main() : creating thread, 4
+main() : creating thread, 5
+main() : creating thread, 6
+main() : creating thread, 7
+main() : creating thread, 8
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Exit now.
+Average per-packet processing time:  0.000000 us.
+Max processing time:  614781 us.
+Total time:  614839 us.
+Processed 37306496 packets. 
+Exit now.

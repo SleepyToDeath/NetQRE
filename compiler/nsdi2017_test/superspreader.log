@@ -1,0 +1,44 @@
+Run superspreader on /home/yifei/ddostrace.20070804_142436.pcap 5 times.
+Starting ...
+Runtime: 3468627 useconds, processes 49447211 packets. Each packet takes 0.070148 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 3516253 useconds, processes 49447211 packets. Each packet takes 0.071111 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 3513393 useconds, processes 49447211 packets. Each packet takes 0.071053 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 3472764 useconds, processes 49447211 packets. Each packet takes 0.070232 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 3480635 useconds, processes 49447211 packets. Each packet takes 0.070391 us.
+Unique srcIP:  7185
+Exit now.
+
+
+Run superspreader on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap 5 times.
+Starting ...
+Runtime: 4154104 useconds, processes 37181292 packets. Each packet takes 0.111726 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 4253685 useconds, processes 37181292 packets. Each packet takes 0.114404 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 4177758 useconds, processes 37181292 packets. Each packet takes 0.112362 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 4161624 useconds, processes 37181292 packets. Each packet takes 0.111928 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 4228263 useconds, processes 37181292 packets. Each packet takes 0.113720 us.
+Unique srcIP:  432870
+Exit now.

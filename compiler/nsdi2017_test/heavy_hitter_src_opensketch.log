@@ -1,0 +1,22 @@
+Run heavy_hitter_src_opensketch on /home/yifei/ddostrace.20070804_142436.pcap 5 times.
+Starting ...
+Runtime: 27851722 useconds, processes 49447211 packets. Each packet takes 0.563262 us.
+done.
+Starting ...
+Runtime: 27949164 useconds, processes 49447211 packets. Each packet takes 0.565232 us.
+done.
+Starting ...
+Runtime: 27949779 useconds, processes 49447211 packets. Each packet takes 0.565245 us.
+done.
+Starting ...
+Runtime: 27752507 useconds, processes 49447211 packets. Each packet takes 0.561255 us.
+done.
+Starting ...
+Runtime: 27848604 useconds, processes 49447211 packets. Each packet takes 0.563199 us.
+done.
+
+
+Run heavy_hitter_src_opensketch on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap 5 times.
+Starting ...
+Runtime: 22684334 useconds, processes 37181292 packets. Each packet takes 0.610101 us.
+done.

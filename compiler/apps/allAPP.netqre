@@ -1,0 +1,202 @@
+////////////////////////////////////
+// heavy hitter
+///////////////////////////////////
+// count size of traffic from x to y
+
+sfun packet filter(IP x, IP y) =
+    .*[srcip==x,dstip==y] ? last;
+
+sfun int hh(IP x, IP y) = 
+    filter(x, y) >>
+    sum{iter(.?size)};
+
+sfun int hh_alert = 
+    hh(last.srcip, last.dstip)>10000 ? alert;
+
+
+////////////////////////////////////
+// super spreader
+// count total number of distinct IP 
+// addresses for each source
+////////////////////////////////////
+sfun int ss(IP x) = 
+    sum{.*[src==x, dst==y].*?1 | IP y};
+
+////////////////////////////////////
+// flow size distribution
+///////////////////////////////////
+
+sfun packet filter(IP x, IP y) =
+    .*[srcip==x,dstip==y] ? last;
+
+sfun int hh(IP x, IP y) = 
+    filter(x, y) >> sum{iter(.?size)};
+
+sfun int total = 
+    sum{.*[srcip==x,dstip==y].* | IP x, IP y};
+
+sfun double dist = 
+    sum{(hh(x,y)>100 && hh(x,y)<1000)?1 | IP x,y}/total;
+
+
+
+//////////////////////////////////
+// flow life time
+//////////////////////////////////
+sfun packet filter_tcp(IP sip, IP dip, Port sp, Port dp) =
+    .*[srcip==sip .. ] ? last;
+
+sfun packet filter_ctrl =
+    .*[syn==1 | fin==1] ? last;
+
+sfun int flow_life = 
+    filter_tcp(sip,dip,sp,dp) >>
+    filter_ctrl >> 
+    sum{iter(select{[fin==1]*[syn==1]*[syn==1, time=t1][fin==1, time=t2]?t2-t1)}|time t1,t2};
+
+
+
+//////////////////////////////////
+// duplicated ack
+//////////////////////////////////
+sfun packet filter_tcp(IP sip, IP dip, Port sp, Port dp) =
+    .*[srcip==sip .. ] ? last;
+
+sfun int duplicated_ack = 
+    filter_tcp >>
+    sum{.*[ack==1, ackno==x].*[ack==1, ackno==x].* | int x};
+
+
+
+//////////////////////////////////
+// traffic change
+//////////////////////////////////
+
+sfun packet filter_time(time t1, time t2) =
+    .*[time>t1. time<t2] ? last;
+
+sfun packet filter(IP x, IP y) =
+    .*[srcip==x,dstip==y] ? last;
+
+sfun int size_time(time t1, time t2, IP x, IP y) = 
+    filter_time(t1,t2) >>
+    filter(x, y) >> sum{iter(.?size)};
+
+sfun int change =
+    size_time(last.time-10, last.time-5, last.srcip, last.dstip) -
+    size_time(last.time-5, last.time, last.srcip, last.dstip) 
+   
+
+////////////////////////////////
+// counting VoIP call
+///////////////////////////////
+sfun bool sip_start(string id, string user) = 
+   .*[callID==id, sip_com=="INVITE", sip_user==u]
+   (![callID==id, sip_com=="INVITE", sip_user==u])*
+   [callID==id, sip_com=="200 OK", sip_user==u]
+   (![callID==id, sip_com=="200.OK", sip_user==u])*
+   [callID==id, sip_com=="ACK", sip_user==u]
+
+sfun int call_num(string user, string id) = 
+    sum{sip_start?1 | all parameter};
+
+////////////////////////////////
+// monitor VoIP usage
+///////////////////////////////
+sfun bool sip_start(string id, string user) = 
+   .*[callID==id, sip_com=="INVITE", sip_user==u]
+   (![callID==id, sip_com=="INVITE", sip_user==u])*
+   [callID==id, sip_com=="200 OK", sip_user==u]
+   (![callID==id, sip_com=="200.OK", sip_user==u])*
+   [callID==id, sip_com=="ACK", sip_user==u]
+
+sfun bool sip_end(string id, string user) = 
+   ([other]|[callID==id, sip_com=="BYE", sip_user==u]).*
+
+sfun int usage_per_call(string user, string id) = 
+    split(sip_start?0, filter(p)>>count, sip_end?0, sum);
+
+sfun  filter(Port p) = 
+    [] ? last;
+
+sfun int count = 
+    sum{iter(.?1)};
+
+sfun usage_per_user(user) = 
+    sum{usage_per_call() | IP sip};
+
+sfun block_user(user) = 
+    usage_per_user(user) > 5*sum{usage_per_call() | IP sip} ? alert;
+
+///////////////////////////////////
+// syn flood
+//////////////////////////////////
+
+///////////////////////////////////
+// email spam
+//////////////////////////////////
+fun int word_counting(string word, packet payload)={
+    sum{iter( buy ? 1)}(payload);
+}
+
+sfun per_email = 
+    split(mail_start?0, word_counting, mail_end?0, sum)
+
+sfun mail_start = 
+    to
+    from
+    to
+
+sfun mail_end = 
+    bye
+    ok
+
+sfun per_conn = 
+    split(conn_start?0, iter(per_email, avg), conn_end?0, sum);
+
+sfun conn_start = 
+    .*[syn][synack][ack]
+
+sfun conn_end = 
+    [fin]
+
+sfun main = 
+    filter_tcp(s,sp,d,dp) >>
+    per_conn;
+
+sfun filter_tcp() =
+    .*is_tcp() ? last;
+///////////////////////////////////
+// newly opened connection 
+//////////////////////////////////
+sfun recent = .*[] ? last;
+
+sfun onging_conn(s,sp,d,dp) =
+    filter_tcp() >> syn,synack,ack, !fin
+
+sfun total = 
+    sum{ongoing_conn | s,sp,d,dp};
+    
+sfun main = 
+    recent(5) >> total;
+
+///////////////////////////////////
+// DNS tunneling 
+//////////////////////////////////
+sfun int orphan(IP hip, IP rip) = 
+  .*[type=DNS, srcip=dns, dstip=hip, reqip=rip](![srcip=hip,dstip=rip])* ? 1;
+
+sfun dns_tunneling(IP hip) = 
+  (sum{orphan(hip, rip) | rip}>T) ? alert(hip);
+    
+
+///////////////////////////////////
+// DNS amplifying
+//////////////////////////////////
+sfun int orphan(IP hip, IP sip) = 
+  (![type=DNSreq, srcip=hip)*[type=DNS, srcip=sip, dstip=hip].*? 1;
+
+sfun dns_tunneling(IP hip) = 
+  (sum{orphan(hip, sip) | sip}>T) ? alert(hip);
+
+

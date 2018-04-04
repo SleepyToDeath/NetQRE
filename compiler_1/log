@@ -1,0 +1,663 @@
+delist
+sfun key
+ID: int
+ID: hh
+ID: int
+ID: x
+single arg
+ID: int
+ID: y
+arglist
+any
+star
+ID: src
+ID: x
+An integer: 1 (1)
+new num
+list
+ID: dst
+ID: y
+single re
+any
+star
+concat
+concat
+re expr
+block
+sfunc
+new stream function
+new func
+Getting parameters...
+new variable x-1
+new variable y
+Free variables in re: 
+x-1 y 
+Emiting state tree...
+Generating predicate tree...
+0 : x-1
+1 : y
+---------- Tree ---------
+x-1@0xb1a2f0
+	default:	0xb1a3f0
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+---------- Tree ---------
+x-1@0xb1a2f0
+	default:	0xb1a3f0
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+---------- Tree ---------
+x-1@0xb1a2f0
+	default:	0xb1a3f0
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+---------- Tree ---------
+x-1@0xb1a2f0
+	default:	0xb1a3f0
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+gle
+single
+---------- Tree ---------
+x-1@0xb1a2f0
+	src:	0xb1aac0
+	default:	0xb1a3f0
+
+y@0xb1aac0
+	dst:	0xb1b100
+	default:	0xb1ab60
+
+Leaf@0xb1b100
+
+Leaf@0xb1ab60
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1aac0
+0xb1b100
+0xb1ab60
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+---------- Tree ---------
+x-1@0xb1a2f0
+	src:	0xb1aac0
+	default:	0xb1a3f0
+
+y@0xb1aac0
+	dst:	0xb1b100
+	default:	0xb1ab60
+
+Leaf@0xb1b100
+
+Leaf@0xb1ab60
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1aac0
+0xb1b100
+0xb1ab60
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+Generated tree is: 
+---------- Tree ---------
+x-1@0xb1a2f0
+	src:	0xb1aac0
+	default:	0xb1a3f0
+
+y@0xb1aac0
+	dst:	0xb1b100
+	default:	0xb1ab60
+
+Leaf@0xb1b100
+
+Leaf@0xb1ab60
+
+y@0xb1a3f0
+	default:	0xb1a490
+
+Leaf@0xb1a490
+
+0xb1a2f0
+0xb1aac0
+0xb1b100
+0xb1ab60
+0xb1a3f0
+0xb1a490
+---------- Tree ---------
+Generating FSM...
+
+concat to fsm
+
+single
+------------- FSM ---------------
+0 0xb1a490 -> -2055080072
+0 0xb1ab60 -> -2055080072
+0 0xb1b100 -> -2055080072
+Initial: 0
+Final: -2055080072 
+------------- FSM ---------------
+
+star
+Before deter
+------------- FSM ---------------
+0 0xb1a490 -> -2055080072
+0 0xb1ab60 -> -2055080072
+0 0xb1b100 -> -2055080072
+11642912 0 -> 0
+-2055080072 0 -> 0
+Initial: 11642912
+Final: 11642912 -2055080072 
+------------- FSM ---------------
+new init state
+0xb1ae40: 0xb1ae70 0xb1aea0 
+Pred 0xb1a490
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1aea0 
+0xb1a7a0: 0xb1ae70 0xb1afb0 Pred 0xb1ab60
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1aea0 
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1afb0 
+DFSDFD
+0xb1a7a0: 0xb1ae70 0xb1afb0 Pred 0xb1b100
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1aea0 
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1afb0 
+DFSDFD
+0xb1a7a0: 0xb1ae70 0xb1afb0 Pred 0xb1a490
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1aea0 
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1afb0 
+DFSDFD
+0xb1a7a0: 0xb1ae70 0xb1afb0 Pred 0xb1ab60
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1aea0 
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1afb0 
+DFSDFD
+0xb1a7a0: 0xb1ae70 0xb1afb0 Pred 0xb1b100
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1aea0 
+oldToStates
+0xb1ae70 0xb1afb0 
+
+TEST
+0xb1ae70 0xb1afb0 
+DFSDFD
+0xb1a7a0: 0xb1ae70 0xb1afb0 After deter
+------------- FSM ---------------
+-2055080072 0xb1a490 -> -2055080072
+-2055080072 0xb1ab60 -> -2055080072
+-2055080072 0xb1b100 -> -2055080072
+-2055080072 0xb1a490 -> -2055080072
+-2055080072 0xb1ab60 -> -2055080072
+-2055080072 0xb1b100 -> -2055080072
+Initial: -2055080072
+Final: -2055080072 -2055080072 
+------------- FSM ---------------
+After minimize
+------------- FSM ---------------
+-2055080072 0xb1a490 -> -2055080072
+-2055080072 0xb1ab60 -> -2055080072
+-2055080072 0xb1b100 -> -2055080072
+Initial: -2055080072
+Final: -2055080072 
+------------- FSM ---------------
+
+concat to fsm
+
+single
+------------- FSM ---------------
+-2055080040 0xb1b100 -> -2055080024
+Initial: -2055080040
+Final: -2055080024 
+------------- FSM ---------------
+
+single
+------------- FSM ---------------
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 0
+Final: 0 
+------------- FSM ---------------
+
+star
+Before deter
+------------- FSM ---------------
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+11648352 0 -> 0
+0 0 -> 0
+Initial: 11648352
+Final: 11648352 0 
+------------- FSM ---------------
+new init state
+0xb1c310: 0xb1be40 0xb1be70 
+Pred 0xb1a490
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1be70 
+0xb1c700: 0xb1be40 0xb1bf80 Pred 0xb1ab60
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1be70 
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1bf80 
+DFSDFD
+0xb1c700: 0xb1be40 0xb1bf80 Pred 0xb1b100
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1be70 
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1bf80 
+DFSDFD
+0xb1c700: 0xb1be40 0xb1bf80 Pred 0xb1a490
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1be70 
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1bf80 
+DFSDFD
+0xb1c700: 0xb1be40 0xb1bf80 Pred 0xb1ab60
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1be70 
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1bf80 
+DFSDFD
+0xb1c700: 0xb1be40 0xb1bf80 Pred 0xb1b100
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1be70 
+oldToStates
+0xb1be40 0xb1bf80 
+
+TEST
+0xb1be40 0xb1bf80 
+DFSDFD
+0xb1c700: 0xb1be40 0xb1bf80 After deter
+------------- FSM ---------------
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 0
+Final: 0 0 
+------------- FSM ---------------
+After minimize
+------------- FSM ---------------
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 0
+Final: 0 
+------------- FSM ---------------
+------------- FSM ---------------
+-2055080040 0xb1b100 -> -2055080024
+Initial: -2055080040
+Final: -2055080024 
+------------- FSM ---------------
+------------- FSM ---------------
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 0
+Final: 0 
+------------- FSM ---------------
+before determinized
+------------- FSM ---------------
+-2055080024 0 -> 0
+-2055080040 0xb1b100 -> -2055080024
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: -2055080040
+Final: 0 
+------------- FSM ---------------
+new init state
+0xb1c730: 0xb1b700 
+Pred 0xb1b100
+oldToStates
+0xb1b200 0xb1c310 
+
+TEST
+0xb1b700 
+0xb1d6c0: 0xb1b200 0xb1c310 Pred 0xb1a490
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b700 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b200 0xb1c310 
+0xb1d980: 0xb1c310 Pred 0xb1ab60
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b700 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b200 0xb1c310 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1c310 
+DFSDFD
+0xb1d980: 0xb1c310 Pred 0xb1b100
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b700 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b200 0xb1c310 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1c310 
+DFSDFD
+0xb1d980: 0xb1c310 Pred 0xb1a490
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b700 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b200 0xb1c310 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1c310 
+DFSDFD
+0xb1d980: 0xb1c310 Pred 0xb1ab60
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b700 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b200 0xb1c310 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1c310 
+DFSDFD
+0xb1d980: 0xb1c310 Pred 0xb1b100
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b700 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1b200 0xb1c310 
+oldToStates
+0xb1c310 
+
+TEST
+0xb1c310 
+DFSDFD
+0xb1d980: 0xb1c310 after determinized
+------------- FSM ---------------
+11650336 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 11650336
+Final: 0 0 
+------------- FSM ---------------
+after minimized
+------------- FSM ---------------
+11650336 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 11650336
+Final: 0 
+------------- FSM ---------------
+------------- FSM ---------------
+-2055080072 0xb1a490 -> -2055080072
+-2055080072 0xb1ab60 -> -2055080072
+-2055080072 0xb1b100 -> -2055080072
+Initial: -2055080072
+Final: -2055080072 
+------------- FSM ---------------
+------------- FSM ---------------
+11650336 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 11650336
+Final: 0 
+------------- FSM ---------------
+before determinized
+------------- FSM ---------------
+-2055080072 0xb1a490 -> -2055080072
+-2055080072 0xb1ab60 -> -2055080072
+-2055080072 0xb1b100 -> -2055080072
+-2055080072 0 -> 11650336
+11650336 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: -2055080072
+Final: 0 
+------------- FSM ---------------
+new init state
+0xb1d830: 0xb1a7a0 0xb1c730 
+Pred 0xb1a490
+oldToStates
+0xb1a7a0 0xb1c730 
+
+TEST
+0xb1a7a0 0xb1c730 
+DFSDFD
+0xb1d830: 0xb1a7a0 0xb1c730 Pred 0xb1ab60
+oldToStates
+0xb1a7a0 0xb1c730 
+
+TEST
+0xb1a7a0 0xb1c730 
+DFSDFD
+0xb1d830: 0xb1a7a0 0xb1c730 Pred 0xb1b100
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 
+0xb1ec60: 0xb1a7a0 0xb1c730 0xb1d6c0 Pred 0xb1a490
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 0xb1d6c0 
+DFSDFD
+0xb1ec60: 0xb1a7a0 0xb1c730 0xb1d6c0 Pred 0xb1ab60
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 0xb1d6c0 
+DFSDFD
+0xb1ec60: 0xb1a7a0 0xb1c730 0xb1d6c0 Pred 0xb1b100
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 
+oldToStates
+0xb1a7a0 0xb1c730 0xb1d6c0 
+
+TEST
+0xb1a7a0 0xb1c730 0xb1d6c0 
+DFSDFD
+0xb1ec60: 0xb1a7a0 0xb1c730 0xb1d6c0 after determinized
+------------- FSM ---------------
+11657936 0xb1a490 -> 11657936
+11657936 0xb1ab60 -> 11657936
+11657936 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 11657936
+Final: 0 
+------------- FSM ---------------
+after minimized
+------------- FSM ---------------
+11657936 0xb1a490 -> 11657936
+11657936 0xb1ab60 -> 11657936
+11657936 0xb1b100 -> 0
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 0
+Initial: 11657936
+Final: 0 
+------------- FSM ---------------
+Generated fsm is: 
+------------- FSM ---------------
+0 0xb1a490 -> 0
+0 0xb1ab60 -> 0
+0 0xb1b100 -> 1
+1 0xb1a490 -> 1
+1 0xb1ab60 -> 1
+1 0xb1b100 -> 1
+Initial: 0
+Final: 1 
+------------- FSM ---------------
+Emitting update code...

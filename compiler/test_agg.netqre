@@ -1,0 +1,1 @@
+sfun int main = sum{/.*[src==x].*/?1:0 | ip x};

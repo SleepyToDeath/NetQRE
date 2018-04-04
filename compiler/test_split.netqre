@@ -1,0 +1,3 @@
+sfun int main = sum{split(/[syn!=x]*[syn==x]/?0, /[src==y]*/?1)};
+//sfun int main = /[src==y]*/;
+//sfun int main = /[syn!=0][syn==0]*/?1;

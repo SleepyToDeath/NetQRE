@@ -1,0 +1,15 @@
+sfun bool test1(int x) = /[src==x]*/;
+
+//sfun bool test2(int x) = /.*[src==x]/;
+//
+//sfun bool test3(int x) = /.*[src==x].*/;
+
+//sfun bool test4 = /[src==1][fin==1]/;
+//
+//sfun bool test5 = /[fin==1]*[syn==1]*/;
+//
+//sfun bool test4 = /[src==1][fin==0]*/;
+//
+//sfun bool test4 = /.*[ack==1,ackno==x].*[ack==1,ackno==x].*/;
+//
+//sfun bool test4 = /.*[srcport==53,srcip==1, dstip==x,reqip==y]![]*/;

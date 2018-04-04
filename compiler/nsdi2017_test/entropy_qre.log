@@ -1,0 +1,44 @@
+Run entropy_qre on /home/yifei/ddostrace.20070804_142436.pcap 5 times.
+Starting ...
+Runtime: 2209387 useconds, processes 49447211 packets. Each packet takes 0.044682 us.
+entropy is : 8.419915
+Exit now.
+Starting ...
+Runtime: 2201261 useconds, processes 49447211 packets. Each packet takes 0.044517 us.
+entropy is : 8.419915
+Exit now.
+Starting ...
+Runtime: 2206435 useconds, processes 49447211 packets. Each packet takes 0.044622 us.
+entropy is : 8.419915
+Exit now.
+Starting ...
+Runtime: 2199440 useconds, processes 49447211 packets. Each packet takes 0.044481 us.
+entropy is : 8.419915
+Exit now.
+Starting ...
+Runtime: 2201624 useconds, processes 49447211 packets. Each packet takes 0.044525 us.
+entropy is : 8.419915
+Exit now.
+
+
+Run entropy_qre on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap 5 times.
+Starting ...
+Runtime: 2013461 useconds, processes 37181292 packets. Each packet takes 0.054153 us.
+entropy is : 8.653043
+Exit now.
+Starting ...
+Runtime: 2061965 useconds, processes 37181292 packets. Each packet takes 0.055457 us.
+entropy is : 8.653043
+Exit now.
+Starting ...
+Runtime: 2060907 useconds, processes 37181292 packets. Each packet takes 0.055429 us.
+entropy is : 8.653043
+Exit now.
+Starting ...
+Runtime: 1998638 useconds, processes 37181292 packets. Each packet takes 0.053754 us.
+entropy is : 8.653043
+Exit now.
+Starting ...
+Runtime: 2004604 useconds, processes 37181292 packets. Each packet takes 0.053914 us.
+entropy is : 8.653043
+Exit now.

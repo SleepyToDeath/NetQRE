@@ -1,0 +1,44 @@
+Run heavy_hitter_src_qre on /home/yifei/ddostrace.20070804_142436.pcap 5 times.
+Starting ...
+Runtime: 2207659 useconds, processes 49447211 packets. Each packet takes 0.044647 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 2255976 useconds, processes 49447211 packets. Each packet takes 0.045624 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 2262638 useconds, processes 49447211 packets. Each packet takes 0.045759 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 2266601 useconds, processes 49447211 packets. Each packet takes 0.045839 us.
+Unique srcIP:  7185
+Exit now.
+Starting ...
+Runtime: 2251570 useconds, processes 49447211 packets. Each packet takes 0.045535 us.
+Unique srcIP:  7185
+Exit now.
+
+
+Run heavy_hitter_src_qre on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap 5 times.
+Starting ...
+Runtime: 1976888 useconds, processes 37181292 packets. Each packet takes 0.053169 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 2075358 useconds, processes 37181292 packets. Each packet takes 0.055817 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 2079143 useconds, processes 37181292 packets. Each packet takes 0.055919 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 2072941 useconds, processes 37181292 packets. Each packet takes 0.055752 us.
+Unique srcIP:  432870
+Exit now.
+Starting ...
+Runtime: 2029083 useconds, processes 37181292 packets. Each packet takes 0.054573 us.
+Unique srcIP:  432870
+Exit now.

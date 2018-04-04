@@ -1,0 +1,44 @@
+Run entropy on /home/yifei/ddostrace.20070804_142436.pcap 5 times.
+Runtime: 764964 seconds, processes 49447211 packets. Each packet takes 0.015470 us.
+Processed 49447211 packets. 
+entropy is : 0.682368
+Exit now.
+Runtime: 767182 seconds, processes 49447211 packets. Each packet takes 0.015515 us.
+Processed 49447211 packets. 
+entropy is : 0.682368
+Exit now.
+Runtime: 764130 seconds, processes 49447211 packets. Each packet takes 0.015453 us.
+Processed 49447211 packets. 
+entropy is : 0.682368
+Exit now.
+Runtime: 764066 seconds, processes 49447211 packets. Each packet takes 0.015452 us.
+Processed 49447211 packets. 
+entropy is : 0.682368
+Exit now.
+Runtime: 766564 seconds, processes 49447211 packets. Each packet takes 0.015503 us.
+Processed 49447211 packets. 
+entropy is : 0.682368
+Exit now.
+
+
+Run entropy on /home/yifei/equinix-chicago.dirB.20150219-135900.UTC.anon.pcap 5 times.
+Runtime: 15458399 seconds, processes 37306496 packets. Each packet takes 0.414362 us.
+Processed 37306496 packets. 
+entropy is : 16.673218
+Exit now.
+Runtime: 15410179 seconds, processes 37306496 packets. Each packet takes 0.413070 us.
+Processed 37306496 packets. 
+entropy is : 16.673218
+Exit now.
+Runtime: 15160436 seconds, processes 37306496 packets. Each packet takes 0.406375 us.
+Processed 37306496 packets. 
+entropy is : 16.673218
+Exit now.
+Runtime: 15115169 seconds, processes 37306496 packets. Each packet takes 0.405162 us.
+Processed 37306496 packets. 
+entropy is : 16.673218
+Exit now.
+Runtime: 15402180 seconds, processes 37306496 packets. Each packet takes 0.412855 us.
+Processed 37306496 packets. 
+entropy is : 16.673218
+Exit now.

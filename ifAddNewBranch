@@ -1,0 +1,78 @@
+// father node first, default node first
+if (state(default) == 1)
+	-> 2
+else
+	add s_pointer = default;
+	if  == 2
+		->0
+
+forall t in M:
+	if (state(t)==1)
+		->2
+	else if (t==s):
+		0->1;
+	else:
+		2->0;
+
+//
+if (state(default) != 1) 
+	add s;
+
+if (state(default) != 2) 
+	add d;
+
+
+	
+
+
+
+
+
+if (state(default) == 1)
+	-> 2
+	forall t in M:
+		if (state(t)==1)
+			->2
+		else if (t==s):
+			0->1;
+		else:
+			2->0;
+
+else
+	2 -> 0;
+	add s_pointer = default;
+
+
+
+
+
+
+
+
+
+
+
+// multiple levels
+
+for e in M and not = f1, f2, .. :
+	if !consistent(node(e), default1, default2);
+		return;
+	
+for all f :
+	for all f' on the other side:
+		if (f==f')
+			if f in M:
+				consisntet(node(f), f, f')
+			else:
+				consisntet(default_node, f, f')
+
+
+	if f in M:
+		consisntet(node(f), f, -default)
+	else:
+		consisntet(default_node, f, -default)
+
+
+for e in x.map and e not = d:
+	if (node(e) == -1 or 1)
+	

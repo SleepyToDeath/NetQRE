@@ -1,0 +1,7 @@
+Run superspreader on /home/yifei/ddostrace.20070804_142436.pcap 1 times.
+Runtime: 1718076 seconds, processes 49447211 packets. Each packet takes 0.034746 us.
+Processed 49447211 packets. 
+34435 : 2
+ 3014787072 : 0
+Unique srcIP:  60487
+Exit now.
