@@ -22,6 +22,7 @@ action 	yylval.num = 1; return TYPE;
 #include "ast.h"
 #include <math.h>
 #include "y.tab.h"
+extern "C" int yylex();
 %}
 
 DIGIT	[0-9]

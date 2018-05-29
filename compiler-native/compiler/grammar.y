@@ -7,7 +7,7 @@
 #include "ast.h"
 
 using namespace std;
-int yylex();
+extern "C" int yylex();
 void yyerror(char const * s);
 
 extern map<string, FunBase*> funTable;
