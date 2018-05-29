@@ -25,7 +25,7 @@ namespace DT
 		void add_circuit(Circuit* c, int character);
 		int combine(Transducer* dt, CombineType t);
 
-		void init(std::vector<int> parameters); /* input the initial values for ALL states */
+		void init(std::vector<int> parameters); /* input the initial values for init states. other states are assumed to be 0(or undef?) */
 		std::vector<int> process(std::vector<std::pair<int,int> > stream); /* start/continue to process stream, return result so far */
 
 		std::vector<int> get_signature();
@@ -38,7 +38,7 @@ namespace DT
 		int final_number;
 		int max_character;
 
-		std::vector<int> states;
+		Port states;
 		std::vector<Circuit*> circuits; /* index = cooresponding character */
 	};
 }

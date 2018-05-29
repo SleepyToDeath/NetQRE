@@ -63,6 +63,13 @@ void Gate::negedge()
 	val_old = val;
 }
 
+void reset()
+{
+	ready_wires = 0;
+	val = init;
+	val_old = init;
+}
+
 int Gate::output(WireType t)
 {
 	if (CMB == t)
@@ -74,6 +81,12 @@ int Gate::output(WireType t)
 void Gate::set_value(int val)
 {
 	this->val = val;
+}
+
+void Gate::set_op(Op* op)
+{
+	delete this->op;
+	this->op = op;
 }
 
 }

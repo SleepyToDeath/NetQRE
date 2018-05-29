@@ -18,6 +18,12 @@ Transducer::~Transducer()
 
 }
 
+void Transducer::destroy()
+{
+	for (int i=0; i<max_character; i++)
+		circuits[i]->destroy();
+}
+
 void Transducer::add_circuit(Circuit* c, int character)
 {
 	circuits[character] = c;
@@ -25,54 +31,56 @@ void Transducer::add_circuit(Circuit* c, int character)
 
 int Transducer::combine(Transducer* dt, CombineType t)
 {
-	switch (t)
-	{
-		case UNION:
-		return combine_union(dt);
-
-		case STAR:
-		return combine_star(dt);
-
-		case CONCATENATION:
-		return combine_concatenation(dt);
-
-		case PARALLEL:
-		return combine_parallel(dt);
-
-		default:
-		return -1;
-	}
+	circuits[0]->combine_epsilon(dt->circuits[0],t);
+	for (int i=1; i<max_character; i++)
+		circuits[i]->combine_char(dt->circuits[i],t);
+	return 0;
 }
 
 int Transducer::init(std::vector<int> parameters)
 {
-	states = parameters;
+	states.init = parameters;
 }
 
-int Transducer::process(std::vector<Word> stream)
+std::vector<int> Transducer::process(std::vector<Word> stream)
 {
 	for (int i=0; i<stream.size(); i++)
 	{
 		{
+			states.fin = NullPort;
+			Circuit* c = circuits[0];
+			c->reset();
+			c->set_stream_in(stream[i].val);
+			c->set_state_in(states);
+			c->tick();
+			states = c->get_state_out();
+			states.init = NullPort;
+		}
+
+		{
+			states.fin = NullPort;
 			Circuit* c = circuits[stream[i].key];
 			c->reset();
 			c->set_stream_in(stream[i].val);
 			c->set_state_in(states);
 			c->tick();
 			states = c->get_state_out();
-			for (int j=0; j<param_number; j++)
-				states[j] = 0;
-		}
-
-		{
-			Circuit* c = circuits[0];
-			c->set_stream_in(stream[i].val);
-			c->reset();
-			c->set_state_in(states);
-			c->tick();
-			states = c->get_state_out();
+			states.init = NullPort;
 		}
 	}
+
+	{
+		states.fin = NullPort;
+		Circuit* c = circuits[0];
+		c->reset();
+		c->set_stream_in(stream[i].val);
+		c->set_state_in(states);
+		c->tick();
+		states = c->get_state_out();
+		states.init = NullPort;
+	}
+
+	return states.fin;
 }
 
 std::vector<int> Transducer::get_signature()
