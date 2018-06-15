@@ -7,9 +7,22 @@ enum SearchNodeColor {
 	White, Black, Gray
 };
 
+class LNode;
 class RNode;
 class DNode;
 class SearchState;
+
+class SearchTree {
+	pulic:
+	SearchTree(ExampleType* example); /* top level search */
+	SearchTree(SearchTreeContext ctxt, SearchState init_state); /* recursive search */
+	bool accept(SyntaxTree* t);
+
+	private:
+	std::map<SearchState,LNode*> cache;
+	SearchTreeContext ctxt;
+	LNode* root;
+}
 
 class SearchTreeNode
 {
@@ -17,7 +30,7 @@ class SearchTreeNode
 	SearchState state;
 
 	SearchTreeNode();
-	virtual bool search() = 0;
+	virtual bool search(SearchTreeContext ctxt) = 0;
 	bool is_feasible();
 	SearchNodeColor get_color();
 
@@ -31,7 +44,7 @@ class LNode: public SearchTreeNode {
 	SyntaxLeftHandSide* syntax;
 	std::vector<DNode*> option;
 
-	bool search();
+	bool search(SearchTreeContext ctxt) = 0;
 	bool accept(SyntaxTree* t);
 };
 
@@ -41,7 +54,7 @@ class DNode: public SearchTreeNode {
 	DivideStrategy* divider;
 	std::vector<RNode*> option;
 
-	bool search();
+	bool search(SearchTreeContext ctxt) = 0;
 };
 
 class RNode: public SearchTreeNode {
@@ -49,14 +62,21 @@ class RNode: public SearchTreeNode {
 	SyntaxRightHandSide* syntax;
 	std::vector<LNode*> subexp;
 
-	bool search();
+	bool search(SearchTreeContext ctxt) = 0;
 };
 
-class SearchContext {
-	std::map<SearchState,LNode*> cache;
+class SearchTreeContext {
+	std::map<SearchState,LNode*>* cache;
 };
 
 /* ========================= Domain Specific Contents ==================== */
+
+/* one for each language */
+class ExampleType {
+	public:
+	virtual SearchState to_init_state() = 0;
+};
+
 
 /* one for each language */
 class SearchState {
