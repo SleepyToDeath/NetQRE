@@ -8,21 +8,24 @@ class SyntaxRule;
 
 class SyntaxTree {
 	public:
-	SyntaxTree();
-	SyntaxTree(SyntaxTree* t); /* copy constructor */
+	SyntaxTreeNode* root;
+	std::vector<SyntaxTree*> subtree;
+
+	SyntaxTree(SyntaxTreeNode* root);
+	SyntaxTree(SyntaxTree* src); /* copy constructor */
+	~SyntaxTree();
 
 	void mutate(int option);
 	
-	SyntaxTreeNode* root;
-	std::vector<SyntaxTree*> subtree;
 };
 
 class SyntaxTreeNode {
 
 	public:
-	SyntaxTreeNode(SyntaxRule* type);
-	SyntaxRule* get_type();
-	void set_option();
+	SyntaxTreeNode(SyntaxLeftHandSide* type);
+	SyntaxTreeNode(SyntaxTreeNode* src);
+	SyntaxLeftHandSide* get_type();
+	void set_option(int option);
 	int get_option();
 	
 	private:
