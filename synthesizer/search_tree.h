@@ -3,8 +3,8 @@
 
 #include "syntax_tree.h"
 
-enum SearchNodeColor {
-	White, Black, Gray
+enum SearchTreeColor {
+	STWhite, STBlack, STGray
 };
 
 class LNode;
@@ -12,11 +12,18 @@ class RNode;
 class DNode;
 class SearchState;
 
+
+/* 
+	Different from syntax tree, this is a global structure.
+	It stores the context for a task.
+	So there's only one instance for each task.
+*/
 class SearchTree {
 	pulic:
-	SearchTree(ExampleType* example); /* top level search */
-	SearchTree(SearchTreeContext ctxt, SearchState init_state); /* recursive search */
+	SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example); /* top level search */
+	SearchTree(SyntaxLeftHandSide* root_syntax, SearchTreeContext ctxt, SearchState init_state); /* recursive search */
 	bool accept(SyntaxTree* t);
+	bool search(SearchTreeContext ctxt);
 
 	private:
 	std::map<SearchState,LNode*> cache;
@@ -29,13 +36,12 @@ class SearchTreeNode
 	public:
 	SearchState state;
 
-	SearchTreeNode();
 	virtual bool search(SearchTreeContext ctxt) = 0;
 	bool is_feasible();
-	SearchNodeColor get_color();
+	SearchTreeColor get_color();
 
 	protected:
-	SearchNodeColor color;
+	SearchTreeColor color;
 	bool feasible;
 };
 
@@ -44,6 +50,7 @@ class LNode: public SearchTreeNode {
 	SyntaxLeftHandSide* syntax;
 	std::vector<DNode*> option;
 
+	LNode(SyntaxLeftHandSide* syntax, SearchState state);
 	bool search(SearchTreeContext ctxt) = 0;
 	bool accept(SyntaxTree* t);
 };
@@ -54,6 +61,7 @@ class DNode: public SearchTreeNode {
 	DivideStrategy* divider;
 	std::vector<RNode*> option;
 
+	LNode(SyntaxRightHandSide* syntax, SearchState state);
 	bool search(SearchTreeContext ctxt) = 0;
 };
 
@@ -62,10 +70,12 @@ class RNode: public SearchTreeNode {
 	SyntaxRightHandSide* syntax;
 	std::vector<LNode*> subexp;
 
+	LNode(SyntaxRightHandSide* syntax, SearchState state);
 	bool search(SearchTreeContext ctxt) = 0;
 };
 
 class SearchTreeContext {
+	public:
 	std::map<SearchState,LNode*>* cache;
 };
 
