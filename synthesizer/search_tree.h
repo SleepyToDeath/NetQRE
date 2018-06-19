@@ -11,6 +11,7 @@ class LNode;
 class RNode;
 class DNode;
 class SearchState;
+class SearchTreeCache;
 
 
 /* 
@@ -20,13 +21,13 @@ class SearchState;
 */
 class SearchTree {
 	pulic:
-	SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example, int search_depth); /* top level search */
+	SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example, RHSToDivider* r2d, int search_depth); /* top level search */
 	SearchTree(SyntaxLeftHandSide* root_syntax, SearchTreeContext ctxt, SearchState* init_state); /* recursive search */
 	bool accept(SyntaxTree* t);
 	bool search(SearchTreeContext ctxt);
 
 	private:
-	std::map<SearchState*,LNode*> cache;
+	SearchTreeCache<LNode*> cache;
 	SearchTreeContext ctxt;
 	LNode* root;
 }
@@ -77,11 +78,20 @@ class RNode: public SearchTreeNode {
 
 class SearchTreeContext {
 	public:
+	RHSToDivider* r2d;
 	ExampleType* example;
 	int search_depth;
 	std::map<SearchState*,LNode*>* cache;
 };
 
+class RHSToDivider {
+	public:
+	DivideStrategy* get_divider(SyntaxRightHandSide* rhs);
+	void register_divider(SyntaxRightHandSide* rhs, DivideStrategy* divider);
+
+	private:
+	std::map<SyntaxRightHandSide*, DivideStrategy*> r2dmap;
+};
 /* ========================= Domain Specific Contents ==================== */
 
 /* one for each language */
@@ -95,6 +105,18 @@ class ExampleType {
 /* one for each language */
 class SearchState {
 };
+
+/* 
+	one for each language
+	simulate std::map 
+	but key should be content of the state instead of the pointer
+*/
+template<class T>
+class SearchTreeCache {
+	virtual T& operator [](SearchState* state) = 0;
+	virtual int count(SearchState* state) = 0;
+};
+
 
 /* one for each right hand side option */
 class DivideStrategy {
@@ -114,7 +136,7 @@ class DivideStrategy {
 		
 	virtual int get_min(SearchState* s) = 0;
 	virtual int get_max(SearchState* s) = 0;
-	virtual std::vector<SearchState*> get_dep_substates(SearchState* s, int min, int max) = 0;
+	virtual SearchState* get_dep_substates(SearchState* s, int min, int max) = 0;
 };
 
 /* ======================================================================= */

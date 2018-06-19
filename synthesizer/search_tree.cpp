@@ -1,8 +1,9 @@
 #include "search_tree.h"
 
-SearchTree::SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example, int search_depth) {
+SearchTree::SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example, RHSToDivider* r2d, int search_depth) {
 	ctxt->cache = &cache;
 	ctxt->search_depth = search_depth;
+	ctxt->r2d = r2d;
 	SearchState* init_state = example->to_init_state();
 	root = new LNode(root_syntax, init_state);
 	cache[init_state] = root;
@@ -108,12 +109,39 @@ DNode::DNode(SyntaxRightHandSide* syn, SearchState* s) {
 	feasible = false;
 }
 
+class DNodeDAGVertex;
+class DNodeDAGPath;
+
+class DNodeDAG {
+	public:
+	/* link list */
+	std::vector< std::vector<int> > edge;
+	std::vector<int> fan_in;
+
+	/* map from int(index) to vertex */
+	std::vector< DNodeDAGNode > vertex;
+
+	/* search queue */
+	std::vector< int > queue;
+};
+
+class DNodeDAGPath {
+	public:
+	std::vector<int> vertex;
+};
+
+class DNodeDAGVertex {
+	public:
+	/* valid paths ending in this vertex */
+	std::vector< DNodeDAGPath > path;
+};
+
 bool DNode::search(SearchTreeContext ctxt) {
 	color = STGray;
 	bool flag = false;
 	if (syntax->independent)
 	{
-		std::vector< std::vector< SearchState* > > strategy = get_indep_substates();
+		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates();
 		for (int i=0; i<strategy.size(); i++)
 		{
 			RNode* div = new RNode(syntax, strategy[i]);
@@ -123,7 +151,94 @@ bool DNode::search(SearchTreeContext ctxt) {
 	}
 	else
 	{
-		/* [TODO] reuse search graph */
+		int min = divider->get_min(state);
+		int max = divider->get_max(state);
+		DNodeDAG* dag = new DNodeDAG();
+
+		/* step 0, allocate edges and vertices */
+		for (int i=0; i<=max; i++)
+		{
+			dag->edge.push_back(std::vector<int>());
+			dag->vertex.push_back(DNodeDAGNode());
+			fan_in.push_back(0);
+		}
+
+		/* step 1, build edges */
+		for (int i=min; i<max; i++)
+			for (int j=i+1; j<=max; j++) 
+			{
+				SearchState* edge_state = divider->get_dep_substates(state, i, j);
+
+				if (ctxt->cache->count(edge_state) == 0)
+				{
+					LNode* exp = new LNode( syntax->subexp[0], edge_state );
+					ctxt->cache[edge_state] = exp;
+					exp->search(ctxt);
+				}
+
+				if (ctxt->cache->is_feasible())
+				{
+					dag->edge[i].push_back(j);
+					dag->fan_in[j]++;
+				}
+			}
+
+		/* step 2, DP on DAG */
+		dat->queue.push_back(min);
+		DNodeDAGPath empty_path;
+		empty_path.push_back(min);
+		dag->vertex[min].path.push_back(empty_path);
+		{
+			int i=0;
+			int end=0;
+			while (i<=end)
+			{
+				int current = queue[i];
+				for (j=0; j<dag->edge[current].size(); j++)
+				{
+					int next = dag->edge[current][j];
+					for (k=0; k<dag->vertex[current].path.size(); k++)
+					{
+						DNodeDAGPath candidate_path = dag->vertex[current].path[k];
+						candidate_path.push_back(next);
+
+						bool flag = false;
+						{
+							SearchGraph g(ctxt.search_depth);
+							std::vector<SearchState*> substate;
+							for (int l=0; l<candidate_path.size()-1; l++)
+								substate.push_back(divider->get_dep_substates(state, candidate_path[l], candidate_path[l+1]));
+							flag = g.search_recursive(ctxt, substate) != nullptr;
+						}
+
+						if (flag)
+							dag->vertex[next].path.push_back(candidate_path);
+					}
+					dag->queue.push_back(next);
+				}
+				i++;
+			}
+		}
+		
+		/* step 3, convert path to division */
+		if (dag->vertex[max].path.size() == 0)
+		{
+			is_feasible = false;
+		}
+		else
+		{
+			is_feasible = true;
+			for (int i=0; i<dag->vertex[max].path.size(); i++)
+			{
+				DNodeDAGPath path = dag->vertex[max].path[i];
+				std::vector<SearchState*> substate;
+				for (int j=0; j<path.size()-1; j++)
+					substate.push_back(divider->get_dep_substates(state, path[j], path[j+1]));
+				RNode* div = new RNode(syntax, substate);
+				div->search(ctxt);
+				division.push_back(div);
+			}
+		}
 	}
 	color = STBlack;
 	return flag;
