@@ -70,6 +70,7 @@ class DNode: public SearchTreeNode {
 class RNode: public SearchTreeNode {
 	public:
 	SyntaxRightHandSide* syntax;
+	DivideStrategy* divider;
 	std::vector<LNode*> subexp;
 	std::vector<substate> substate;
 
@@ -114,6 +115,7 @@ class SearchState {
 */
 template<class T>
 class SearchTreeCache {
+	public:
 	virtual T& operator [](SearchState* state) = 0;
 	virtual int count(SearchState* state) = 0;
 };
@@ -134,10 +136,12 @@ class DivideStrategy {
 		get_max returns the upper bound of the larger interval.
 		get_dep_substates returns all possible substates that can cover a small interval.
 		All intervals here are left-closed right-open. */
-		
 	virtual int get_min(SearchState* s) = 0;
 	virtual int get_max(SearchState* s) = 0;
 	virtual SearchState* get_dep_substates(SearchState* s, int min, int max) = 0;
+
+	/* for gathering results */
+	virtual bool valid_combination(std::vector<bool> valid_subexp);
 };
 
 /* ======================================================================= */

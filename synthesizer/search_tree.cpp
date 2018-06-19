@@ -141,6 +141,7 @@ class DNodeDAGVertex {
 bool DNode::search(SearchTreeContext ctxt) {
 	color = STGray;
 	bool flag = false;
+	divider = ctxt->r2d->get_divider(syntax);
 	if (syntax->independent)
 	{
 		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates();
@@ -204,6 +205,10 @@ bool DNode::search(SearchTreeContext ctxt) {
 						DNodeDAGPath candidate_path = dag->vertex[current].path[k];
 						candidate_path.push_back(next);
 
+						/*
+							Mismatch condition can be reduced to match condition in this case.
+							Just need proper dividing strategy
+						*/
 						bool flag = false;
 						{
 							SearchGraph g(ctxt.search_depth);
@@ -255,7 +260,8 @@ RNode::RNode(SyntaxRightHandSide* syn, SearchState* s) {
 
 bool RNode::search(SearchTreeContext ctxt) {
 	color = STGray;
-	bool flag = true;
+	divider = ctxt->r2d->get_divider(syntax);
+	std::vector<bool> valid_subexp;
 	for (int i=0; i<substate.size(); i++)
 	{
 		if (ctxt->cache->count(substate[i])==0)
@@ -265,7 +271,9 @@ bool RNode::search(SearchTreeContext ctxt) {
 			exp->search(ctxt);
 		}
 		subexp.push_back(ctxt->cache[substate[i]]);
-		flag = flag && subexp[i]->is_feasible();
+		valid_.push_back(subexp[i]->is_feasible());
 	}
+	feasible = divider->valid_combination(valid_subexp);
 	color = STBlack;
+	return feasible;
 }
