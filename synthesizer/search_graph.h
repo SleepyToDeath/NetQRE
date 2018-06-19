@@ -9,6 +9,9 @@ class SearchGraph {
 	SyntaxTree* search_top_level(std::vector<ExampleType> example);
 	SyntaxTree* search_recursive(SearchTreeContext ctxt, std::vector<SearchState> state);
 	SyntaxTree* search(SearchGraphContext ctxt);
+
+	private:
+	int depth_threshold;
 };
 
 class SearchGraphContext {
