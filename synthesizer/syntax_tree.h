@@ -16,7 +16,10 @@ class SyntaxTree {
 	~SyntaxTree();
 
 	void mutate(int option);
-	
+	/* mutate a node of depth AT MOST `max_depth` into all possible RHS, and append the results to `queue` */
+	bool multi_mutate(SyntaxTree* root, int max_depth, std::vector<SyntaxTree*> * queue);
+	/* check if all leaf nodes are terminal */
+	bool complete();
 };
 
 class SyntaxTreeNode {

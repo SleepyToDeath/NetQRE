@@ -17,10 +17,72 @@ SyntaxTree::~SyntaxTree() {
 }
 
 void SyntaxTree::mutate(int option) {
+	/* clean up previous mutation */
+	if (root->get_option() != SyntaxLeftHandSide::NoOption)
+	{
+		while(subtree.size()>0)
+		{
+			delete subtree.back();
+			subtree.pop_back();
+		}
+	}
+
 	root->set_option(option);
-	SyntaxRightHandSide* r = root->get_type()->option[option];
-	for (int i=0; i<r->subexp.size(); i++)
-		subtree[i] = new SyntaxTree(new SyntaxTreeNode(r->subexp[i]));
+
+	/* new mutation */
+	if (option != SyntaxLeftHandSide::NoOption)
+	{
+		SyntaxRightHandSide* r = root->get_type()->option[option];
+		for (int i=0; i<r->subexp.size(); i++)
+			subtree.push_back(new SyntaxTree(new SyntaxTreeNode(r->subexp[i])));
+	}
+
+}
+
+bool SyntaxTree::complete() {
+
+	if (root->is_term)
+		return true;
+
+	if (root->get_option() == SyntaxLeftHandSide::NoOption)
+		return false;
+
+	for (int i=0; i<subtree.size(); i++)
+		if (!subtree[i]->complete())
+			return false;
+
+	return true;
+}
+
+bool SyntaxTree::multi_mutate(SyntaxTree* root, int max_depth, std::vector<SyntaxTree*> * queue) {
+
+	if (root->get_type()->is_term)
+		return false;
+
+	if (max_depth >= 0)
+	{
+		if (root->get_option() == SyntaxLeftHandSide::NoOption)
+		{
+			for (int i=0; i<root->get_type()->option.size(); i++);
+			{
+				mutate(i);
+				queue->push_back(new SyntaxTree(root));
+			}
+			mutate(SyntaxLeftHandSide::NoOption);
+			return true;
+		}
+		else
+		{
+			for (int i=0; i<subtree.size(); i++)
+				if (subtree[i]->multi_mutate(root, max_depth-1, queue))
+					return true;
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
 }
 
 SyntaxTreeNode::SyntaxTreeNode(SyntaxLeftHandSide* l) {

@@ -5,18 +5,16 @@
 
 class SearchGraph {
 	public:
-	SearchGraph(int depth_threshold);
-	SyntaxTree* search_top_level(std::vector<ExampleType> example);
-	SyntaxTree* search_recursive(SearchTreeContext ctxt, std::vector<SearchState> state);
-	SyntaxTree* search(SearchGraphContext ctxt);
+	SearchGraph(int depth_threshold, SyntaxLeftHandSide* starting_symbol, RHSToDivider* r2d);
+	SyntaxTree* search_top_level(std::vector<ExampleType*> example);
+	SyntaxTree* search_recursive(SearchTreeContext ctxt, std::vector<SearchState*> state);
 
 	private:
 	int depth_threshold;
-};
+	SyntaxLeftHandSide* starting_symbol;
+	RHSToDivider* r2d;
 
-class SearchGraphContext {
-	int depth;
-	SyntaxTree* t;
+	SyntaxTree* search(std::vector<LNode*> constraint);
 };
 
 #endif

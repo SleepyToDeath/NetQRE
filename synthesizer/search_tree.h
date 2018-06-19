@@ -21,10 +21,11 @@ class SearchTreeCache;
 */
 class SearchTree {
 	pulic:
-	SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example, RHSToDivider* r2d, int search_depth); /* top level search */
-	SearchTree(SyntaxLeftHandSide* root_syntax, SearchTreeContext ctxt, SearchState* init_state); /* recursive search */
-	bool accept(SyntaxTree* t);
-	bool search(SearchTreeContext ctxt);
+	SearchTree(SyntaxLeftHandSide* starting_symbol, ExampleType* example, RHSToDivider* r2d, int search_depth); /* top level search */
+	SearchTree(SyntaxLeftHandSide* starting_symbol, SearchTreeContext ctxt, SearchState* init_state); /* recursive search */
+	LNode* get_root();
+//	bool accept(SyntaxTree* t);
+	bool search();
 
 	private:
 	SearchTreeCache<LNode*> cache;

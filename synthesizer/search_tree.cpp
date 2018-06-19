@@ -1,30 +1,32 @@
 #include "search_tree.h"
 
-SearchTree::SearchTree(SyntaxLeftHandSide* root_syntax, ExampleType* example, RHSToDivider* r2d, int search_depth) {
+SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, ExampleType* example, RHSToDivider* r2d, int search_depth) {
 	ctxt->cache = &cache;
 	ctxt->search_depth = search_depth;
 	ctxt->r2d = r2d;
 	SearchState* init_state = example->to_init_state();
-	root = new LNode(root_syntax, init_state);
+	root = new LNode(starting_symbol, init_state);
 	cache[init_state] = root;
 }
 
-SearchTree::SearchTree(SyntaxLeftHandSide* root_syntax, SearchTreeContext ctxt0, SearchState* init_state) {
+SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, SearchTreeContext ctxt0, SearchState* init_state) {
 	ctxt = ctxt0;
 	if (ctxt.cache->count(init_state)>0)
 		root = ctxt.cache[init_state];
 	else 
 	{
-		root = new LNode(root_syntax, init_state);
+		root = new LNode(starting_symbol, init_state);
 		ctxt.cache[init_state] = root;
 	}
 }
 
+/*
 bool SearchTree::accept(SyntaxTree* t) {
 	return root->accept(t);
 }
+*/
 
-bool SearchTree::search(SearchTreeContext ctxt) {
+bool SearchTree::search() {
 	return root->search(ctxt);
 }
 
