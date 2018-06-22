@@ -13,6 +13,7 @@ class SearchGraph {
 	int depth_threshold;
 	SyntaxLeftHandSide* starting_symbol;
 	RHSToDivider* r2d;
+	SearchTreeCacheFactory* cache_pool;
 
 	SyntaxTree* search(std::vector<LNode*> constraint);
 };

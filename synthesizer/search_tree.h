@@ -24,7 +24,7 @@ class SearchTree {
 	SearchTree(SyntaxLeftHandSide* starting_symbol, 
 				ExampleType* example, 
 				RHSToDivider* r2d, 
-				SearchTreeCache* cache, 
+				SearchTreeCacheFactory* cache_pool, 
 				int search_depth); /* top level search */
 
 	SearchTree(SyntaxLeftHandSide* starting_symbol, 
@@ -36,7 +36,6 @@ class SearchTree {
 	bool search();
 
 	private:
-	SearchTreeCache<LNode*> cache;
 	SearchTreeContext ctxt;
 	LNode* root;
 }
@@ -92,6 +91,7 @@ class SearchTreeContext {
 	ExampleType* example;
 	int search_depth;
 	std::map<SearchState*,LNode*>* cache;
+	SearchTreeCacheFactory* cache_pool;
 };
 
 class RHSToDivider {

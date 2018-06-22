@@ -1,22 +1,23 @@
 #include "search_tree.h"
 
 SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, ExampleType* example, RHSToDivider* r2d, int search_depth) {
-	ctxt->cache = &cache;
 	ctxt->search_depth = search_depth;
 	ctxt->r2d = r2d;
+	ctxt->cache_pool = cache_pool0;
+	ctxt->cache = cache_pool0->get_cache();
 	SearchState* init_state = example->to_init_state();
 	root = new LNode(starting_symbol, init_state);
-	cache[init_state] = root;
+	(*cache)[init_state] = root;
 }
 
 SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, SearchTreeContext ctxt0, SearchState* init_state) {
 	ctxt = ctxt0;
 	if (ctxt.cache->count(init_state)>0)
-		root = ctxt.cache[init_state];
+		root = (*ctxt.cache)[init_state];
 	else 
 	{
 		root = new LNode(starting_symbol, init_state);
-		ctxt.cache[init_state] = root;
+		(*ctxt.cache)[init_state] = root;
 	}
 }
 
@@ -175,7 +176,7 @@ bool DNode::search(SearchTreeContext ctxt) {
 				if (ctxt->cache->count(edge_state) == 0)
 				{
 					LNode* exp = new LNode( syntax->subexp[0], edge_state );
-					ctxt->cache[edge_state] = exp;
+					(*ctxt->cache)[edge_state] = exp;
 					exp->search(ctxt);
 				}
 
@@ -211,11 +212,11 @@ bool DNode::search(SearchTreeContext ctxt) {
 						*/
 						bool flag = false;
 						{
-							SearchGraph g(syntax, ctxt.search_depth);
+							SearchGraph g(ctxt.search_depth, syntax, nullptr, nullptr);
 							std::vector<SearchState*> substate;
 							for (int l=0; l<candidate_path.size()-1; l++)
 								substate.push_back(divider->get_dep_substates(state, candidate_path[l], candidate_path[l+1]));
-							flag = g.search_recursive(ctxt, substate) != nullptr;
+							flag = (g.search_recursive(ctxt, substate) != nullptr);
 						}
 
 						if (flag)
@@ -267,10 +268,10 @@ bool RNode::search(SearchTreeContext ctxt) {
 		if (ctxt->cache->count(substate[i])==0)
 		{
 			LNode* exp = new LNode(syntax->subexp[syntax->independent?i:0],substate[i]);
-			ctxt->cache[substate[i]] = exp;
+			(*ctxt->cache)[substate[i]] = exp;
 			exp->search(ctxt);
 		}
-		subexp.push_back(ctxt->cache[substate[i]]);
+		subexp.push_back((*ctxt->cache)[substate[i]]);
 		valid_.push_back(subexp[i]->is_feasible());
 	}
 	feasible = divider->valid_combination(valid_subexp);

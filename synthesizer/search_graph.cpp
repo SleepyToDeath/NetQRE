@@ -1,8 +1,9 @@
 #include "search_graph.h"
 
-SearchGraph::SearchGraph(int depth_threshold0, SyntaxLeftHandSide* starting_symbol0, RHSToDivider* r2d0) {
+SearchGraph::SearchGraph(int depth_threshold0, SyntaxLeftHandSide* starting_symbol0, RHSToDivider* r2d0, SearchTreeCacheFactory* cache_pool0) {
 	depth_threshold = depth_threshold0;
 	starting_symbol = starting_symbol0;
+	cache_pool = cache_pool0;
 	r2d = r2d0;
 }
 
