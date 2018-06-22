@@ -211,7 +211,7 @@ bool DNode::search(SearchTreeContext ctxt) {
 						*/
 						bool flag = false;
 						{
-							SearchGraph g(ctxt.search_depth);
+							SearchGraph g(syntax, ctxt.search_depth);
 							std::vector<SearchState*> substate;
 							for (int l=0; l<candidate_path.size()-1; l++)
 								substate.push_back(divider->get_dep_substates(state, candidate_path[l], candidate_path[l+1]));
@@ -277,3 +277,14 @@ bool RNode::search(SearchTreeContext ctxt) {
 	color = STBlack;
 	return feasible;
 }
+
+DivideStrategy* RHSToDivider::get_divider(SyntaxRightHandSide* rhs)
+{
+	return r2dmap[rhs];
+}
+
+void RHSToDivide::register_divider(SyntaxRightHandSide* rhs, DivideStrategy* divider)
+{
+	r2dmap[rhs] = divider;
+}
+

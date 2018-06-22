@@ -21,8 +21,16 @@ class SearchTreeCache;
 */
 class SearchTree {
 	pulic:
-	SearchTree(SyntaxLeftHandSide* starting_symbol, ExampleType* example, RHSToDivider* r2d, int search_depth); /* top level search */
-	SearchTree(SyntaxLeftHandSide* starting_symbol, SearchTreeContext ctxt, SearchState* init_state); /* recursive search */
+	SearchTree(SyntaxLeftHandSide* starting_symbol, 
+				ExampleType* example, 
+				RHSToDivider* r2d, 
+				SearchTreeCache* cache, 
+				int search_depth); /* top level search */
+
+	SearchTree(SyntaxLeftHandSide* starting_symbol, 
+				SearchTreeContext ctxt, 
+				SearchState* init_state); /* recursive search */
+
 	LNode* get_root();
 //	bool accept(SyntaxTree* t);
 	bool search();
@@ -107,6 +115,12 @@ class ExampleType {
 /* one for each language */
 class SearchState {
 };
+
+template<class T>
+class SearchTreeCacheFactory {
+	public:
+	virtual SearchTreeCache* get_cache() = 0;
+}
 
 /* 
 	one for each language

@@ -36,6 +36,7 @@ class SyntaxTreeNode {
 	int option;
 };
 
+/* [TODO] useless? */
 class LanguageSyntax
 {
 	public:
