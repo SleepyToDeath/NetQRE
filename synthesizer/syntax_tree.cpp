@@ -5,8 +5,8 @@ SyntaxTree::SyntaxTree(SyntaxTreeNode* r) {
 }
 
 SyntaxTree::SyntaxTree(SyntaxTree* t) {
-	root = new SyntaxTreeNode(t->root)
-	for (int i=0; i<t->subtree.size()
+	root = new SyntaxTreeNode(t->root);
+	for (int i=0; i<t->subtree.size(); i++)
 		subtree[i] = new SyntaxTree(t->subtree[i]);
 }
 
@@ -41,7 +41,7 @@ void SyntaxTree::mutate(int option) {
 
 bool SyntaxTree::complete() {
 
-	if (root->is_term)
+	if (root->get_type()->is_term)
 		return true;
 
 	if (root->get_option() == SyntaxLeftHandSide::NoOption)
@@ -54,7 +54,7 @@ bool SyntaxTree::complete() {
 	return true;
 }
 
-bool SyntaxTree::multi_mutate(SyntaxTree* root, int max_depth, std::vector<SyntaxTree*> * queue) {
+bool SyntaxTree::multi_mutate(SyntaxTree* top, int max_depth, std::vector<SyntaxTree*> * queue) {
 
 	if (root->get_type()->is_term)
 		return false;
@@ -63,7 +63,7 @@ bool SyntaxTree::multi_mutate(SyntaxTree* root, int max_depth, std::vector<Synta
 	{
 		if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
-			for (int i=0; i<root->get_type()->option.size(); i++);
+			for (int i=0; i<root->get_type()->option.size(); i++)
 			{
 				mutate(i);
 				queue->push_back(new SyntaxTree(root));
@@ -74,7 +74,7 @@ bool SyntaxTree::multi_mutate(SyntaxTree* root, int max_depth, std::vector<Synta
 		else
 		{
 			for (int i=0; i<subtree.size(); i++)
-				if (subtree[i]->multi_mutate(root, max_depth-1, queue))
+				if (subtree[i]->multi_mutate(top, max_depth-1, queue))
 					return true;
 			return false;
 		}

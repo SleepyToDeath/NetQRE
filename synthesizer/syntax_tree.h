@@ -3,8 +3,9 @@
 
 #include<vector>
 
+class SyntaxRightHandSide;
+class SyntaxLeftHandSide;
 class SyntaxTreeNode;
-class SyntaxRule;
 
 class SyntaxTree {
 	public:
@@ -32,7 +33,7 @@ class SyntaxTreeNode {
 	int get_option();
 	
 	private:
-	SyntaxRule* type;
+	SyntaxLeftHandSide* type;
 	int option;
 };
 
@@ -45,24 +46,24 @@ class LanguageSyntax
 	int size();
 
 	private:
-	vector<SyntaxLeftHandSide*> rule;
+	std::vector<SyntaxLeftHandSide*> rule;
 };
 
 class SyntaxLeftHandSide {
 	public:
 	int id;
 	int size();
-	vector<SyntaxRightHandSide*> option;
+	std::vector<SyntaxRightHandSide*> option;
 	bool is_term;
 
-	const int NoOption = -1;
+	static const int NoOption = -1;
 };
 
 class SyntaxRightHandSide {
 	public:
 	int size();
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
-	vector<SyntaxLeftHandSide*> subexp;
+	std::vector<SyntaxLeftHandSide*> subexp;
 };
 
 

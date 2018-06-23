@@ -5,7 +5,7 @@
 
 class SearchGraph {
 	public:
-	SearchGraph(int depth_threshold, SyntaxLeftHandSide* starting_symbol, RHSToDivider* r2d, SearchTreeCacheFactory* cache_pool);
+	SearchGraph(int depth_threshold, SyntaxLeftHandSide* starting_symbol, RHSToDivider* r2d, SearchTreeCacheFactory<LNode*>* cache_pool);
 	SyntaxTree* search_top_level(std::vector<ExampleType*> example);
 	SyntaxTree* search_recursive(SearchTreeContext ctxt, std::vector<SearchState*> state);
 
@@ -13,9 +13,9 @@ class SearchGraph {
 	int depth_threshold;
 	SyntaxLeftHandSide* starting_symbol;
 	RHSToDivider* r2d;
-	SearchTreeCacheFactory* cache_pool;
+	SearchTreeCacheFactory<LNode*>* cache_pool;
 
-	SyntaxTree* search(std::vector<LNode*> constraint);
+	SyntaxTree* enumerate(std::vector<LNode*> constraint);
 };
 
 #endif

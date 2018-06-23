@@ -1,13 +1,18 @@
 #include "search_tree.h"
+#include "search_graph.h"
 
-SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, ExampleType* example, RHSToDivider* r2d, int search_depth) {
-	ctxt->search_depth = search_depth;
-	ctxt->r2d = r2d;
-	ctxt->cache_pool = cache_pool0;
-	ctxt->cache = cache_pool0->get_cache();
+SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, 
+						ExampleType* example, 
+						RHSToDivider* r2d, 
+						SearchTreeCacheFactory<LNode*>* cache_pool0, 
+						int search_depth) {
+	ctxt.search_depth = search_depth;
+	ctxt.r2d = r2d;
+	ctxt.cache_pool = cache_pool0;
+	ctxt.cache = cache_pool0->get_cache();
 	SearchState* init_state = example->to_init_state();
 	root = new LNode(starting_symbol, init_state);
-	(*cache)[init_state] = root;
+	(*ctxt.cache)[init_state] = root;
 }
 
 SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, SearchTreeContext ctxt0, SearchState* init_state) {
@@ -31,6 +36,10 @@ bool SearchTree::search() {
 	return root->search(ctxt);
 }
 
+LNode* SearchTree::get_root() {
+	return root;
+}
+
 SearchTreeColor SearchTreeNode::get_color() {
 	return color;
 }
@@ -51,7 +60,7 @@ LNode::LNode(SyntaxLeftHandSide* syn, SearchState* s) {
 
 bool LNode::search(SearchTreeContext ctxt) {
 	color = STGray;
-	ctxt->search_depth--;
+	ctxt.search_depth--;
 
 	if (syntax->is_term)
 		return ctxt.example->match(state, syntax);
@@ -59,7 +68,7 @@ bool LNode::search(SearchTreeContext ctxt) {
 	bool flag = false;
 	for (int i=0; i<syntax->option.size(); i++)
 	{
-		option.push_back = new DNode(syntax->option[i], state);
+		option.push_back(new DNode(syntax->option[i], state));
 		flag = flag | option[i]->search(ctxt);
 	}
 	feasible = flag;
@@ -83,7 +92,7 @@ bool LNode::accept(SyntaxTree* t) {
 		{
 			/* if it's independent, each sub-search-tree must accept corresponding sub-syntax-tree */
 			for (int j=0; j<div->subexp.size(); j++)
-				if (!(div->subexp[j]->accep(t->subtree[j])))
+				if (!(div->subexp[j]->accept(t->subtree[j])))
 				{
 					flag = false;
 					break;
@@ -122,7 +131,7 @@ class DNodeDAG {
 	std::vector<int> fan_in;
 
 	/* map from int(index) to vertex */
-	std::vector< DNodeDAGNode > vertex;
+	std::vector< DNodeDAGVertex > vertex;
 
 	/* search queue */
 	std::vector< int > queue;
@@ -142,14 +151,14 @@ class DNodeDAGVertex {
 bool DNode::search(SearchTreeContext ctxt) {
 	color = STGray;
 	bool flag = false;
-	divider = ctxt->r2d->get_divider(syntax);
+	divider = ctxt.r2d->get_divider(syntax);
 	if (syntax->independent)
 	{
-		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates();
+		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates(state);
 		for (int i=0; i<strategy.size(); i++)
 		{
 			RNode* div = new RNode(syntax, strategy[i]);
-			division.push_back = div;
+			division.push_back(div);
 			flag = flag || div->search(ctxt);
 		}
 	}
@@ -163,8 +172,8 @@ bool DNode::search(SearchTreeContext ctxt) {
 		for (int i=0; i<=max; i++)
 		{
 			dag->edge.push_back(std::vector<int>());
-			dag->vertex.push_back(DNodeDAGNode());
-			fan_in.push_back(0);
+			dag->vertex.push_back(DNodeDAGVertex());
+			dag->fan_in.push_back(0);
 		}
 
 		/* step 1, build edges */
@@ -173,14 +182,14 @@ bool DNode::search(SearchTreeContext ctxt) {
 			{
 				SearchState* edge_state = divider->get_dep_substates(state, i, j);
 
-				if (ctxt->cache->count(edge_state) == 0)
+				if (ctxt.cache->count(edge_state) == 0)
 				{
 					LNode* exp = new LNode( syntax->subexp[0], edge_state );
-					(*ctxt->cache)[edge_state] = exp;
+					(*ctxt.cache)[edge_state] = exp;
 					exp->search(ctxt);
 				}
 
-				if (ctxt->cache->is_feasible())
+				if ((*ctxt.cache)[edge_state]->is_feasible())
 				{
 					dag->edge[i].push_back(j);
 					dag->fan_in[j]++;
@@ -188,23 +197,23 @@ bool DNode::search(SearchTreeContext ctxt) {
 			}
 
 		/* step 2, DP on DAG */
-		dat->queue.push_back(min);
+		dag->queue.push_back(min);
 		DNodeDAGPath empty_path;
-		empty_path.push_back(min);
+		empty_path.vertex.push_back(min);
 		dag->vertex[min].path.push_back(empty_path);
 		{
 			int i=0;
 			int end=0;
 			while (i<=end)
 			{
-				int current = queue[i];
-				for (j=0; j<dag->edge[current].size(); j++)
+				int current = dag->queue[i];
+				for (int j=0; j<dag->edge[current].size(); j++)
 				{
 					int next = dag->edge[current][j];
-					for (k=0; k<dag->vertex[current].path.size(); k++)
+					for (int k=0; k<dag->vertex[current].path.size(); k++)
 					{
 						DNodeDAGPath candidate_path = dag->vertex[current].path[k];
-						candidate_path.push_back(next);
+						candidate_path.vertex.push_back(next);
 
 						/*
 							Mismatch condition can be reduced to match condition in this case.
@@ -212,10 +221,10 @@ bool DNode::search(SearchTreeContext ctxt) {
 						*/
 						bool flag = false;
 						{
-							SearchGraph g(ctxt.search_depth, syntax, nullptr, nullptr);
+							SearchGraph g(ctxt.search_depth, syntax->subexp[0], nullptr, nullptr);
 							std::vector<SearchState*> substate;
-							for (int l=0; l<candidate_path.size()-1; l++)
-								substate.push_back(divider->get_dep_substates(state, candidate_path[l], candidate_path[l+1]));
+							for (int l=0; l<candidate_path.vertex.size()-1; l++)
+								substate.push_back(divider->get_dep_substates(state, candidate_path.vertex[l], candidate_path.vertex[l+1]));
 							flag = (g.search_recursive(ctxt, substate) != nullptr);
 						}
 
@@ -231,17 +240,17 @@ bool DNode::search(SearchTreeContext ctxt) {
 		/* step 3, convert path to division */
 		if (dag->vertex[max].path.size() == 0)
 		{
-			is_feasible = false;
+			feasible = false;
 		}
 		else
 		{
-			is_feasible = true;
+			feasible = true;
 			for (int i=0; i<dag->vertex[max].path.size(); i++)
 			{
 				DNodeDAGPath path = dag->vertex[max].path[i];
 				std::vector<SearchState*> substate;
-				for (int j=0; j<path.size()-1; j++)
-					substate.push_back(divider->get_dep_substates(state, path[j], path[j+1]));
+				for (int j=0; j<path.vertex.size()-1; j++)
+					substate.push_back(divider->get_dep_substates(state, path.vertex[j], path.vertex[j+1]));
 				RNode* div = new RNode(syntax, substate);
 				div->search(ctxt);
 				division.push_back(div);
@@ -252,27 +261,27 @@ bool DNode::search(SearchTreeContext ctxt) {
 	return flag;
 }
 
-RNode::RNode(SyntaxRightHandSide* syn, SearchState* s) {
+RNode::RNode(SyntaxRightHandSide* syn, std::vector<SearchState*> substate0) {
 	syntax = syn;
-	state = s;
+	substate = substate0;
 	color = STWhite;
 	feasible = false;
 }
 
 bool RNode::search(SearchTreeContext ctxt) {
 	color = STGray;
-	divider = ctxt->r2d->get_divider(syntax);
+	divider = ctxt.r2d->get_divider(syntax);
 	std::vector<bool> valid_subexp;
 	for (int i=0; i<substate.size(); i++)
 	{
-		if (ctxt->cache->count(substate[i])==0)
+		if (ctxt.cache->count(substate[i])==0)
 		{
 			LNode* exp = new LNode(syntax->subexp[syntax->independent?i:0],substate[i]);
-			(*ctxt->cache)[substate[i]] = exp;
+			(*ctxt.cache)[substate[i]] = exp;
 			exp->search(ctxt);
 		}
-		subexp.push_back((*ctxt->cache)[substate[i]]);
-		valid_.push_back(subexp[i]->is_feasible());
+		subexp.push_back((*ctxt.cache)[substate[i]]);
+		valid_subexp.push_back(subexp[i]->is_feasible());
 	}
 	feasible = divider->valid_combination(valid_subexp);
 	color = STBlack;
@@ -284,7 +293,7 @@ DivideStrategy* RHSToDivider::get_divider(SyntaxRightHandSide* rhs)
 	return r2dmap[rhs];
 }
 
-void RHSToDivide::register_divider(SyntaxRightHandSide* rhs, DivideStrategy* divider)
+void RHSToDivider::register_divider(SyntaxRightHandSide* rhs, DivideStrategy* divider)
 {
 	r2dmap[rhs] = divider;
 }

@@ -2,6 +2,7 @@
 #define SEARCH_TREE_H
 
 #include "syntax_tree.h"
+#include <map>
 
 enum SearchTreeColor {
 	STWhite, STBlack, STGray
@@ -11,8 +12,22 @@ class LNode;
 class RNode;
 class DNode;
 class SearchState;
+template<class T>
 class SearchTreeCache;
+template<class T>
+class SearchTreeCacheFactory;
+class ExampleType;
+class RHSToDivider;
+class DivideStrategy;
 
+class SearchTreeContext {
+	public:
+	RHSToDivider* r2d;
+	ExampleType* example;
+	int search_depth;
+	SearchTreeCache<LNode*>* cache;
+	SearchTreeCacheFactory<LNode*>* cache_pool;
+};
 
 /* 
 	Different from syntax tree, this is a global structure.
@@ -20,11 +35,11 @@ class SearchTreeCache;
 	So there's only one instance for each task.
 */
 class SearchTree {
-	pulic:
+	public:
 	SearchTree(SyntaxLeftHandSide* starting_symbol, 
 				ExampleType* example, 
 				RHSToDivider* r2d, 
-				SearchTreeCacheFactory* cache_pool, 
+				SearchTreeCacheFactory<LNode*>* cache_pool, 
 				int search_depth); /* top level search */
 
 	SearchTree(SyntaxLeftHandSide* starting_symbol, 
@@ -38,7 +53,7 @@ class SearchTree {
 	private:
 	SearchTreeContext ctxt;
 	LNode* root;
-}
+};
 
 class SearchTreeNode
 {
@@ -60,7 +75,7 @@ class LNode: public SearchTreeNode {
 	std::vector<DNode*> option;
 
 	LNode(SyntaxLeftHandSide* syntax, SearchState* state);
-	bool search(SearchTreeContext ctxt) = 0;
+	bool search(SearchTreeContext ctxt);
 	bool accept(SyntaxTree* t);
 };
 
@@ -71,7 +86,7 @@ class DNode: public SearchTreeNode {
 	std::vector<RNode*> division;
 
 	DNode(SyntaxRightHandSide* syntax, SearchState* state);
-	bool search(SearchTreeContext ctxt) = 0;
+	bool search(SearchTreeContext ctxt);
 };
 
 class RNode: public SearchTreeNode {
@@ -79,19 +94,10 @@ class RNode: public SearchTreeNode {
 	SyntaxRightHandSide* syntax;
 	DivideStrategy* divider;
 	std::vector<LNode*> subexp;
-	std::vector<substate> substate;
+	std::vector<SearchState*> substate;
 
 	RNode(SyntaxRightHandSide* syntax, std::vector<SearchState*> substate);
-	bool search(SearchTreeContext ctxt) = 0;
-};
-
-class SearchTreeContext {
-	public:
-	RHSToDivider* r2d;
-	ExampleType* example;
-	int search_depth;
-	std::map<SearchState*,LNode*>* cache;
-	SearchTreeCacheFactory* cache_pool;
+	bool search(SearchTreeContext ctxt);
 };
 
 class RHSToDivider {
@@ -119,8 +125,8 @@ class SearchState {
 template<class T>
 class SearchTreeCacheFactory {
 	public:
-	virtual SearchTreeCache* get_cache() = 0;
-}
+	virtual SearchTreeCache<T>* get_cache() = 0;
+};
 
 /* 
 	one for each language
@@ -155,7 +161,7 @@ class DivideStrategy {
 	virtual SearchState* get_dep_substates(SearchState* s, int min, int max) = 0;
 
 	/* for gathering results */
-	virtual bool valid_combination(std::vector<bool> valid_subexp);
+	virtual bool valid_combination(std::vector<bool> valid_subexp) = 0;
 };
 
 /* ======================================================================= */

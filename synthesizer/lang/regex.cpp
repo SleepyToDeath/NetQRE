@@ -5,30 +5,8 @@
 #include <vector>
 #include <map>
 
-class RegexSearchState;
-
-class RegexSyntaxType {
-	ZERO, ONE, CHAR, RE
-};
-
-class RegexExampleType: public ExampleType {
-	public:
-	RegexExampleType(std::string s0) {
-		s = s0;
-	}
-
-	bool match(SearchState* state, SyntaxLeftHandSide* terminal) {
-		RegexSearchState* rstate = (RegexSearchState*) state;
-		if (r-l>1)
-			return false;
-		if ((terminal->id == ZERO) && (s[l] =='0'))
-			return true;
-		if ((terminal->id == one) && (s[l] =='1'))
-			return true;
-		return false;
-	}
-
-	std::string s;
+enum RegexSyntaxType {
+	RE_ZERO = 0, RE_ONE, RE_CHAR, RE_RE
 };
 
 class RegexSearchState: public SearchState {
@@ -37,28 +15,75 @@ class RegexSearchState: public SearchState {
 	RegexSyntaxType type;
 };
 
-template<class T>
-class RegexSearchTreeCacheFactory: public SearchTreeCacheFactory {
+bool operator < (const RegexSearchState s1, const RegexSearchState s2) {
+	if (s2.l > s1.l)
+		return true;
+	else if (s2.l > s1.l)
+		return false;
+	else if (s2.r > s1.r)
+		return true;
+	else if (s2.r < s1.r)
+		return false;
+	else if (s2.type > s1.type)
+		return true;
+	else if (s2.type < s1.type)
+		return false;
+	return false;
+}
+
+
+class RegexExampleType: public ExampleType {
 	public:
-	SearchTreeCache* get_cache() {
-		return new RegexSearchTreeCache();
+	RegexExampleType(std::string s0) {
+		s = s0;
 	}
+
+	SearchState* to_init_state() {
+		RegexSearchState* rstate = new RegexSearchState();
+		rstate->l = 0;
+		rstate->r = s.length();
+		rstate->type = RE_RE;
+	}
+
+
+	bool match(SearchState* state, SyntaxLeftHandSide* terminal) {
+		RegexSearchState* rstate = (RegexSearchState*) state;
+		int r = rstate->r;
+		int l = rstate->l;
+		if (r-l>1)
+			return false;
+		if ((terminal->id == RE_ZERO) && (s[l] =='0'))
+			return true;
+		if ((terminal->id == RE_ONE) && (s[l] =='1'))
+			return true;
+		return false;
+	}
+
+	std::string s;
 };
 
 template<class T>
-class RegexSearchTreeCache: public SearchTreeCache {
+class RegexSearchTreeCache: public SearchTreeCache<T> {
 	public:
 	T& operator [](SearchState* state) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
-		return m[rstate*];
+		return m[*rstate];
 	}
 
 	int count(SearchState* state) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
-		return m.count(rstate*);
+		return m.count(*rstate);
 	}
 
 	std::map<RegexSearchState,T> m;
+};
+
+template<class T>
+class RegexSearchTreeCacheFactory: public SearchTreeCacheFactory<T> {
+	public:
+	SearchTreeCache<T>* get_cache() {
+		return new RegexSearchTreeCache<T>();
+	}
 };
 
 /* one for each right hand side option */
@@ -69,15 +94,15 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 		std::vector< std::vector<SearchState*> > ans;
 		for (int i=rstate->l+1; i<rstate->r; i++)
 		{
-			std::vetor<SearchState*> div;
+			std::vector<SearchState*> div;
 			RegexSearchState* left = new RegexSearchState;
 			RegexSearchState* right = new RegexSearchState;
 			left->l = rstate->l;
 			left->r = i;
-			left->type = RE;
+			left->type = RE_RE;
 			right->l = i;
 			right->r = rstate->r;
-			right->type = RE;
+			right->type = RE_RE;
 			div.push_back(left);
 			div.push_back(right);
 			ans.push_back(div);
@@ -97,7 +122,7 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 
 	SearchState* get_dep_substates(SearchState* s, int min, int max)
 	{
-		return nullptr
+		return nullptr;
 	}
 
 	bool valid_combination(std::vector<bool> valid_subexp) {
@@ -108,7 +133,7 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 	}
 };
 
-class RegexCharDivideStrategy : public DivideStrategy{
+class RegexCharDivideStrategy : public DivideStrategy {
 	public:
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		std::vector< std::vector<SearchState*> > ans;
@@ -117,7 +142,7 @@ class RegexCharDivideStrategy : public DivideStrategy{
 		RegexSearchState* ans_final = new RegexSearchState();
 		ans_final->l = rstate->l;
 		ans_final->r = rstate->r;
-		ans_final->type = CHAR;
+		ans_final->type = RE_CHAR;
 		ans_inner.push_back(ans_final);
 		ans.push_back(ans_inner);
 	}
@@ -134,7 +159,7 @@ class RegexCharDivideStrategy : public DivideStrategy{
 
 	SearchState* get_dep_substates(SearchState* s, int min, int max)
 	{
-		return nullptr
+		return nullptr;
 	}
 
 	bool valid_combination(std::vector<bool> valid_subexp) {
@@ -145,7 +170,7 @@ class RegexCharDivideStrategy : public DivideStrategy{
 	}
 };
 
-class RegexZeroDivideStrategy : public DivideStrategy{
+class RegexZeroDivideStrategy : public DivideStrategy {
 	public:
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		std::vector< std::vector<SearchState*> > ans;
@@ -154,7 +179,7 @@ class RegexZeroDivideStrategy : public DivideStrategy{
 		RegexSearchState* ans_final = new RegexSearchState();
 		ans_final->l = rstate->l;
 		ans_final->r = rstate->r;
-		ans_final->type = ZERO;
+		ans_final->type = RE_ZERO;
 		ans_inner.push_back(ans_final);
 		ans.push_back(ans_inner);
 	}
@@ -171,7 +196,7 @@ class RegexZeroDivideStrategy : public DivideStrategy{
 
 	SearchState* get_dep_substates(SearchState* s, int min, int max)
 	{
-		return nullptr
+		return nullptr;
 	}
 
 	bool valid_combination(std::vector<bool> valid_subexp) {
@@ -192,7 +217,7 @@ class RegexOneDivideStrategy : public DivideStrategy {
 		RegexSearchState* ans_final = new RegexSearchState();
 		ans_final->l = rstate->l;
 		ans_final->r = rstate->r;
-		ans_final->type = ONE;
+		ans_final->type = RE_ONE;
 		ans_inner.push_back(ans_final);
 		ans.push_back(ans_inner);
 	}
@@ -209,7 +234,7 @@ class RegexOneDivideStrategy : public DivideStrategy {
 
 	SearchState* get_dep_substates(SearchState* s, int min, int max)
 	{
-		return nullptr
+		return nullptr;
 	}
 
 	bool valid_combination(std::vector<bool> valid_subexp) {
@@ -237,13 +262,13 @@ RegexOneDivideStrategy* d_one;
 
 RHSToDivider* r2d;
 
-RegexSearchTreeCacheFactory* cache_pool;
+RegexSearchTreeCacheFactory<LNode*>* cache_pool;
 
 void init()
 {
 	l_re = new SyntaxLeftHandSide;
 	l_ch = new SyntaxLeftHandSide();
-	l_zero = new SyntaxLeftHandSide()();
+	l_zero = new SyntaxLeftHandSide();
 	l_one = new SyntaxLeftHandSide();
 
 	r_concat = new SyntaxRightHandSide();
@@ -258,10 +283,10 @@ void init()
 
 	r2d = new RHSToDivider();
 
-	l_re->id = RE;
-	l_ch->id = CHAR;
-	l_zero->id = ZERO;
-	l_one->id = ONE;
+	l_re->id = RE_RE;
+	l_ch->id = RE_CHAR;
+	l_zero->id = RE_ZERO;
+	l_one->id = RE_ONE;
 
 	l_re->is_term = false;
 	l_ch->is_term = false;
@@ -289,17 +314,18 @@ void init()
 	r2d->register_divider(r_zero, d_zero);
 	r2d->register_divider(r_one, d_one);
 
-	cache_pool = new RegexSearchTreeCacheFactory();
+	cache_pool = new RegexSearchTreeCacheFactory<LNode*>();
 }
 
 int main()
 {
 	std::string example_string;
 	init();
-	SearchGraph g(10, l_re, r2d, SearchTreeCacheFactory* cache_pool, );
-	std::cin>> example_string;
-	std::vector<RegexExampleType*> example;
-	example.push_back(new RegexExampleType(example_string);
-	SyntaxTree* search_top_level(example);
+	SearchGraph g(10, l_re, r2d,  cache_pool );
+	std::cin>>example_string;
+	std::vector<ExampleType*> example;
+	example.push_back(new RegexExampleType(example_string));
+	SyntaxTree* program = g.search_top_level(example);
 	/* [TODO] output syntax tree */
+	std::cout<<program<<std::endl;
 }
