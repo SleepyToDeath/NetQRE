@@ -120,6 +120,8 @@ class ExampleType {
 
 /* one for each language */
 class SearchState {
+	public:
+	virtual void print_state() = 0;
 };
 
 template<class T>
@@ -144,6 +146,7 @@ class SearchTreeCache {
 /* one for each right hand side option */
 class DivideStrategy {
 	public:
+	virtual bool valid_state(SearchState* s) = 0;
 	/* for independent rule */
 	/* substates[i,j]: in ith dividing option, jth subexp get this state */
 	virtual std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* s) = 0;

@@ -5,14 +5,22 @@
 #include <vector>
 #include <map>
 
-enum RegexSyntaxType {
+enum RegexSyntaxLHSType {
 	RE_ZERO = 0, RE_ONE, RE_CHAR, RE_RE
+};
+
+enum RegexSyntaxRHSType {
+	MU_ZERO = 0, MU_ONE, MU_CHAR, MU_CONCAT
 };
 
 class RegexSearchState: public SearchState {
 	public:
 	int l,r;
-	RegexSyntaxType type;
+	RegexSyntaxLHSType type;
+
+	void print_state() {
+		std::cout<<"State: "<<l<<" "<<r<<" "<<type<<std::endl;
+	}
 };
 
 bool operator < (const RegexSearchState s1, const RegexSearchState s2) {
@@ -89,6 +97,16 @@ class RegexSearchTreeCacheFactory: public SearchTreeCacheFactory<T> {
 /* one for each right hand side option */
 class RegexConcatDivideStrategy: public DivideStrategy {
 	public:
+
+	bool valid_state(SearchState* state) {
+		RegexSearchState* rstate = (RegexSearchState*) state;
+		if (rstate->l < 0)
+			return false;
+		if (rstate->r - rstate->l <2)
+			return false;
+		return true;
+	}
+
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
 		std::vector< std::vector<SearchState*> > ans;
@@ -135,6 +153,16 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 
 class RegexCharDivideStrategy : public DivideStrategy {
 	public:
+
+	bool valid_state(SearchState* state) {
+		RegexSearchState* rstate = (RegexSearchState*) state;
+		if (rstate->l < 0)
+			return false;
+		if (rstate->r - rstate->l != 1)
+			return false;
+		return true;
+	}
+
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		std::vector< std::vector<SearchState*> > ans;
 		std::vector<SearchState*> ans_inner;
@@ -172,6 +200,16 @@ class RegexCharDivideStrategy : public DivideStrategy {
 
 class RegexZeroDivideStrategy : public DivideStrategy {
 	public:
+
+	bool valid_state(SearchState* state) {
+		RegexSearchState* rstate = (RegexSearchState*) state;
+		if (rstate->l < 0)
+			return false;
+		if (rstate->r - rstate->l != 1)
+			return false;
+		return true;
+	}
+
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		std::vector< std::vector<SearchState*> > ans;
 		std::vector<SearchState*> ans_inner;
@@ -210,6 +248,16 @@ class RegexZeroDivideStrategy : public DivideStrategy {
 
 class RegexOneDivideStrategy : public DivideStrategy {
 	public:
+
+	bool valid_state(SearchState* state) {
+		RegexSearchState* rstate = (RegexSearchState*) state;
+		if (rstate->l < 0)
+			return false;
+		if (rstate->r - rstate->l != 1)
+			return false;
+		return true;
+	}
+
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		std::vector< std::vector<SearchState*> > ans;
 		std::vector<SearchState*> ans_inner;
@@ -297,6 +345,11 @@ void init()
 	r_ch->independent = true;
 	r_zero->independent = true;
 	r_one->independent = true;
+
+	r_concat->id = MU_CONCAT;
+	r_ch->id = MU_CHAR;
+	r_zero->id = MU_ZERO;
+	r_one->id = MU_ONE;
 
 	l_re->option.push_back(r_concat);
 	l_re->option.push_back(r_ch);

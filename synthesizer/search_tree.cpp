@@ -1,5 +1,6 @@
 #include "search_tree.h"
 #include "search_graph.h"
+#include <iostream>
 
 SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol, 
 						ExampleType* example, 
@@ -59,6 +60,10 @@ LNode::LNode(SyntaxLeftHandSide* syn, SearchState* s) {
 }
 
 bool LNode::search(SearchTreeContext ctxt) {
+#ifdef DEBUG_PRINT
+	std::cout<<"LNode "<<syntax->id<<"\n";
+	state->print_state();
+#endif
 	color = STGray;
 	ctxt.search_depth--;
 
@@ -68,6 +73,9 @@ bool LNode::search(SearchTreeContext ctxt) {
 	bool flag = false;
 	for (int i=0; i<syntax->option.size(); i++)
 	{
+#ifdef DEBUG_PRINT
+	std::cout<<"branch: "<<i<<std::endl;
+#endif
 		option.push_back(new DNode(syntax->option[i], state));
 		flag = flag | option[i]->search(ctxt);
 	}
@@ -149,18 +157,32 @@ class DNodeDAGVertex {
 };
 
 bool DNode::search(SearchTreeContext ctxt) {
+#ifdef DEBUG_PRINT
+	std::cout<<"DNode "<<syntax->id<<"\n";
+	state->print_state();
+#endif
 	color = STGray;
-	bool flag = false;
 	divider = ctxt.r2d->get_divider(syntax);
+	if (!(divider->valid_state(state)))
+	{
+		feasible = false;
+		return false;
+	}
+
 	if (syntax->independent)
 	{
+		bool flag = false;
 		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates(state);
 		for (int i=0; i<strategy.size(); i++)
 		{
+#ifdef DEBUG_PRINT
+	std::cout<<"branch: "<<i<<std::endl;
+#endif
 			RNode* div = new RNode(syntax, strategy[i]);
 			division.push_back(div);
 			flag = flag || div->search(ctxt);
 		}
+		feasible = flag;
 	}
 	else
 	{
@@ -258,7 +280,7 @@ bool DNode::search(SearchTreeContext ctxt) {
 		}
 	}
 	color = STBlack;
-	return flag;
+	return feasible;
 }
 
 RNode::RNode(SyntaxRightHandSide* syn, std::vector<SearchState*> substate0) {
@@ -269,11 +291,19 @@ RNode::RNode(SyntaxRightHandSide* syn, std::vector<SearchState*> substate0) {
 }
 
 bool RNode::search(SearchTreeContext ctxt) {
+#ifdef DEBUG_PRINT
+	std::cout<<"RNode "<<syntax->id<<"\n";
+	for (int i=0; i<substate.size(); i++)
+		substate[i]->print_state();
+#endif
 	color = STGray;
 	divider = ctxt.r2d->get_divider(syntax);
 	std::vector<bool> valid_subexp;
 	for (int i=0; i<substate.size(); i++)
 	{
+#ifdef DEBUG_PRINT
+	std::cout<<"branch: "<<i<<std::endl;
+#endif
 		if (ctxt.cache->count(substate[i])==0)
 		{
 			LNode* exp = new LNode(syntax->subexp[syntax->independent?i:0],substate[i]);

@@ -1,5 +1,6 @@
 #ifndef SYNTAX_TREE_H
 #define SYNTAX_TREE_H
+#define DEBUG_PRINT
 
 #include<vector>
 
@@ -61,6 +62,7 @@ class SyntaxLeftHandSide {
 
 class SyntaxRightHandSide {
 	public:
+	int id;
 	int size();
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
 	std::vector<SyntaxLeftHandSide*> subexp;
