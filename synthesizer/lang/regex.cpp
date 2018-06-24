@@ -18,26 +18,44 @@ class RegexSearchState: public SearchState {
 	int l,r;
 	RegexSyntaxLHSType type;
 
+	std::vector<int> to_vector() {
+		std::vector<int> ans;
+		ans.push_back(l);
+		ans.push_back(r);
+		ans.push_back(type);
+		return ans;
+	}
+
 	void print_state() {
 		std::cout<<"State: "<<l<<" "<<r<<" "<<type<<std::endl;
 	}
 };
 
-bool operator < (const RegexSearchState s1, const RegexSearchState s2) {
+/*
+bool operator < (const RegexSearchState& s1, const RegexSearchState& s2) {
+	bool flag;
 	if (s2.l > s1.l)
-		return true;
+		flag =  true;
 	else if (s2.l > s1.l)
-		return false;
+		flag =  false;
 	else if (s2.r > s1.r)
-		return true;
+		flag =  true;
 	else if (s2.r < s1.r)
-		return false;
+		flag =  false;
 	else if (s2.type > s1.type)
-		return true;
+		flag =  true;
 	else if (s2.type < s1.type)
-		return false;
-	return false;
+		flag =  false;
+	else
+		flag =  false;
+	std::cout<<"============cmp=================\n";
+	std::cout<<"Player1: "<<s1.l<<" "<<s1.r<<" "<<s1.type<<"\n";
+	std::cout<<"Player2: "<<s2.l<<" "<<s2.r<<" "<<s2.type<<"\n";
+	std::cout<<"result: "<<flag<<std::endl;
+	std::cout<<"================================\n";
+	return flag;
 }
+*/
 
 
 class RegexExampleType: public ExampleType {
@@ -75,15 +93,15 @@ class RegexSearchTreeCache: public SearchTreeCache<T> {
 	public:
 	T& operator [](SearchState* state) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
-		return m[*rstate];
+		return m[rstate->to_vector()];
 	}
 
 	int count(SearchState* state) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
-		return m.count(*rstate);
+		return m.count(rstate->to_vector());
 	}
 
-	std::map<RegexSearchState,T> m;
+	std::map<std::vector<int>,T> m;
 };
 
 template<class T>
@@ -173,6 +191,7 @@ class RegexCharDivideStrategy : public DivideStrategy {
 		ans_final->type = RE_CHAR;
 		ans_inner.push_back(ans_final);
 		ans.push_back(ans_inner);
+		return ans;
 	}
 
 	int get_min(SearchState* state) {
@@ -220,6 +239,7 @@ class RegexZeroDivideStrategy : public DivideStrategy {
 		ans_final->type = RE_ZERO;
 		ans_inner.push_back(ans_final);
 		ans.push_back(ans_inner);
+		return ans;
 	}
 
 	int get_min(SearchState* state) {
@@ -268,6 +288,7 @@ class RegexOneDivideStrategy : public DivideStrategy {
 		ans_final->type = RE_ONE;
 		ans_inner.push_back(ans_final);
 		ans.push_back(ans_inner);
+		return ans;
 	}
 
 	int get_min(SearchState* state) {

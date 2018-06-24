@@ -68,7 +68,10 @@ bool LNode::search(SearchTreeContext ctxt) {
 	ctxt.search_depth--;
 
 	if (syntax->is_term)
+	{
+		color = STBlack;
 		return ctxt.example->match(state, syntax);
+	}
 
 	bool flag = false;
 	for (int i=0; i<syntax->option.size(); i++)
@@ -301,13 +304,10 @@ bool RNode::search(SearchTreeContext ctxt) {
 	std::vector<bool> valid_subexp;
 	for (int i=0; i<substate.size(); i++)
 	{
-#ifdef DEBUG_PRINT
-	std::cout<<"branch: "<<i<<std::endl;
-#endif
 		if (ctxt.cache->count(substate[i])==0)
 		{
 			LNode* exp = new LNode(syntax->subexp[syntax->independent?i:0],substate[i]);
-			(*ctxt.cache)[substate[i]] = exp;
+			(*(ctxt.cache))[substate[i]] = exp;
 			exp->search(ctxt);
 		}
 		subexp.push_back((*ctxt.cache)[substate[i]]);
