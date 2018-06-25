@@ -22,6 +22,9 @@ class DivideStrategy;
 
 class SearchTreeContext {
 	public:
+#ifdef DEBUG_PRINT
+	std::string indent;
+#endif
 	RHSToDivider* r2d;
 	ExampleType* example;
 	int search_depth;
@@ -121,7 +124,7 @@ class ExampleType {
 /* one for each language */
 class SearchState {
 	public:
-	virtual void print_state() = 0;
+	virtual void print_state(std::string indent) = 0;
 };
 
 template<class T>

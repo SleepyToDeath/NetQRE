@@ -92,16 +92,18 @@ bool SyntaxTree::multi_mutate(SyntaxTree* top, int max_depth, std::vector<Syntax
 
 std::string SyntaxTree::to_string() {
 	std::string s;
-	if ((root->get_type()->is_term) || (root->get_option() == SyntaxLeftHandSide::NoOption))
-	{
+	if (root->get_type()->is_term) 
 		s = root->get_type()->name;
-	}
+	else if (root->get_option() == SyntaxLeftHandSide::NoOption)
+		s = root->get_type()->name;
 	else
 	{
-		s = root->get_type()->option[root->get_option()]->name + "(";
+		if (subtree.size() > 1)
+			s = root->get_type()->option[root->get_option()]->name + "(";
 		for (int i=0; i<this->subtree.size(); i++)
-			s = s+subtree[i]->to_string();
-		s = s + ")";
+			s = s+subtree[i]->to_string() + (i==subtree.size()-1?"":",");
+		if (subtree.size() > 1)
+			s = s + ")";
 	}
 	return s;
 }

@@ -26,8 +26,8 @@ class RegexSearchState: public SearchState {
 		return ans;
 	}
 
-	void print_state() {
-		std::cout<<"State: "<<l<<" "<<r<<" "<<type<<std::endl;
+	void print_state(std::string indent) {
+		std::cout<<indent<<"State: "<<l<<" "<<r<<" "<<type<<std::endl;
 	}
 };
 
@@ -411,5 +411,8 @@ int main()
 	example.push_back(new RegexExampleType(example_string));
 	SyntaxTree* program = g.search_top_level(example);
 	/* [TODO] output syntax tree */
-	std::cout<<program<<std::endl;
+	if (program == nullptr)
+		std::cout<<"Not Found!\n";
+	else
+		std::cout<<program->to_string()<<std::endl;
 }

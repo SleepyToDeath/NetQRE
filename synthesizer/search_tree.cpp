@@ -7,6 +7,9 @@ SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol,
 						RHSToDivider* r2d, 
 						SearchTreeCacheFactory<LNode*>* cache_pool0, 
 						int search_depth) {
+#ifdef DEBUG_PRINT
+	ctxt.indent = "";
+#endif
 	ctxt.example = example;
 	ctxt.search_depth = search_depth;
 	ctxt.r2d = r2d;
@@ -62,8 +65,9 @@ LNode::LNode(SyntaxLeftHandSide* syn, SearchState* s) {
 
 bool LNode::search(SearchTreeContext ctxt) {
 #ifdef DEBUG_PRINT
-	std::cout<<"LNode "<<syntax->id<<"\n";
-	state->print_state();
+	ctxt.indent = ctxt.indent + "|  ";
+	std::cout<<ctxt.indent<<"LNode "<<syntax->name<<"\n";
+	state->print_state(ctxt.indent);
 #endif
 	color = STGray;
 	ctxt.search_depth--;
@@ -71,29 +75,47 @@ bool LNode::search(SearchTreeContext ctxt) {
 	if (syntax->is_term)
 	{
 		color = STBlack;
-		return ctxt.example->match(state, syntax);
+		feasible = ctxt.example->match(state, syntax);
+#ifdef DEBUG_PRINT
+	std::cout<<ctxt.indent<<(feasible?"Acc!":"Rej!")<<"\n";
+#endif
+		return feasible;
 	}
 
 	bool flag = false;
 	for (int i=0; i<syntax->option.size(); i++)
 	{
 #ifdef DEBUG_PRINT
-	std::cout<<"branch: "<<i<<std::endl;
+//	std::cout<<ctxt.indent<<"branch: "<<i<<std::endl;
 #endif
 		option.push_back(new DNode(syntax->option[i], state));
 		flag = flag | option[i]->search(ctxt);
 	}
 	feasible = flag;
 	color = STBlack;
+#ifdef DEBUG_PRINT
+	std::cout<<ctxt.indent<<(feasible?"Acc!":"Rej!")<<"\n";
+#endif
+	return feasible;
 }
 
 bool LNode::accept(SyntaxTree* t) {
 	/* if it's terminal, accept */
 	if (syntax->is_term) 
+	{
+#ifdef DEBUG_PRINT
+	std::cout<<"["<<syntax->name<<" "<<t->to_string()<<" Rej!]\n";
+#endif
 		return true;
+	}
 	/* if not mutated, return result of this node */
 	if (t->root->get_option() == SyntaxLeftHandSide::NoOption)
+	{
+#ifdef DEBUG_PRINT
+	std::cout<<"["<<syntax->name<<" "<<t->to_string()<<(feasible?" Acc!":" Rej!")<<"]\n";
+#endif
 		return feasible;
+	}
 	DNode* op = option[t->root->get_option()];
 	/* if the mutation option is not feasible, reject */
 	if (!(op->is_feasible()))
@@ -124,8 +146,16 @@ bool LNode::accept(SyntaxTree* t) {
 				}
 		}
 		if (flag)
+		{
+#ifdef DEBUG_PRINT
+	std::cout<<"["<<op->division.size()<<" "<<div->subexp.size()<<" "<<i<<" "<<syntax->name<<" "<<t->to_string()<<" Acc!]\n";
+#endif
 			return true;
+		}
 	}
+#ifdef DEBUG_PRINT
+	std::cout<<"["<<syntax->name<<" "<<t->to_string()<<" Rej!]\n";
+#endif
 	return false;
 }
 
@@ -165,29 +195,37 @@ class DNodeDAGVertex {
 
 bool DNode::search(SearchTreeContext ctxt) {
 #ifdef DEBUG_PRINT
-	std::cout<<"DNode "<<syntax->id<<"\n";
-	state->print_state();
+	ctxt.indent = ctxt.indent + "|  ";
+	std::cout<<ctxt.indent<<"DNode "<<syntax->name<<"\n";
+	state->print_state(ctxt.indent);
 #endif
 	color = STGray;
 	divider = ctxt.r2d->get_divider(syntax);
 	if (!(divider->valid_state(state)))
 	{
 		feasible = false;
-		return false;
+#ifdef DEBUG_PRINT
+	std::cout<<ctxt.indent<<(feasible?std::string("Acc!"):std::string("Rej!"))<<"\n";
+#endif
+		return feasible;
 	}
 
 	if (syntax->independent)
 	{
 		bool flag = false;
 		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates(state);
+#ifdef DEBUG_PRINT
+	std::cout<<ctxt.indent<<"num of branch: "<<strategy.size()<<std::endl;
+#endif
 		for (int i=0; i<strategy.size(); i++)
 		{
 #ifdef DEBUG_PRINT
-	std::cout<<"branch: "<<i<<std::endl;
+	std::cout<<ctxt.indent<<"branch: "<<i<<std::endl;
 #endif
 			RNode* div = new RNode(syntax, strategy[i]);
 			division.push_back(div);
-			flag = flag || div->search(ctxt);
+			div->search(ctxt);
+			flag = flag || div->is_feasible();
 		}
 		feasible = flag;
 	}
@@ -287,6 +325,9 @@ bool DNode::search(SearchTreeContext ctxt) {
 		}
 	}
 	color = STBlack;
+#ifdef DEBUG_PRINT
+	std::cout<<ctxt.indent<<(feasible?std::string("Acc!"):std::string("Rej!"))<<"\n";
+#endif
 	return feasible;
 }
 
@@ -299,9 +340,10 @@ RNode::RNode(SyntaxRightHandSide* syn, std::vector<SearchState*> substate0) {
 
 bool RNode::search(SearchTreeContext ctxt) {
 #ifdef DEBUG_PRINT
-	std::cout<<"RNode "<<syntax->id<<"\n";
+	ctxt.indent = ctxt.indent + "|  ";
+	std::cout<<ctxt.indent<<"RNode "<<syntax->name<<"\n";
 	for (int i=0; i<substate.size(); i++)
-		substate[i]->print_state();
+		substate[i]->print_state(ctxt.indent);
 #endif
 	color = STGray;
 	divider = ctxt.r2d->get_divider(syntax);
@@ -319,6 +361,9 @@ bool RNode::search(SearchTreeContext ctxt) {
 	}
 	feasible = divider->valid_combination(valid_subexp);
 	color = STBlack;
+#ifdef DEBUG_PRINT
+	std::cout<<ctxt.indent<<(feasible?"Acc!":"Rej!")<<"\n";
+#endif
 	return feasible;
 }
 
