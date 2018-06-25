@@ -29,7 +29,10 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 	std::vector<SyntaxTree*> this_round;
 	std::vector<SyntaxTree*> next_round;
 
-	for (int depth = 0; depth<depth_threshold; depth++)
+//	return nullptr;
+
+//	for (int depth = 0; depth<depth_threshold; depth++)
+	int depth = depth_threshold;
 	{
 		SyntaxTree* s = new SyntaxTree(new SyntaxTreeNode(starting_symbol));
 		this_round.push_back(s);
@@ -44,13 +47,13 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 				SyntaxTree* current = this_round[i];
 				if (current->multi_mutate(current, depth, &candidate))
 				{
-#ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT_2
 	std::cout<<"candidate size: "<<candidate.size()<<"\n";
 #endif
 
 					for (int j=0; j<candidate.size(); j++)
 					{
-#ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT_2
 	std::cout<<"candidate "<<j<<" : ";
 	std::cout<<candidate[j]->to_string()<<"\n";
 #endif
@@ -65,14 +68,14 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 						}
 						if (flag_acc)
 						{
-#ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT_2
 	std::cout<<"Acc!\n";
 #endif
 							flag_new = true;
 							next_round.push_back(candidate[j]);
 							if (candidate[j]->complete())
 							{
-#ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT_2
 	std::cout<<"Gotcha!\n";
 	std::cout<<"candidate "<<j<<" : ";
 	std::cout<<candidate[j]->to_string()<<"\n";
@@ -88,7 +91,7 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 						}
 						else
 						{
-#ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT_2
 	std::cout<<"Rej!\n";
 #endif
 							delete candidate[j];
@@ -98,7 +101,9 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 			}
 			for (int k=0; k<this_round.size(); k++)
 				delete this_round[k];
+#ifdef DEBUG_PRINT_2
 	std::cout<<"This round size: "<<this_round.size()<<std::endl;
+#endif
 			this_round = next_round;
 			next_round.clear();
 		}

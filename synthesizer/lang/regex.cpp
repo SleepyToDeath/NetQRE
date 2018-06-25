@@ -69,6 +69,7 @@ class RegexExampleType: public ExampleType {
 		rstate->l = 0;
 		rstate->r = s.length();
 		rstate->type = RE_RE;
+		return rstate;
 	}
 
 
@@ -128,7 +129,7 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 	std::vector< std::vector<SearchState*> > get_indep_substates(SearchState* state) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
 		std::vector< std::vector<SearchState*> > ans;
-		for (int i=rstate->l+1; i<rstate->r; i++)
+		for (int i=rstate->l+1; i<=rstate->l+1; i++)
 		{
 			std::vector<SearchState*> div;
 			RegexSearchState* left = new RegexSearchState;
@@ -387,7 +388,7 @@ void init()
 	l_ch->option.push_back(r_zero);
 	l_ch->option.push_back(r_one);
 
-	r_concat->subexp.push_back(l_re);
+	r_concat->subexp.push_back(l_ch);
 	r_concat->subexp.push_back(l_re);
 	r_ch->subexp.push_back(l_ch);
 	r_zero->subexp.push_back(l_zero);
@@ -405,7 +406,7 @@ int main()
 {
 	std::string example_string;
 	init();
-	SearchGraph g(10, l_re, r2d,  cache_pool );
+	SearchGraph g(1000000, l_re, r2d,  cache_pool );
 	std::cin>>example_string;
 	std::vector<ExampleType*> example;
 	example.push_back(new RegexExampleType(example_string));

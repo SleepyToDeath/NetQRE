@@ -1,6 +1,7 @@
 #ifndef SYNTAX_TREE_H
 #define SYNTAX_TREE_H
-#define DEBUG_PRINT
+//#define DEBUG_PRINT
+//#define DEBUG_PRINT_2
 
 #include<vector>
 #include<string>
