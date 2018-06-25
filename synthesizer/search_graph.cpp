@@ -44,9 +44,16 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 				SyntaxTree* current = this_round[i];
 				if (current->multi_mutate(current, depth, &candidate))
 				{
+#ifdef DEBUG_PRINT
+	std::cout<<"candidate size: "<<candidate.size()<<"\n";
+#endif
 
 					for (int j=0; j<candidate.size(); j++)
 					{
+#ifdef DEBUG_PRINT
+	std::cout<<"candidate "<<j<<" : ";
+	std::cout<<candidate[j]->to_string()<<"\n";
+#endif
 						bool flag_acc = true;
 						for (int k=0; k<constraint.size(); k++)
 						{
@@ -58,6 +65,10 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 						}
 						if (flag_acc)
 						{
+#ifdef DEBUG_PRINT
+	std::cout<<"Acc!\n";
+#endif
+							flag_new = true;
 							next_round.push_back(candidate[j]);
 							if (candidate[j]->complete())
 							{
@@ -72,6 +83,9 @@ SyntaxTree* SearchGraph::enumerate(std::vector<LNode*> constraint) {
 						}
 						else
 						{
+#ifdef DEBUG_PRINT
+	std::cout<<"Rej!\n";
+#endif
 							delete candidate[j];
 						}
 					}

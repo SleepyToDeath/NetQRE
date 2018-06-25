@@ -7,6 +7,7 @@ SearchTree::SearchTree(SyntaxLeftHandSide* starting_symbol,
 						RHSToDivider* r2d, 
 						SearchTreeCacheFactory<LNode*>* cache_pool0, 
 						int search_depth) {
+	ctxt.example = example;
 	ctxt.search_depth = search_depth;
 	ctxt.r2d = r2d;
 	ctxt.cache_pool = cache_pool0;
@@ -90,6 +91,9 @@ bool LNode::accept(SyntaxTree* t) {
 	/* if it's terminal, accept */
 	if (syntax->is_term) 
 		return true;
+	/* if not mutated, return result of this node */
+	if (t->root->get_option() == SyntaxLeftHandSide::NoOption)
+		return feasible;
 	DNode* op = option[t->root->get_option()];
 	/* if the mutation option is not feasible, reject */
 	if (!(op->is_feasible()))

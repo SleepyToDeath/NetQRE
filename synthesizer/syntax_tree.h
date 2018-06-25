@@ -3,6 +3,8 @@
 #define DEBUG_PRINT
 
 #include<vector>
+#include<string>
+#include<iostream>
 
 class SyntaxRightHandSide;
 class SyntaxLeftHandSide;
@@ -22,6 +24,8 @@ class SyntaxTree {
 	bool multi_mutate(SyntaxTree* root, int max_depth, std::vector<SyntaxTree*> * queue);
 	/* check if all leaf nodes are terminal */
 	bool complete();
+
+	std::string to_string();
 };
 
 class SyntaxTreeNode {
@@ -54,6 +58,7 @@ class SyntaxLeftHandSide {
 	public:
 	int id;
 	int size();
+	std::string name;
 	std::vector<SyntaxRightHandSide*> option;
 	bool is_term;
 
@@ -64,6 +69,7 @@ class SyntaxRightHandSide {
 	public:
 	int id;
 	int size();
+	std::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
 	std::vector<SyntaxLeftHandSide*> subexp;
 };

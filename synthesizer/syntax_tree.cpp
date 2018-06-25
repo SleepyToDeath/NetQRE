@@ -7,7 +7,12 @@ SyntaxTree::SyntaxTree(SyntaxTreeNode* r) {
 SyntaxTree::SyntaxTree(SyntaxTree* t) {
 	root = new SyntaxTreeNode(t->root);
 	for (int i=0; i<t->subtree.size(); i++)
-		subtree[i] = new SyntaxTree(t->subtree[i]);
+		subtree.push_back(new SyntaxTree(t->subtree[i]));
+#ifdef DEBUG_PRINT
+//	std::cout<< "copying syntax tree\n";
+//	std::cout<<"src: "<<t->to_string()<<"\n";
+//	std::cout<<"dst: "<<to_string()<<"\n";
+#endif 
 }
 
 SyntaxTree::~SyntaxTree() {
@@ -66,7 +71,7 @@ bool SyntaxTree::multi_mutate(SyntaxTree* top, int max_depth, std::vector<Syntax
 			for (int i=0; i<root->get_type()->option.size(); i++)
 			{
 				mutate(i);
-				queue->push_back(new SyntaxTree(root));
+				queue->push_back(new SyntaxTree(top));
 			}
 			mutate(SyntaxLeftHandSide::NoOption);
 			return true;
@@ -83,6 +88,22 @@ bool SyntaxTree::multi_mutate(SyntaxTree* top, int max_depth, std::vector<Syntax
 	{
 		return false;
 	}
+}
+
+std::string SyntaxTree::to_string() {
+	std::string s;
+	if ((root->get_type()->is_term) || (root->get_option() == SyntaxLeftHandSide::NoOption))
+	{
+		s = root->get_type()->name;
+	}
+	else
+	{
+		s = root->get_type()->option[root->get_option()]->name + "(";
+		for (int i=0; i<this->subtree.size(); i++)
+			s = s+subtree[i]->to_string();
+		s = s + ")";
+	}
+	return s;
 }
 
 SyntaxTreeNode::SyntaxTreeNode(SyntaxLeftHandSide* l) {

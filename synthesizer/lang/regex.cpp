@@ -357,10 +357,15 @@ void init()
 	l_zero->id = RE_ZERO;
 	l_one->id = RE_ONE;
 
+	l_re->name = "re";
+	l_ch->name = "char";
+	l_zero->name = "0";
+	l_one->name = "1";
+
 	l_re->is_term = false;
 	l_ch->is_term = false;
-	l_zero->is_term = false;
-	l_one->is_term = false;
+	l_zero->is_term = true;
+	l_one->is_term = true;
 
 	r_concat->independent = true;
 	r_ch->independent = true;
@@ -371,6 +376,11 @@ void init()
 	r_ch->id = MU_CHAR;
 	r_zero->id = MU_ZERO;
 	r_one->id = MU_ONE;
+
+	r_concat->name = "concat";
+	r_ch->name = "char";
+	r_zero->name = "0";
+	r_one->name = "1";
 
 	l_re->option.push_back(r_concat);
 	l_re->option.push_back(r_ch);
