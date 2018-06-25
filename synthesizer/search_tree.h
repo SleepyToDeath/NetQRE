@@ -53,6 +53,8 @@ class SearchTree {
 //	bool accept(SyntaxTree* t);
 	bool search();
 
+	SearchTreeContext get_ctxt();
+
 	private:
 	SearchTreeContext ctxt;
 	LNode* root;
@@ -143,6 +145,7 @@ class SearchTreeCache {
 	public:
 	virtual T& operator [](SearchState* state) = 0;
 	virtual int count(SearchState* state) = 0;
+	virtual int size() = 0;
 };
 
 

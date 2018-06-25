@@ -16,6 +16,8 @@ class SearchGraph {
 	SearchTreeCacheFactory<LNode*>* cache_pool;
 
 	SyntaxTree* enumerate(std::vector<LNode*> constraint);
+	SyntaxTree* enumerate_naive(SyntaxTree* answer);
+	SyntaxTree* enumerate_random(std::vector<LNode*> constraint, int batch_size);
 };
 
 #endif

@@ -37,6 +37,10 @@ bool SearchTree::accept(SyntaxTree* t) {
 }
 */
 
+SearchTreeContext SearchTree::get_ctxt() {
+	return ctxt;
+}
+
 bool SearchTree::search() {
 	return root->search(ctxt);
 }
@@ -121,14 +125,16 @@ bool LNode::accept(SyntaxTree* t) {
 	if (!(op->is_feasible()))
 		return false;
 	/* if any dividing option below the mutation option is accepted, accept*/
-	for (int i=0; i<op->division.size(); i++)
+	int dsize = op->division.size();
+	for (int i=0; i<dsize; i++)
 	{
 		RNode* div = op->division[i];
 		bool flag = true;
 		if (op->syntax->independent) 
 		{
 			/* if it's independent, each sub-search-tree must accept corresponding sub-syntax-tree */
-			for (int j=0; j<div->subexp.size(); j++)
+			int esize = div->subexp.size();
+			for (int j=0; j<esize; j++)
 				if (!(div->subexp[j]->accept(t->subtree[j])))
 				{
 					flag = false;

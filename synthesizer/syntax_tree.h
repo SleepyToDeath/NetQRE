@@ -2,6 +2,10 @@
 #define SYNTAX_TREE_H
 //#define DEBUG_PRINT
 //#define DEBUG_PRINT_2
+//#define DEBUG_PRINT_4
+//#define DEBUG_PRINT_5
+#define DEBUG_PRINT_9
+#define DEBUG_PRINT_8
 
 #include<vector>
 #include<string>
@@ -27,6 +31,8 @@ class SyntaxTree {
 	bool complete();
 
 	std::string to_string();
+
+	bool equal(SyntaxTree* t);
 };
 
 class SyntaxTreeNode {
@@ -37,6 +43,8 @@ class SyntaxTreeNode {
 	SyntaxLeftHandSide* get_type();
 	void set_option(int option);
 	int get_option();
+
+	bool equal(SyntaxTreeNode* n);
 	
 	private:
 	SyntaxLeftHandSide* type;

@@ -108,6 +108,17 @@ std::string SyntaxTree::to_string() {
 	return s;
 }
 
+bool SyntaxTree::equal(SyntaxTree* t) {
+	if (!root->equal(t->root))
+		return false;
+	if (subtree.size() != t->subtree.size())
+		return false;
+	for (int i=0; i<subtree.size(); i++)
+		if (!subtree[i]->equal(t->subtree[i]))
+			return false;
+	return true;
+}
+
 SyntaxTreeNode::SyntaxTreeNode(SyntaxLeftHandSide* l) {
 	type = l;
 	option = SyntaxLeftHandSide::NoOption;
@@ -118,6 +129,9 @@ SyntaxTreeNode::SyntaxTreeNode(SyntaxTreeNode* src) {
 	type = src->type;
 }
 
+bool SyntaxTreeNode::equal(SyntaxTreeNode* n) {
+	return (option == n->option) && (type == n->type);
+}
 
 SyntaxLeftHandSide* SyntaxTreeNode::get_type() {
 	return type;

@@ -102,6 +102,10 @@ class RegexSearchTreeCache: public SearchTreeCache<T> {
 		return m.count(rstate->to_vector());
 	}
 
+	int size() {
+		return m.size();
+	}
+
 	std::map<std::vector<int>,T> m;
 };
 
@@ -136,7 +140,7 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 			RegexSearchState* right = new RegexSearchState;
 			left->l = rstate->l;
 			left->r = i;
-			left->type = RE_RE;
+			left->type = RE_CHAR;
 			right->l = i;
 			right->r = rstate->r;
 			right->type = RE_RE;
