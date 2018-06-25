@@ -20,6 +20,13 @@ SyntaxTree* SearchGraph::search_top_level(std::vector<ExampleType*> example) {
 #endif
 	}
 #ifdef DEBUG_PRINT_9
+	std::cout<<"================= Random Algorithm Start ===================\n";
+#endif
+
+	SyntaxTree* ans2 = enumerate_random(constraint, 1);
+
+#ifdef DEBUG_PRINT_9
+	std::cout<<ans2->to_string()<<std::endl;
 	std::cout<<"================= Algorithm Start ===================\n";
 #endif
 
@@ -27,13 +34,6 @@ SyntaxTree* SearchGraph::search_top_level(std::vector<ExampleType*> example) {
 
 #ifdef DEBUG_PRINT_9
 	std::cout<<ans->to_string()<<std::endl;
-	std::cout<<"================= Random Algorithm Start ===================\n";
-#endif
-
-	SyntaxTree* ans2 = enumerate_random(constraint, 10000);
-
-#ifdef DEBUG_PRINT_9
-	std::cout<<ans2->to_string()<<std::endl;
 	std::cout<<"================= Naive Search Start ===================\n";
 #endif
 
