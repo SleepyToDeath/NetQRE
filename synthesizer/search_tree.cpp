@@ -129,29 +129,21 @@ bool LNode::accept(SyntaxTree* t) {
 	for (int i=0; i<dsize; i++)
 	{
 		RNode* div = op->division[i];
-		bool flag = true;
+		std::vector<bool> valid_subexp;
 		if (op->syntax->independent) 
 		{
 			/* if it's independent, each sub-search-tree must accept corresponding sub-syntax-tree */
 			int esize = div->subexp.size();
 			for (int j=0; j<esize; j++)
-				if (!(div->subexp[j]->accept(t->subtree[j])))
-				{
-					flag = false;
-					break;
-				}
+				valid_subexp.push_back(div->subexp[j]->accept(t->subtree[j]));
 		}
 		else 
 		{
 			/* if it's dependent, there's only one sub-syntax-tree, and it must be accepted by all sub-search-trees */
 			for (int j=0; j<div->subexp.size(); j++)
-				if (!(div->subexp[j]->accept(t->subtree[0])))
-				{
-					flag = false;
-					break;
-				}
+				valid_subexp.push_back(div->subexp[j]->accept(t->subtree[0]));
 		}
-		if (flag)
+		if (op->divider->valid_combination(state, valid_subexp))
 		{
 #ifdef DEBUG_PRINT
 	std::cout<<"["<<op->division.size()<<" "<<div->subexp.size()<<" "<<i<<" "<<syntax->name<<" "<<t->to_string()<<" Acc!]\n";
@@ -228,7 +220,7 @@ bool DNode::search(SearchTreeContext ctxt) {
 #ifdef DEBUG_PRINT
 	std::cout<<ctxt.indent<<"branch: "<<i<<std::endl;
 #endif
-			RNode* div = new RNode(syntax, strategy[i]);
+			RNode* div = new RNode(syntax, state, strategy[i]);
 			division.push_back(div);
 			div->search(ctxt);
 			flag = flag || div->is_feasible();
@@ -324,7 +316,7 @@ bool DNode::search(SearchTreeContext ctxt) {
 				std::vector<SearchState*> substate;
 				for (int j=0; j<path.vertex.size()-1; j++)
 					substate.push_back(divider->get_dep_substates(state, path.vertex[j], path.vertex[j+1]));
-				RNode* div = new RNode(syntax, substate);
+				RNode* div = new RNode(syntax, state, substate);
 				div->search(ctxt);
 				division.push_back(div);
 			}
@@ -337,8 +329,9 @@ bool DNode::search(SearchTreeContext ctxt) {
 	return feasible;
 }
 
-RNode::RNode(SyntaxRightHandSide* syn, std::vector<SearchState*> substate0) {
+RNode::RNode(SyntaxRightHandSide* syn, SearchState* state0, std::vector<SearchState*> substate0) {
 	syntax = syn;
+	state = state0;
 	substate = substate0;
 	color = STWhite;
 	feasible = false;
@@ -365,7 +358,7 @@ bool RNode::search(SearchTreeContext ctxt) {
 		subexp.push_back((*ctxt.cache)[substate[i]]);
 		valid_subexp.push_back(subexp[i]->is_feasible());
 	}
-	feasible = divider->valid_combination(valid_subexp);
+	feasible = divider->valid_combination(state, valid_subexp);
 	color = STBlack;
 #ifdef DEBUG_PRINT
 	std::cout<<ctxt.indent<<(feasible?"Acc!":"Rej!")<<"\n";

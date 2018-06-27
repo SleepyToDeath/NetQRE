@@ -101,7 +101,7 @@ class RNode: public SearchTreeNode {
 	std::vector<LNode*> subexp;
 	std::vector<SearchState*> substate;
 
-	RNode(SyntaxRightHandSide* syntax, std::vector<SearchState*> substate);
+	RNode(SyntaxRightHandSide* syntax, SearchState* state, std::vector<SearchState*> substate);
 	bool search(SearchTreeContext ctxt);
 };
 
@@ -170,7 +170,7 @@ class DivideStrategy {
 	virtual SearchState* get_dep_substates(SearchState* s, int min, int max) = 0;
 
 	/* for gathering results */
-	virtual bool valid_combination(std::vector<bool> valid_subexp) = 0;
+	virtual bool valid_combination(SearchState* state, std::vector<bool> valid_subexp) = 0;
 };
 
 /* ======================================================================= */

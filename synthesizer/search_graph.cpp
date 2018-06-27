@@ -20,27 +20,36 @@ SyntaxTree* SearchGraph::search_top_level(std::vector<ExampleType*> example) {
 #endif
 	}
 #ifdef DEBUG_PRINT_9
-	std::cout<<"================= Random Algorithm Start ===================\n";
+	std::cout<<"================= DFS Start ===================\n";
 #endif
 
 	SyntaxTree* ans2 = enumerate_random(constraint, 1);
 
 #ifdef DEBUG_PRINT_9
-	std::cout<<ans2->to_string()<<std::endl;
-	std::cout<<"================= Algorithm Start ===================\n";
+	if (ans2!=nullptr)
+		std::cout<<ans2->to_string()<<std::endl;
+	else
+		std::cout<<"Not Found!\n";
+	std::cout<<"================= BFS Start ===================\n";
 #endif
 
 	SyntaxTree* ans = enumerate(constraint);
 
 #ifdef DEBUG_PRINT_9
-	std::cout<<ans->to_string()<<std::endl;
-	std::cout<<"================= Naive Search Start ===================\n";
+	if (ans!=nullptr)
+		std::cout<<ans->to_string()<<std::endl;
+	else
+		std::cout<<"Not Found!\n";
+	std::cout<<"================= Naive BFS Start ===================\n";
 #endif
 
 	SyntaxTree* ans3 = enumerate_naive(ans);
 
 #ifdef DEBUG_PRINT_9
-	std::cout<<ans3->to_string()<<std::endl;
+	if (ans3!=nullptr)
+		std::cout<<ans3->to_string()<<std::endl;
+	else
+		std::cout<<"Not Found!\n";
 	std::cout<<"===================== End =======================\n";
 #endif
 	return ans;
@@ -57,6 +66,9 @@ SyntaxTree* SearchGraph::enumerate_naive(SyntaxTree* answer) {
 	std::vector<LNode*> constraint;
 	std::vector<SyntaxTree*> this_round;
 	std::vector<SyntaxTree*> next_round;
+
+	if (answer == nullptr)
+		return nullptr;
 
 	constraint.clear();
 
