@@ -15,9 +15,7 @@ class SearchGraph {
 	RHSToDivider* r2d;
 	SearchTreeCacheFactory<LNode*>* cache_pool;
 
-	SyntaxTree* enumerate(std::vector<LNode*> constraint);
-	SyntaxTree* enumerate_naive(SyntaxTree* answer);
-	SyntaxTree* enumerate_random(std::vector<LNode*> constraint, int batch_size);
+	SyntaxTree* enumerate_random(std::vector<LNode*> positive_constraint, std::vector<LNode*> negative_constraint, int batch_size);
 };
 
 #endif

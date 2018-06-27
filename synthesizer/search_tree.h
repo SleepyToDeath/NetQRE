@@ -19,6 +19,9 @@ class SearchTreeCacheFactory;
 class ExampleType;
 class RHSToDivider;
 class DivideStrategy;
+class DNodeDAGVertex;
+class DNodeDAGPath;
+class DNodeDAG;
 
 class SearchTreeContext {
 	public:
@@ -30,6 +33,7 @@ class SearchTreeContext {
 	int search_depth;
 	SearchTreeCache<LNode*>* cache;
 	SearchTreeCacheFactory<LNode*>* cache_pool;
+	std::vector<DNodeDAG*> dag;
 };
 
 /* 
@@ -105,6 +109,32 @@ class RNode: public SearchTreeNode {
 	bool search(SearchTreeContext ctxt);
 };
 
+
+class DNodeDAG {
+	public:
+	/* link list */
+	std::vector< std::vector<int> > edge;
+	std::vector<int> fan_in;
+
+	/* map from int(index) to vertex */
+	std::vector< DNodeDAGVertex > vertex;
+
+	/* search queue */
+	std::vector< int > queue;
+};
+
+class DNodeDAGPath {
+	public:
+	std::vector<int> vertex;
+};
+
+class DNodeDAGVertex {
+	public:
+	/* valid paths ending in this vertex */
+	std::vector< DNodeDAGPath > path;
+};
+
+
 class RHSToDivider {
 	public:
 	DivideStrategy* get_divider(SyntaxRightHandSide* rhs);
@@ -120,6 +150,7 @@ class ExampleType {
 	public:
 	virtual SearchState* to_init_state() = 0;
 	virtual bool match(SearchState* state, SyntaxLeftHandSide* terminal) = 0;
+	virtual bool is_positive() = 0;
 };
 
 
@@ -127,6 +158,7 @@ class ExampleType {
 class SearchState {
 	public:
 	virtual void print_state(std::string indent) = 0;
+	virtual bool is_positive() = 0;
 };
 
 template<class T>
@@ -160,14 +192,25 @@ class DivideStrategy {
 	/* for dependent rule */
 	/* We model this kind of search as finding proper smaller non-overlapping intervals
 		that together FULLY covers a whole larger interval.
-		e.g. the large interval can be [0,10), smaller intervals can be [0,3),[3,6),[6,10)
+		e.g. for string abaabaabba the large interval can be [0,10), 
+		smaller intervals can be [0,3),[3,6),[6,10)
+		corresponding to split aba | aba | abba 
+		( (ab*a)* )
 		get_min returns the lower bound of the larger interval.
 		get_max returns the upper bound of the larger interval.
 		get_dep_substates returns all possible substates that can cover a small interval.
 		All intervals here are left-closed right-open. */
+	/* Some language may need to do extra search to avoid ambiguity.
+		e.g abaabaabaabba matching [0,9) with a kleene star (that matches till the longest possible string)
+		correct: (aba)*
+		incorrect: (ab*a)*
+		substates: [0,3) yes, [3,6) yes, [6,9) yes
+		extra states: [9,10) no, [9,11) no, [9,12) no, [9,13) no
+		Use get_dep_extra_states() for that.*/
 	virtual int get_min(SearchState* s) = 0;
 	virtual int get_max(SearchState* s) = 0;
 	virtual SearchState* get_dep_substates(SearchState* s, int min, int max) = 0;
+	virtual std::vector<SearchState*> get_dep_extra_states(SearchState* s, SearchTreeContext ctxt) = 0;
 
 	/* for gathering results */
 	virtual bool valid_combination(SearchState* state, std::vector<bool> valid_subexp) = 0;
