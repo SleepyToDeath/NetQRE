@@ -54,10 +54,12 @@ SearchTreeColor SearchTreeNode::get_color() {
 }
 
 bool SearchTreeNode::is_feasible() {
-	if (color == STBlack)
+	/* Don't need color condition since we assume it's a DAG, which has no back edge */
+	/* now the color is used for on-demand generation of dependent nodes */
+//	if (color == STBlack)
 		return feasible;
-	else 
-		return false;
+//	else 
+//		return false;
 }
 
 LNode::LNode(SyntaxLeftHandSide* syn, SearchState* s) {
@@ -110,9 +112,10 @@ bool LNode::search(SearchTreeContext ctxt) {
 }
 
 bool LNode::accept(SyntaxTree* t) {
-	#ifdef DEBUG_PRINT
-	std::cout<<"["<<t->root->get_type()->name<<"\n";
-	#endif
+	if (!feasible)
+	{
+		return false;
+	}
 	/* if it's terminal, accept */
 	if (syntax->is_term) 
 	{
@@ -121,71 +124,113 @@ bool LNode::accept(SyntaxTree* t) {
 	/* if not mutated, return result of this node */
 	if (t->root->get_option() == SyntaxLeftHandSide::NoOption)
 	{
-		if (state->is_positive())
+//		if (state->is_positive())
 			return feasible;
-		else
-			return !feasible;
+//		else
+//			return !feasible;
 	}
 	DNode* op = option[t->root->get_option()];
 	/* if the mutation option is not feasible, reject */
 	if (!(op->is_feasible()))
 		return false;
 	/* if any dividing option below the mutation option is accepted, accept*/
-	int dsize = op->division.size();
-	for (int i=0; i<dsize; i++)
+	if (op->syntax->independent) 
 	{
-		RNode* div = op->division[i];
-		std::vector<bool> valid_subexp;
-		if (op->syntax->independent) 
+		int dsize = op->division.size();
+		for (int i=0; i<dsize; i++)
 		{
-			/* if it's independent, each sub-search-tree must accept corresponding sub-syntax-tree */
-			int esize = div->subexp.size();
-			for (int j=0; j<esize; j++)
-				valid_subexp.push_back(div->subexp[j]->accept(t->subtree[j]));
-		}
-		else 
-		{
-			/* if it's dependent, there's only one sub-syntax-tree, and it must be accepted by all sub-search-trees */
-			for (int j=0; j<div->subexp.size(); j++)
+			RNode* div = op->division[i];
+			std::vector<bool> valid_subexp;
+			if (op->syntax->independent) 
 			{
-				valid_subexp.push_back(div->subexp[j]->accept(t->subtree[0]));
-				#ifdef DEBUG_PRINT
-				std::cout<<valid_subexp[j]<<" ";
-				div->substate[j]->print_state("");
-				#endif
-				valid_subexp[j] = valid_subexp[j] == (div->substate[j]->is_positive());
+				/* if it's independent, each sub-search-tree must accept corresponding sub-syntax-tree */
+				int esize = div->subexp.size();
+				for (int j=0; j<esize; j++)
+					valid_subexp.push_back(div->subexp[j]->accept(t->subtree[j]));
 			}
 
-			#ifdef DEBUG_PRINT
-			std::cout<<"\n";
-			for (int j=0; j<valid_subexp.size(); j++)
-				std::cout<<" "<<valid_subexp[j];
-			std::cout<<"\n";
-			for (int j=0; j<valid_subexp.size(); j++)
-			std::cout<<" "<<div->substate[j]->is_positive();
-			std::cout<<"\n";
-			#endif
+			if (op->divider->valid_combination(state, valid_subexp))
+			{
+				return true;
+			}
 		}
-		if (op->divider->valid_combination(state, valid_subexp))
-		{
-			#ifdef DEBUG_PRINT
-			state->print_state("");
-			std::cout<<"acc]\n";
-			#endif
-			return true;
-		}
-		else
-		{
-			#ifdef DEBUG_PRINT
-			std::cout<<"fail]\n";
-			#endif
-		}
+		return false;
 	}
-	#ifdef DEBUG_PRINT
-	state->print_state("[");
-	std::cout<<"rej]\n";
-	#endif
-	return false;
+	else
+	{
+		if (t->is_complete())
+		{
+			for (int i=0; i<op->extra.size(); i++)
+			{
+				if (op->extra[i]->accept(t->subtree[0]))
+				{
+					return false;
+				}
+			}
+		}
+
+		int min = op->divider->get_min(state);
+		int max = op->divider->get_max(state);
+		std::vector<bool> acc_pre(max-min+1, false);
+		acc_pre[0] = true;
+
+		for (int i0=min; i0<max; i0++)
+		{
+			int i = i0 - min;
+			if (acc_pre[i])
+			{
+				for (int j0=i0+1; j0<=max; j0++)
+				{
+					int j = j0 - min;
+					if (op->segment[i][j]!=nullptr)
+					{
+						acc_pre[j] = acc_pre[j] || op->segment[i][j]->is_feasible();
+					}
+				}
+			}
+		}
+		if (!acc_pre[max-min])
+		{
+			return false;
+		}
+
+		std::vector<bool> acc(max-min+1, false);
+		acc[0] = true;
+
+/*
+		for (int i0=min; i0<max; i0++)
+		{
+			int i = i0 - min;
+			if (acc[i])
+			{
+				for (int j0=i0+1; j0<=max; j0++)
+				{
+					int j = j0 - min;
+					if (op->segment[i][j]!=nullptr)
+					{
+						acc[j] = acc[j] || op->segment[i][j]->accept(t->subtree[0]);
+					}
+				}
+			}
+		}
+		*/
+
+		for (int j=1; j<max-min; j++)
+			for (int i0=min; i0+j<=max; i0++)
+			{
+				int i = i0 - min;
+				if (acc[i] && (op->segment[i][i+j]!=nullptr))
+				{
+					acc[i+j] = acc[i+j] || op->segment[i][i+j]->accept(t->subtree[0]);
+				}
+				if (acc[max-min])
+				{
+					return true;
+				}
+			}
+
+		return acc[max-min];
+	}
 }
 
 DNode::DNode(SyntaxRightHandSide* syn, SearchState* s) {
@@ -196,19 +241,23 @@ DNode::DNode(SyntaxRightHandSide* syn, SearchState* s) {
 }
 
 bool DNode::search(SearchTreeContext ctxt) {
-#ifdef DEBUG_PRINT
-	ctxt.indent = ctxt.indent + "|  ";
-	std::cout<<ctxt.indent<<"DNode "<<syntax->name<<"\n";
-	state->print_state(ctxt.indent);
-#endif
+	/* ========== Prepare ========== */
+
 	if (state == nullptr)
 	{
 		color = STBlack;
 		feasible = false;
 		return feasible;
 	}
+#ifdef DEBUG_PRINT
+	ctxt.indent = ctxt.indent + "|  ";
+	std::cout<<ctxt.indent<<"DNode "<<syntax->name<<"\n";
+	state->print_state(ctxt.indent);
+#endif
+
 	color = STGray;
 	divider = ctxt.r2d->get_divider(syntax);
+
 	if (!(divider->valid_state(state)))
 	{
 		feasible = false;
@@ -220,16 +269,11 @@ bool DNode::search(SearchTreeContext ctxt) {
 
 	if (syntax->independent)
 	{
+		/* ========== Handle Independent ========== */
 		bool flag = false;
 		std::vector< std::vector< SearchState* > > strategy = divider->get_indep_substates(state);
-#ifdef DEBUG_PRINT
-	std::cout<<ctxt.indent<<"num of branch: "<<strategy.size()<<std::endl;
-#endif
 		for (int i=0; i<strategy.size(); i++)
 		{
-#ifdef DEBUG_PRINT
-	std::cout<<ctxt.indent<<"branch: "<<i<<std::endl;
-#endif
 			RNode* div = new RNode(syntax, state, strategy[i]);
 			division.push_back(div);
 			div->search(ctxt);
@@ -239,126 +283,57 @@ bool DNode::search(SearchTreeContext ctxt) {
 	}
 	else
 	{
+		/* ========== Handle Dependent ========== */
 		int min = divider->get_min(state);
 		int max = divider->get_max(state);
-		DNodeDAG* dag = new DNodeDAG();
-		std::vector<SearchState*> extra_state = divider->get_dep_extra_states(state, ctxt);
-
-		/* step 0, allocate edges and vertices */
-		for (int i=0; i<=max; i++)
-		{
-			dag->edge.push_back(std::vector<int>());
-			dag->vertex.push_back(DNodeDAGVertex());
-			dag->fan_in.push_back(0);
-		}
-
-		/* step 0.5, build extra state search tree */
-		for (int i=0; i<extra_state.size(); i++)
-		{
-			if (ctxt.cache->count(extra_state[i]) == 0)
-			{
-				LNode* exp = new LNode( syntax->subexp[0], extra_state[i] );
-				(*ctxt.cache)[extra_state[i]] = exp;
-				exp->search(ctxt);
-			}
-		}
-
-
-		/* step 1, build edges */
 		for (int i=min; i<max; i++)
-			for (int j=i+1; j<=max; j++) 
+		{
+			std::vector<LNode*> row(i-min+1, nullptr);
+			for (int j=i+1; j<=max; j++)
 			{
-				SearchState* edge_state = divider->get_dep_substates(state, i, j);
-
-				if (edge_state != nullptr)
+				SearchState* substate = divider->get_dep_substate(state, i, j);
+				if (substate!=nullptr)
 				{
-					if (ctxt.cache->count(edge_state) == 0)
+					if (ctxt.cache->count(substate)==0)
 					{
-						LNode* exp = new LNode( syntax->subexp[0], edge_state );
-						(*ctxt.cache)[edge_state] = exp;
+						LNode* exp = new LNode(syntax->subexp[0],substate);
+						(*(ctxt.cache))[substate] = exp;
 						exp->search(ctxt);
 					}
-
-					if ((*ctxt.cache)[edge_state]->is_feasible())
-					{
-						dag->edge[i].push_back(j);
-						dag->fan_in[j]++;
-					}
+					row.push_back((*ctxt.cache)[substate]);
 				}
-			}
-
-		/* step 2, DP on DAG */
-		dag->queue.push_back(min);
-		DNodeDAGPath empty_path;
-		empty_path.vertex.push_back(min);
-		dag->vertex[min].path.push_back(empty_path);
-		{
-			int i=0;
-			int end=0;
-			while (i<=end)
-			{
-				int current = dag->queue[i];
-				for (int j=0; j<dag->edge[current].size(); j++)
+				else
 				{
-					int next = dag->edge[current][j];
-					for (int k=0; k<dag->vertex[current].path.size(); k++)
-					{
-						DNodeDAGPath candidate_path = dag->vertex[current].path[k];
-						candidate_path.vertex.push_back(next);
-
-						/*
-							Mismatch condition can be reduced to match condition in this case.
-							Just need proper dividing strategy
-						*/
-						bool flag = false;
-						{
-							SearchGraph g(ctxt.search_depth, syntax->subexp[0], nullptr, nullptr);
-							std::vector<SearchState*> substate = extra_state;
-							for (int l=0; l<candidate_path.vertex.size()-1; l++)
-								substate.push_back(divider->get_dep_substates(state, candidate_path.vertex[l], candidate_path.vertex[l+1]));
-							flag = (g.search_recursive(ctxt, substate) != nullptr);
-#ifdef DEBUG_PRINT
-	std::cout<<"[ Testing split:\n";
-	for (int l=0; l<substate.size(); l++)
-		substate[l]->print_state("");
-	std::cout<<(flag?"Acc":"Rej")<<"]:\n";
-#endif
-						}
-
-						if (flag)
-							dag->vertex[next].path.push_back(candidate_path);
-					}
-					dag->queue.push_back(next);
-					end ++;
+					row.push_back(nullptr);
 				}
-				i++;
 			}
+			segment.push_back(row);
 		}
-		
-		/* step 3, convert path to division */
-		if (dag->vertex[max].path.size() == 0)
+
+		std::vector<SearchState*> extra_state = divider->get_dep_extra_states(state, ctxt);
+		for (int i=0; i<extra_state.size(); i++)
 		{
-			feasible = false;
-		}
-		else
-		{
-			feasible = true;
-			for (int i=0; i<dag->vertex[max].path.size(); i++)
+			SearchState* substate = extra_state[i];
+			if (substate!=nullptr)
 			{
-				DNodeDAGPath path = dag->vertex[max].path[i];
-				std::vector<SearchState*> substate = extra_state;
-				for (int j=0; j<path.vertex.size()-1; j++)
-					substate.push_back(divider->get_dep_substates(state, path.vertex[j], path.vertex[j+1]));
-				RNode* div = new RNode(syntax, state, substate);
-				div->search(ctxt);
-				division.push_back(div);
+				if (ctxt.cache->count(substate)==0)
+				{
+					LNode* exp = new LNode(syntax->subexp[0],substate);
+					(*(ctxt.cache))[substate] = exp;
+					exp->search(ctxt);
+				}
+				extra.push_back((*ctxt.cache)[substate]);
 			}
 		}
+
+		feasible = true;
 	}
-	color = STBlack;
+
 #ifdef DEBUG_PRINT
-	std::cout<<ctxt.indent<<"2"<<(feasible?std::string("Acc!"):std::string("Rej!"))<<"\n";
+	std::cout<<ctxt.indent<<"1"<<(feasible?std::string("Acc!"):std::string("Rej!"))<<"\n";
 #endif
+
+	color = STBlack;
 	return feasible;
 }
 

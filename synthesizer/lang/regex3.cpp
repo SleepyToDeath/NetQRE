@@ -151,7 +151,7 @@ class RegexStarUnfoldDivideStrategy: public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* state, int min, int max) {
+	SearchState* get_dep_substate(SearchState* state, int min, int max) {
 		RegexSearchState* rstate = (RegexSearchState*) state;
 //		if (!valid_pos_state(rstate))
 //			return nullptr;
@@ -162,7 +162,7 @@ class RegexStarUnfoldDivideStrategy: public DivideStrategy {
 		RegexSearchState* ans = new RegexSearchState();
 		ans->l = min;
 		ans->r = max;
-		ans->out = (rstate->out == O_YES)?O_YES:O_NO;
+		ans->out = rstate->out;
 		ans->type = RE_RE;
 		return ans;
 
@@ -170,22 +170,10 @@ class RegexStarUnfoldDivideStrategy: public DivideStrategy {
 
 	bool valid_combination(SearchState* state, std::vector<bool> valid_subexp) {
 		RegexSearchState* rs = (RegexSearchState*) state;
-		if (rs->out == O_YES)
-		{
-			for (int i=0; i<valid_subexp.size(); i++)
-				if (!valid_subexp[i])
-					return false;
-			return true;
-		}
-		else
-		{
-			if (!valid_pos_state(rs))
-				return true;
-			for (int i=0; i<valid_subexp.size(); i++)
-				if (valid_subexp[i])
-					return true;
-			return false;
-		}
+		for (int i=0; i<valid_subexp.size(); i++)
+			if (!valid_subexp[i])
+				return false;
+		return true;
 	}
 
 	std::vector<SearchState*> get_dep_extra_states(SearchState* state, SearchTreeContext ctxt) {
@@ -200,7 +188,8 @@ class RegexStarUnfoldDivideStrategy: public DivideStrategy {
 			RegexSearchState* st = new RegexSearchState();
 			st->l = rstate->r;
 			st->r = i;
-			st->out = (rstate->out == O_NO)?O_YES:O_NO;
+//			st->out = (rstate->out == O_NO)?O_YES:O_NO;
+			st->out = rstate->out;
 			st->type = RE_RE;
 			ans.push_back(st);
 		}
@@ -251,7 +240,7 @@ class RegexTermDivideStrategy : public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max) {
+	SearchState* get_dep_substate(SearchState* s, int min, int max) {
 		return nullptr;
 	}
 
@@ -312,7 +301,7 @@ class RegexStarDivideStrategy : public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max) {
+	SearchState* get_dep_substate(SearchState* s, int min, int max) {
 		return nullptr;
 	}
 
@@ -386,7 +375,7 @@ class RegexConcatDivideStrategy: public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max) {
+	SearchState* get_dep_substate(SearchState* s, int min, int max) {
 		return nullptr;
 	}
 
@@ -446,7 +435,7 @@ class RegexCharDivideStrategy : public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max) {
+	SearchState* get_dep_substate(SearchState* s, int min, int max) {
 		return nullptr;
 	}
 
@@ -508,7 +497,7 @@ class RegexZeroDivideStrategy : public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max)
+	SearchState* get_dep_substate(SearchState* s, int min, int max)
 	{
 		return nullptr;
 	}
@@ -570,7 +559,7 @@ class RegexOneDivideStrategy : public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max)
+	SearchState* get_dep_substate(SearchState* s, int min, int max)
 	{
 		return nullptr;
 	}
@@ -630,7 +619,7 @@ class RegexDotDivideStrategy : public DivideStrategy {
 		return rstate->r;
 	}
 
-	SearchState* get_dep_substates(SearchState* s, int min, int max)
+	SearchState* get_dep_substate(SearchState* s, int min, int max)
 	{
 		return nullptr;
 	}
@@ -763,8 +752,8 @@ void init()
 //	l_ch->option.push_back(r_dot);
 	l_ch->option.push_back(r_zero);
 	l_ch->option.push_back(r_one);
-	l_term->option.push_back(r_star);
 	l_term->option.push_back(r_ch);
+	l_term->option.push_back(r_star);
 	l_star->option.push_back(r_star_unfold);
 
 	r_concat->subexp.push_back(l_term);
@@ -791,7 +780,9 @@ void init()
 
 int main() {
 	init();
-	SearchGraph g(6, l_re, r2d,  cache_pool );
+	int d;
+	std::cin>>d;
+	SearchGraph g(d, l_re, r2d,  cache_pool );
 	std::vector<ExampleType*> example;
 	int positive_num, negative_num;
 	std::cin>>positive_num;

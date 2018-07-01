@@ -92,7 +92,12 @@ class DNode: public SearchTreeNode {
 	public:
 	SyntaxRightHandSide* syntax;
 	DivideStrategy* divider;
+	/* for independent */
 	std::vector<RNode*> division;
+
+	/* for dependent */
+	std::vector< std::vector<LNode*> > segment; /* offset by min */
+	std::vector< LNode* > extra;
 
 	DNode(SyntaxRightHandSide* syntax, SearchState* state);
 	bool search(SearchTreeContext ctxt);
@@ -109,7 +114,7 @@ class RNode: public SearchTreeNode {
 	bool search(SearchTreeContext ctxt);
 };
 
-
+#if 0
 class DNodeDAG {
 	public:
 	/* link list */
@@ -133,6 +138,7 @@ class DNodeDAGVertex {
 	/* valid paths ending in this vertex */
 	std::vector< DNodeDAGPath > path;
 };
+#endif
 
 
 class RHSToDivider {
@@ -209,7 +215,7 @@ class DivideStrategy {
 		Use get_dep_extra_states() for that.*/
 	virtual int get_min(SearchState* s) = 0;
 	virtual int get_max(SearchState* s) = 0;
-	virtual SearchState* get_dep_substates(SearchState* s, int min, int max) = 0;
+	virtual SearchState* get_dep_substate(SearchState* s, int min, int max) = 0;
 	virtual std::vector<SearchState*> get_dep_extra_states(SearchState* s, SearchTreeContext ctxt) = 0;
 
 	/* for gathering results */

@@ -1,5 +1,6 @@
 #include "search_graph.h"
 #include <experimental/random>
+#include <algorithm>
 
 SearchGraph::SearchGraph(int depth_threshold0, SyntaxLeftHandSide* starting_symbol0, RHSToDivider* r2d0, SearchTreeCacheFactory<LNode*>* cache_pool0) {
 	depth_threshold = depth_threshold0;
@@ -27,7 +28,7 @@ SyntaxTree* SearchGraph::search_top_level(std::vector<ExampleType*> example) {
 	std::cout<<"================= DFS Start ===================\n";
 #endif
 
-	SyntaxTree* ans = enumerate_random(positive_constraint, negative_constraint, 1);
+	SyntaxTree* ans = enumerate_random(positive_constraint, negative_constraint, 100);
 
 #ifdef DEBUG_PRINT_9
 	if (ans!=nullptr)
@@ -57,19 +58,21 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 	std::vector<SyntaxTree*> this_round;
 	std::vector<SyntaxTree*> buffer;
 
-//	return nullptr;
+	double progress = 0;
 
 //	for (int depth = 0; depth<depth_threshold; depth++)
 	int depth = depth_threshold;
 	{
+		std::cout<<"Depth:"<<depth<<std::endl;
 		SyntaxTree* s = new SyntaxTree(new SyntaxTreeNode(starting_symbol));
+		s->weight = 1;
 		this_round.push_back(s);
-		bool flag_new = true;
 		while (this_round.size()>0)
 		{
 			std::vector<SyntaxTree*> candidate;
 			int counter = 0;
 			int done = -1;
+			bool flag_deadend = false;
 			for (int i=0; i<this_round.size(); i++)
 			{
 				candidate.clear();
@@ -80,16 +83,24 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 					{
 						bool flag_acc = true;
 						/* check positive example */
-						for (int k=0; k<positive_constraint.size(); k++)
-						{
-							if (!positive_constraint[k]->accept(candidate[j]))
+						std::cout<<candidate[j]->to_string()<<std::endl;
+//						if (candidate[j]->get_complexity() > 1000)
+//						{
+//							flag_acc = false;
+//						}
+//						else
+//						{
+							for (int k=0; k<positive_constraint.size(); k++)
 							{
-								flag_acc = false;
-								break;
+								if (!positive_constraint[k]->accept(candidate[j]))
+								{
+									flag_acc = false;
+									break;
+								}
 							}
-						}
+//						}
 						/* check negative example */
-						if (flag_acc && candidate[j]->complete())
+						if (flag_acc && candidate[j]->is_complete())
 						{
 							for (int k=0; k<negative_constraint.size(); k++)
 								if (negative_constraint[k]->accept(candidate[j]))
@@ -100,13 +111,15 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 						}
 						if (flag_acc)
 						{
+							std::cout<<progress<<std::endl;
+							std::cout<<candidate[j]->get_complexity()<<std::endl;
 #ifdef DEBUG_PRINT_5
 	std::cout<<"candidate "<<j<<" : ";
 	std::cout<<candidate[j]->to_string()<<"\n";
 #endif
 							buffer.push_back(candidate[j]);
 							counter++;
-							if (candidate[j]->complete())
+							if (candidate[j]->is_complete())
 							{
 								for (int k=j+1; k<candidate.size(); k++)
 									delete candidate[k];
@@ -119,8 +132,16 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 						}
 						else
 						{
+							progress += candidate[j]->weight;
+							std::cout<<progress<<std::endl;
+							std::cout<<candidate[j]->get_complexity()<<std::endl;
+//							flag_deadend = true;
 							delete candidate[j];
 						}
+					}
+					if (candidate.size() == 0)
+					{
+						flag_deadend = true;
 					}
 				}
 				/* only explore batch_size new nodes each time */
@@ -128,19 +149,41 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 				if (counter >= batch_size)
 					break;
 			}
+
+			/* gather all candidates in buffer in LRU order */
 			for (int k=0; k<=done; k++)
 				delete this_round[k];
+			std::vector<SyntaxTree*> buffer2;
 			for (int k=done+1; k<this_round.size(); k++)
-				buffer.push_back(this_round[k]);
-//			std::cout<<"buffer size: "<<buffer.size()<<std::endl;
+				buffer2.push_back(this_round[k]);
+			while (!buffer.empty())
+			{
+				buffer2.push_back(buffer.back());
+				buffer.pop_back();
+			}
+			buffer = buffer2;
+			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree);
+			std::cout<<"buffer size"<<buffer.size()<<std::endl;
+			/*
+			if (flag_deadend)
+			{
+				SyntaxTree* tmp = buffer[0];
+				buffer[0] = buffer.back();
+				buffer.back() = tmp;
+			}
+			*/
+
+			this_round.clear();
 			if (buffer.size() <= batch_size)
 			{
-				this_round = buffer;
-				buffer.clear();
+				while(!buffer.empty())
+				{
+					this_round.push_back(buffer.back());
+					buffer.pop_back();
+				}
 			}
 			else
 			{
-				this_round.clear();
 				for (int k=0; k<batch_size; k++)
 				{
 //					int l = std::experimental::randint(0,bsize);

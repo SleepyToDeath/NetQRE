@@ -15,25 +15,41 @@ class SyntaxRightHandSide;
 class SyntaxLeftHandSide;
 class SyntaxTreeNode;
 
+enum SyntaxTreeCompleteness {
+	UNKNOWN, COMPLETE, INCOMPLETE
+};
+
+/*	This data structure is immutable.
+	Every time it mutates, you get a new one */
 class SyntaxTree {
 	public:
-	SyntaxTreeNode* root;
-	std::vector<SyntaxTree*> subtree;
+	std::vector<SyntaxTree*> subtree; // read only
+	SyntaxTreeNode* root; // read only
+	double weight;
 
 	SyntaxTree(SyntaxTreeNode* root);
 	SyntaxTree(SyntaxTree* src); /* copy constructor */
 	~SyntaxTree();
 
-	void mutate(int option);
 	/* mutate a node of depth AT MOST `max_depth` into all possible RHS, and append the results to `queue` */
 	bool multi_mutate(SyntaxTree* root, int max_depth, std::vector<SyntaxTree*> * queue);
 	/* check if all leaf nodes are terminal */
-	bool complete();
+	bool is_complete();
+
+	double get_complexity();
 
 	std::string to_string();
 
 	bool equal(SyntaxTree* t);
+
+	private:
+	SyntaxTreeCompleteness complete;
+	double complexity;
+
+	void mutate(int option);
 };
+
+bool compare_syntax_tree(SyntaxTree* a, SyntaxTree* b);
 
 class SyntaxTreeNode {
 
