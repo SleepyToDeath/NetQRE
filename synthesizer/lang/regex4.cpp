@@ -46,13 +46,15 @@ class RegexIEProgram: public IEProgram {
 		complete = complete0;
 	}
 
-	RegexIEProgram(NFA* nfa, bool complete0) {
+	RegexIEProgram(NFA* nfa0, bool complete0) {
 		complete = complete0;
+		nfa = nfa0;
 	}
 
 	RegexIEProgram(RegexIEProgram* src) {
 		complete = src->complete;
 		nfa = new NFA(src->nfa);
+//std::cout<<"RegexIEProgram source nfa:"<<nfa<<std::endl;
 	}
 
 	bool accept(IEExample* example) {
@@ -279,35 +281,35 @@ class RHSConcat : public IESyntaxRightHandSide {
 class RHSCh : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return new RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram((RegexIEProgram*)subprograms[0]);
 	}
 };
 
 class RHSZero : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return new RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram((RegexIEProgram*)subprograms[0]);
 	}
 };
 
 class RHSOne : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return new RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram((RegexIEProgram*)subprograms[0]);
 	}
 };
 
 class RHSDot : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return new RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram((RegexIEProgram*)subprograms[0]);
 	}
 };
 
 class RHSStar : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return new RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram((RegexIEProgram*)subprograms[0]);
 	}
 };
 
@@ -332,7 +334,7 @@ class RHSStarUnfold : public IESyntaxRightHandSide {
 class RHSClause : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return new RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram((RegexIEProgram*)subprograms[0]);
 	}
 };
 

@@ -217,7 +217,7 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 //	for (int depth = 0; depth<depth_threshold; depth++)
 	int depth = depth_threshold;
 	{
-		std::cout<<"Depth:"<<depth<<std::endl;
+//		std::cout<<"Depth:"<<depth<<std::endl;
 		IESyntaxTree* s = new IESyntaxTree(new SyntaxTreeNode(starting_symbol));
 		s->weight = 1;
 		this_round.push_back(s);
@@ -238,12 +238,13 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 					for (int j=0; j<tmp.size(); j++)
 					{
 						candidate.push_back(new IESyntaxTree(tmp[j]));
+//						std::cout<<tmp[j]->weight<<" "<<candidate[j]->weight<<std::endl;;
 						delete tmp[j];
 					}
 					for (int j=0; j<candidate.size(); j++)
 					{
 						bool flag_acc = true;
-						std::cout<<candidate[j]->to_string()<<std::endl;
+//						std::cout<<candidate[j]->to_string()<<std::endl;
 						for (int k=0; k<examples.size(); k++)
 						{
 							if (!candidate[j]->to_program()->accept(examples[k]))
@@ -254,8 +255,8 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 						}
 						if (flag_acc)
 						{
-							std::cout<<"Progress:"<<progress*100<<"%"<<std::endl;
-							std::cout<<candidate[j]->get_complexity()<<std::endl;
+//							std::cout<<"Progress:"<<progress<<" | +"<<candidate[j]->weight<<std::endl;
+//							std::cout<<candidate[j]->get_complexity()<<std::endl;
 							buffer.push_back(candidate[j]);
 							counter++;
 							if (candidate[j]->is_complete())
@@ -272,8 +273,8 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 						else
 						{
 							progress += candidate[j]->weight;
-							std::cout<<"Progress:"<<progress*100<<"%"<<std::endl;
-							std::cout<<candidate[j]->get_complexity()<<std::endl;
+							std::cout<<"Progress: "<<progress*100.0<<"% | +"<<candidate[j]->weight<<std::endl;
+//							std::cout<<candidate[j]->get_complexity()<<std::endl;
 //							flag_deadend = true;
 							delete candidate[j];
 						}
@@ -302,7 +303,7 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 			}
 			buffer = buffer2;
 			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree);
-			std::cout<<"buffer size"<<buffer.size()<<std::endl;
+			std::cout<<"buffer size: "<<buffer.size()<<std::endl;
 			/*
 			if (flag_deadend)
 			{

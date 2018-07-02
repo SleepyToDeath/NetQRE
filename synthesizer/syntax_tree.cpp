@@ -13,6 +13,7 @@ SyntaxTree::SyntaxTree(SyntaxTreeNode* r) {
 
 SyntaxTree::SyntaxTree(SyntaxTree* t) {
 	root = new SyntaxTreeNode(t->root);
+	this->weight = t->weight;
 	complete = UNKNOWN;
 	complexity = 0;
 	for (int i=0; i<t->subtree.size(); i++)
@@ -77,14 +78,15 @@ double SyntaxTree::get_complexity() {
 			complexity = 1;
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
-//			complexity = root->get_type()->option.size() * 2;
-			complexity = 1;
+			complexity = root->get_type()->option.size();
+//			complexity = 1;
 		}
 		else
 		{
 			complexity = 0;
 			for (int i=0; i<subtree.size(); i++)
 				complexity += subtree[i]->get_complexity();
+				/*
 			if (root->get_type()->option[root->get_option()]->independent)
 			{
 				complexity *= subtree.size();
@@ -93,6 +95,7 @@ double SyntaxTree::get_complexity() {
 			{
 				complexity *= sqrt(complexity*4);
 			}
+			*/
 		}
 	}
 	return complexity;
