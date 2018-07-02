@@ -1,6 +1,7 @@
 #include "../search_graph.h"
 #include "../search_tree.h"
 #include "../syntax_tree.h"
+#include "../incomplete_execution.h"
 #include "nfa.hpp"
 #include <iostream>
 #include <vector>
@@ -55,7 +56,7 @@ class RegexIEProgram: public IEProgram {
 	}
 
 	bool accept(IEExample* example) {
-		RegexIEExample* re = (RegexIEExampl*)example;
+		RegexIEExample* re = (RegexIEExample*)example;
 		if (re->is_positive())
 		{
 			return nfa->accept(re->s);
@@ -71,7 +72,7 @@ class RegexIEProgram: public IEProgram {
 
 	bool complete;
 	NFA* nfa;
-}
+};
 
 
 
@@ -88,18 +89,18 @@ class LHSRe : public IESyntaxLeftHandSide {
 		std::set<NFAState*> ed_trans;
 
 		zero_trans.insert(op);
-		zero[Epsilon] = zero_trans;
+		zero->transitions[Epsilon] = zero_trans;
 		op_trans.insert(ed);
-		op->transitions["0"] = op_trans;
-		op->transitions["1"] = op_trans;
+		op->transitions['0'] = op_trans;
+		op->transitions['1'] = op_trans;
 		ed_trans.insert(op);
-		ed[Epsilon] = ed_trans;
-		NFA->states.insert(zero);
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(zero);
-		NFA->accept_states.insert(zero);
-		NFA->accept_states.insert(ed);
+		ed->transitions[Epsilon] = ed_trans;
+		nfa->states.insert(zero);
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(zero);
+		nfa->accept_states.insert(zero);
+		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
 		return p;
@@ -115,14 +116,14 @@ class LHSCh : public IESyntaxLeftHandSide {
 		NFAState* ed = new NFAState();
 
 		op_trans.insert(ed);
-		op->transitions["0"] = op_trans;
-		op->transitions["1"] = op_trans;
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(op);
-		NFA->accept_states.insert(ed);
+		op->transitions['0'] = op_trans;
+		op->transitions['1'] = op_trans;
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(op);
+		nfa->accept_states.insert(ed);
 		
-		IEProgram* p = new IEProgram(nfa, false);
+		RegexIEProgram* p = new RegexIEProgram(nfa, false);
 		return p;
 	}
 };
@@ -136,11 +137,11 @@ class LHSZero : public IESyntaxLeftHandSide {
 		NFAState* ed = new NFAState();
 
 		op_trans.insert(ed);
-		op->transitions["0"] = op_trans;
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(op);
-		NFA->accept_states.insert(ed);
+		op->transitions['0'] = op_trans;
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(op);
+		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, true);
 		return p;
@@ -156,11 +157,11 @@ class LHSOne : public IESyntaxLeftHandSide {
 		NFAState* ed = new NFAState();
 
 		op_trans.insert(ed);
-		op->transitions["1"] = op_trans;
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(op);
-		NFA->accept_states.insert(ed);
+		op->transitions['1'] = op_trans;
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(op);
+		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, true);
 		return p;
@@ -176,12 +177,12 @@ class LHSDot : public IESyntaxLeftHandSide {
 		NFAState* ed = new NFAState();
 
 		op_trans.insert(ed);
-		op->transitions["0"] = op_trans;
-		op->transitions["1"] = op_trans;
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(op);
-		NFA->accept_states.insert(ed);
+		op->transitions['0'] = op_trans;
+		op->transitions['1'] = op_trans;
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(op);
+		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, true);
 		return p;
@@ -200,18 +201,18 @@ class LHSClause : public IESyntaxLeftHandSide {
 		std::set<NFAState*> ed_trans;
 
 		zero_trans.insert(op);
-		zero[Epsilon] = zero_trans;
+		zero->transitions[Epsilon] = zero_trans;
 		op_trans.insert(ed);
-		op->transitions["0"] = op_trans;
-		op->transitions["1"] = op_trans;
+		op->transitions['0'] = op_trans;
+		op->transitions['1'] = op_trans;
 		ed_trans.insert(op);
-		ed[Epsilon] = ed_trans;
-		NFA->states.insert(zero);
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(zero);
-		NFA->accept_states.insert(zero);
-		NFA->accept_states.insert(ed);
+		ed->transitions[Epsilon] = ed_trans;
+		nfa->states.insert(zero);
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(zero);
+		nfa->accept_states.insert(zero);
+		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
 		return p;
@@ -230,18 +231,18 @@ class LHSStar : public IESyntaxLeftHandSide {
 		std::set<NFAState*> ed_trans;
 
 		zero_trans.insert(op);
-		zero[Epsilon] = zero_trans;
+		zero->transitions[Epsilon] = zero_trans;
 		op_trans.insert(ed);
-		op->transitions["0"] = op_trans;
-		op->transitions["1"] = op_trans;
+		op->transitions['0'] = op_trans;
+		op->transitions['1'] = op_trans;
 		ed_trans.insert(op);
-		ed[Epsilon] = ed_trans;
-		NFA->states.insert(zero);
-		NFA->states.insert(op);
-		NFA->states.insert(ed);
-		NFA->start_states.insert(zero);
-		NFA->accept_states.insert(zero);
-		NFA->accept_states.insert(ed);
+		ed->transitions[Epsilon] = ed_trans;
+		nfa->states.insert(zero);
+		nfa->states.insert(op);
+		nfa->states.insert(ed);
+		nfa->start_states.insert(zero);
+		nfa->accept_states.insert(zero);
+		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
 		return p;
@@ -331,7 +332,7 @@ class RHSStarUnfold : public IESyntaxRightHandSide {
 class RHSClause : public IESyntaxRightHandSide {
 	public:
 	IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) {
-		return RegexIEProgram(subprograms[0]);
+		return new RegexIEProgram(subprograms[0]);
 	}
 };
 
@@ -355,22 +356,22 @@ RHSClause* r_clause;
 
 void init()
 {
-	l_re = new SyntaxLeftHandSide;
-	l_ch = new SyntaxLeftHandSide();
-	l_zero = new SyntaxLeftHandSide();
-	l_one = new SyntaxLeftHandSide();
-	l_dot = new SyntaxLeftHandSide();
-	l_star = new SyntaxLeftHandSide();
-	l_clause = new SyntaxLeftHandSide();
+	l_re = new LHSRe();
+	l_ch = new LHSCh();
+	l_zero = new LHSZero();
+	l_one = new LHSOne();
+	l_dot = new LHSDot();
+	l_star = new LHSStar();
+	l_clause = new LHSClause();
 
-	r_concat = new SyntaxRightHandSide();
-	r_ch = new SyntaxRightHandSide();
-	r_zero = new SyntaxRightHandSide();
-	r_one = new SyntaxRightHandSide();
-	r_dot = new SyntaxRightHandSide();
-	r_star = new SyntaxRightHandSide();
-	r_star_unfold = new SyntaxRightHandSide();
-	r_clause = new SyntaxRightHandSide();
+	r_concat = new RHSConcat();
+	r_ch = new RHSCh();
+	r_zero = new RHSZero();
+	r_one = new RHSOne();
+	r_dot = new RHSDot();
+	r_star = new RHSStar();
+	r_star_unfold = new RHSStarUnfold();
+	r_clause = new RHSClause();
 
 	l_re->id = RE_RE;
 	l_ch->id = RE_CHAR;

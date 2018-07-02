@@ -7,6 +7,7 @@ class IEExample {
 };
 
 class IEProgram {
+	public:
 	virtual bool accept(IEExample* e) = 0;
 };
 
@@ -22,10 +23,12 @@ class IESyntaxTree : public SyntaxTree {
 };
 
 class IESyntaxLeftHandSide : public SyntaxLeftHandSide {
+	public:
 	virtual IEProgram* to_program() = 0;
-}
+};
 
 class IESyntaxRightHandSide : public SyntaxRightHandSide {
+	public:
 	virtual IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) = 0;
 };
 

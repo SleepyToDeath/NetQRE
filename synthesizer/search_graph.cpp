@@ -198,17 +198,17 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 }
 
 
-SearchGraph(int depth_threshold0, IESyntaxLeftHandSide* starting_symbol0) {
+SearchGraph::SearchGraph(int depth_threshold0, IESyntaxLeftHandSide* starting_symbol0) {
 	depth_threshold = depth_threshold0;
 	starting_symbol = starting_symbol0;
 }
 
-IESyntaxTree* search_top_level_v2(std::vector<IEExample*> examples) {
+IESyntaxTree* SearchGraph::search_top_level_v2(std::vector<IEExample*> examples) {
 	IESyntaxTree* ans = enumerate_random_v2(examples, 100);
 	return ans;
 }
 
-IESyntaxTree* enumerate_random_v2(std::vector<IEExample*> examples, int batch_size) {
+IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples, int batch_size) {
 	std::vector<IESyntaxTree*> this_round;
 	std::vector<IESyntaxTree*> buffer;
 
@@ -224,15 +224,22 @@ IESyntaxTree* enumerate_random_v2(std::vector<IEExample*> examples, int batch_si
 		while (this_round.size()>0)
 		{
 			std::vector<IESyntaxTree*> candidate;
+			std::vector<SyntaxTree*> tmp;
 			int counter = 0;
 			int done = -1;
 			bool flag_deadend = false;
 			for (int i=0; i<this_round.size(); i++)
 			{
 				candidate.clear();
+				tmp.clear();
 				IESyntaxTree* current = this_round[i];
-				if (current->multi_mutate(current, depth, &candidate))
+				if (current->multi_mutate(current, depth, &tmp))
 				{
+					for (int j=0; j<tmp.size(); j++)
+					{
+						candidate.push_back(new IESyntaxTree(tmp[j]));
+						delete tmp[j];
+					}
 					for (int j=0; j<candidate.size(); j++)
 					{
 						bool flag_acc = true;

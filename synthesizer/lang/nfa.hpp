@@ -6,9 +6,14 @@
 #include <map>
 #include <iostream>
 
-const char Epsilon = "#";
+const char Epsilon = '#';
 
-typedef NFAIt std::set<NFAState*>::iterator;
+class NFAState {
+	public:
+	std::map<char, std::set<NFAState*> > transitions;
+};
+
+typedef std::set<NFAState*>::iterator NFAIt;
 
 class NFA {
 	public:
@@ -19,22 +24,24 @@ class NFA {
 		std::map<NFAState*, NFAState*> m;
 		for (NFAIt i = src->states.begin(); i!=src->states.end(); i++)
 		{
-			NFAState* new_state = new NFAState*();
-			new_state->transition = (*i)->transition;
+			NFAState* new_state = new NFAState();
+			new_state->transitions = (*i)->transitions;
 			states.insert(new_state);
 			m[(*i)] = new_state;
 		}
 		for (NFAIt i = states.begin(); i!=states.end(); i++)
 		{
 			NFAState* new_state = (*i);
-			for (std::map<char, std::set<NFAState*> >::iterator j = new_state->transitions.begin(); j<new_state->transitions.end(); j++)
+			std::map<char, std::set<NFAState*> > new_transitions;
+			for (std::map<char, std::set<NFAState*> >::iterator j = new_state->transitions.begin(); j!=new_state->transitions.end(); j++)
 			{
 				char ch = j->first;
-				std::set<NFAState*> new_transition = j->second;
-				for (NFAIt k = new_transition.begin(); k!=new_transition.end(); k++)
-					(*k) = m[(*k)];
-				new_state->transitions[ch] = new_transition;
+				std::set<NFAState*> new_transition;
+				for (NFAIt k = j->second.begin(); k!=j->second.end(); k++)
+					new_transition.insert(m[(*k)]);
+				new_transitions[ch] = new_transition;
 			}
+			new_state->transitions = new_transitions;
 		}
 		for (NFAIt i = src->start_states.begin(); i!=src->start_states.end(); i++)
 			start_states.insert(m[(*i)]);
@@ -56,7 +63,7 @@ class NFA {
 	std::set<NFAState*> transition(std::set<NFAState*> current, char s) {
 		std::set<NFAState*> next;
 		for (NFAIt i = current.begin(); i!=current.end(); i++)
-			next.insert((*i)->transition[s].begin, (*i)->transition[s].end());
+			next.insert((*i)->transitions[s].begin(), (*i)->transitions[s].end());
 		return next;
 	}
 
@@ -77,11 +84,6 @@ class NFA {
 	std::set<NFAState*> start_states;
 	std::set<NFAState*> accept_states;
 	std::set<NFAState*> states;
-};
-
-class NFAState {
-	public:
-	std::map<char, std::set<NFAState*> > transitions;
 };
 
 #endif

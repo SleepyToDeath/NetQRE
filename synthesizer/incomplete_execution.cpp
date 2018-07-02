@@ -6,12 +6,13 @@ IESyntaxTree::IESyntaxTree(SyntaxTreeNode* root)
 	p = nullptr;
 }
 
-IESyntaxTree::IESyntaxTree(IESyntaxTree* src)
+IESyntaxTree::IESyntaxTree(SyntaxTree* src)
 :SyntaxTree(src->root)
 {
+	root = new SyntaxTreeNode(src->root);
 	p = nullptr;
 	for (int i=0; i<src->subtree.size(); i++)
-		subtree.push_back(new IESyntaxTree((IESyntaxTree*)(src->subtree[i])));
+		subtree.push_back(new IESyntaxTree(src->subtree[i]));
 }
 
 IEProgram* IESyntaxTree::to_program() {
@@ -25,7 +26,7 @@ IEProgram* IESyntaxTree::to_program() {
 	{
 		std::vector<IEProgram*> subprograms;
 		for (int i=0; i<subtree.size(); i++)
-			subprograms.push_back((IESyntaxTree*)subtree[i]->to_program());
+			subprograms.push_back(((IESyntaxTree*)(subtree[i]))->to_program());
 		p = ((IESyntaxRightHandSide*)(root->get_type()->option[root->get_option()]))->combine_subprograms(subprograms);
 	}
 	return p;
