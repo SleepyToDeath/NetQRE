@@ -108,7 +108,7 @@ you can read the code if you are curious.)
 
 ### Incomplete Execution
 When handling regular expression, the VSA version has time complexity roughly (more than, actually)
-O(m*k*(n^4)) where m is number of examples, k is number of (complete or incomplete) programs tried, 
+`O(m*k*(n^4))` where m is number of examples, k is number of (complete or incomplete) programs tried, 
 and n is the average length of examples. It's not that bad. But still far from satisfactory.
 In practice, it can hardly handle examples of length 50, and consumes a lot of memory due to its dynamic
 programming nature.
@@ -151,7 +151,7 @@ Then the replacement map is like this:
 After the replacement, we can directly run the resulting RE on the example for pruning, for which we can use
 NFA, which is super fast.
 
-The total time complexity of this algorithm for regular expression is about O(k*n*p) where k is number of programs
+The total time complexity of this algorithm for regular expression is about `O(k*n*p)` where k is number of programs
 tested, n is total length of examples, p is size of the program.
 
 For this algorithm to prune well, there are some (reasonable) requirements on the syntax of the language.
