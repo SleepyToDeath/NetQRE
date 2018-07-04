@@ -135,16 +135,38 @@ so that,
 The "if and only if" requirement can be loosen to "if". It won't harm correctness, only damage the performance.
 
 Regular expression is incompletely executable. The super set language is itself.
-The replacement map is like this:
-- `re -> .*`
-- `star -> .*`
-- `char -> .`
+
+If we define its syntax like this:
+-`<re> :: concat(<clause>, <re>) | <clause>`
+-`<clause> :: <star> | <char>`
+-`<star> :: (<re>)*`
+-`<char> :: . | 0 | 1 | .........`
+
+Then the replacement map is like this:
+- `<re> -> .*`
+- `<clause> -> .*`
+- `<star> -> .*`
+- `<char> -> .`
 
 After the replacement, we can directly run the resulting RE on the example for pruning, for which we can use
 NFA, which is super fast.
 
 The total time complexity of this algorithm for regular expression is about O(k*n*p) where k is number of programs
 tested, n is total length of examples, p is size of the program.
+
+For this algorithm to prune well, there are some (reasonable) requirements on the syntax of the language.
+- It should be as unambigious as possible. Because the effectiveness of the algorithm is based on the assumption
+	that the number of correct program is very small. If the syntax is ambigious, (e.g., writing regular expression
+	syntax like this: `<re> :: concat(<re>, <re>) | (<re>)* | . | 0 | 1 | .....`), there will be huge number of correct syntax
+	trees for the same program, thus canceling the effect of pruning.
+- It should have more levels and use a different non-terminal for a different purpose. Again, this is a bad example:
+	`<re> :: concat(<re>, <re>) | (<re>)* | . | 0 | 1 | ......`. It mixes a general regular expression with a clause 
+	of it and a kleene star and a character. There are two reasons this is bad. First, we generally want to start searching
+	from simpler programs. This kind of syntax fails to tell the potential complexity of an incomplete program.
+	Second, the condition of pruning a branch is "it has zero correct program". Using the same non-terminal for multiple
+	purposes is like merging multiple subtrees, during which a subtree with correct program will "contaminate" other subtrees
+	with no correct program, which makes it difficult to prune at a high level.
+
 It is not known yet how this will work for other languages. Intuitively, the complexity should be the same for QRE
 if data transducer is used. And other tasks shouldn't be too difficult to handle since it only need to execute the
 program instead of exploring the whole state space.
