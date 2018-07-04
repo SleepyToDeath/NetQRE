@@ -86,7 +86,6 @@ double SyntaxTree::get_complexity() {
 			complexity = 0;
 			for (int i=0; i<subtree.size(); i++)
 				complexity += subtree[i]->get_complexity();
-				/*
 			if (root->get_type()->option[root->get_option()]->independent)
 			{
 				complexity *= subtree.size();
@@ -95,7 +94,6 @@ double SyntaxTree::get_complexity() {
 			{
 				complexity *= sqrt(complexity*4);
 			}
-			*/
 		}
 	}
 	return complexity;

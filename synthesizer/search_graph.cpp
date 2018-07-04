@@ -275,7 +275,7 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 							progress += candidate[j]->weight;
 							std::cout<<"Progress: "<<progress*100.0<<"% | +"<<candidate[j]->weight<<std::endl;
 //							std::cout<<candidate[j]->get_complexity()<<std::endl;
-//							flag_deadend = true;
+							flag_deadend = true;
 							delete candidate[j];
 						}
 					}
