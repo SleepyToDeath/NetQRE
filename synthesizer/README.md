@@ -137,10 +137,10 @@ The "if and only if" requirement can be loosen to "if". It won't harm correctnes
 Regular expression is incompletely executable. The super set language is itself.
 
 If we define its syntax like this:
--`<re> :: concat(<clause>, <re>) | <clause>`
--`<clause> :: <star> | <char>`
--`<star> :: (<re>)*`
--`<char> :: . | 0 | 1 | .........`
+- `<re> :: concat(<clause>, <re>) | <clause>`
+- `<clause> :: <star> | <char>`
+- `<star> :: (<re>)*`
+- `<char> :: . | 0 | 1 | .........`
 
 Then the replacement map is like this:
 - `<re> -> .*`
