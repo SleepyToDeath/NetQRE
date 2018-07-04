@@ -38,7 +38,7 @@ Here are several examples:
 - Synthesized program size: about 15
 - Time used: 20s
 
-## Example 5
+## Example 6
 - Number of input strings: 5
 - Average string size: 1500
 - Synthesized program size: about 20
@@ -112,36 +112,48 @@ O(m*k*(n^4)) where m is number of examples, k is number of (complete or incomple
 and n is the average length of examples. It's not that bad. But still far from satisfactory.
 In practice, it can hardly handle examples of length 50, and consumes a lot of memory due to its dynamic
 programming nature.
+
 The better way is called Incomplete Execution. 
+
 The reason we find pruning difficult is that we can not execute an incomplete program and let it 
 tell us if it can potentially accept an example directly. We have to somehow collect informations
 bottom up until reaching the point we try to prune. VSA greatly compressed the space and information
 we need to collect, yet it's still not super fast.
+
 But is it really truth that we can not execute an incomplete program? As you may have guessed from
 the name, yes, we can ("Ass♂We♂Can!").
 
 We formally define the property "Incompletely Executable": 
+
 A language L is incompletely executable if there's a super set of it L',
 so that,
+
 there is a way to replace every non-terminal in L by a complete program in L'
 so that,
+
 given any incomplete program P in L, we can always replace all its non-terminals and get a complete program P' in L'
 so that,
+
 for any specification S, P' satisfies S if and only if P can mutate into a complete program that satisfies S.
 The "if and only if" requirement can be loosen to "if". It won't harm correctness, only damage the performance.
 
 Regular expression is incompletely executable. The super set language is itself.
 The replacement map is like this:
+
 `
 re -> .*
+
 star -> .*
+
 char -> .
 `
+
 After the replacement, we can directly run the resulting RE on the example for pruning, for which we can use
 NFA, which is super fast.
+
 The total time complexity of this algorithm for regular expression is about O(k*n*p) where k is number of programs
 tested, n is total length of examples, p is size of the program.
 It is not known yet how this will work for other languages. Intuitively, the complexity should be the same for QRE
-if data transducer is used. And other tasks should be too difficult to handle since it only need to execute the
+if data transducer is used. And other tasks shouldn't be too difficult to handle since it only need to execute the
 program instead of exploring the whole state space.
 
