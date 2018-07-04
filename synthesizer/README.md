@@ -123,30 +123,22 @@ we need to collect, yet it's still not super fast.
 But is it really truth that we can not execute an incomplete program? As you may have guessed from
 the name, yes, we can ("Ass♂We♂Can!").
 
-We formally define the property "Incompletely Executable": 
-
-A language L is incompletely executable if there's a super set of it L',
+We formally define the property "*Incompletely Executable*": 
+- A language L is incompletely executable if there's a super set of it L',
 so that,
-
-there is a way to replace every non-terminal in L by a complete program in L'
+- there is a way to replace every non-terminal in L by a complete program in L'
 so that,
-
-given any incomplete program P in L, we can always replace all its non-terminals and get a complete program P' in L'
+- given any incomplete program P in L, we can always replace all its non-terminals and get a complete program P' in L'
 so that,
+- for any specification S, P' satisfies S if and only if P can mutate into a complete program that satisfies S.
 
-for any specification S, P' satisfies S if and only if P can mutate into a complete program that satisfies S.
 The "if and only if" requirement can be loosen to "if". It won't harm correctness, only damage the performance.
 
 Regular expression is incompletely executable. The super set language is itself.
 The replacement map is like this:
-
-`
-re -> .*
-
-star -> .*
-
-char -> .
-`
+- `re -> .*`
+- `star -> .*`
+- `char -> .`
 
 After the replacement, we can directly run the resulting RE on the example for pruning, for which we can use
 NFA, which is super fast.
