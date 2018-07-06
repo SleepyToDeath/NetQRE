@@ -8,16 +8,18 @@
 class SearchGraph {
 	public:
 	/* search tree version */
-	SearchGraph(int depth_threshold, SyntaxLeftHandSide* starting_symbol, RHSToDivider* r2d, SearchTreeCacheFactory<LNode*>* cache_pool);
+	SearchGraph(int depth_threshold, int batch_size, int answer_count, SyntaxLeftHandSide* starting_symbol, RHSToDivider* r2d, SearchTreeCacheFactory<LNode*>* cache_pool);
 	SyntaxTree* search_top_level(std::vector<ExampleType*> example);
 	SyntaxTree* search_recursive(SearchTreeContext ctxt, std::vector<SearchState*> state);
 
 	/* incomplete execution version */
-	SearchGraph(int depth_threshold, IESyntaxLeftHandSide* starting_symbol);
-	IESyntaxTree* search_top_level_v2(std::vector<IEExample*> example);
+	SearchGraph(int depth_threshold, int batch_size, int answer_count, IESyntaxLeftHandSide* starting_symbol);
+	std::vector<IESyntaxTree*> search_top_level_v2(std::vector<IEExample*> example);
 
 	private:
 	int depth_threshold;
+	int batch_size;
+	int answer_count;
 	SyntaxLeftHandSide* starting_symbol;
 
 	/* search tree version */
@@ -26,7 +28,7 @@ class SearchGraph {
 	SyntaxTree* enumerate_random(std::vector<LNode*> positive_constraint, std::vector<LNode*> negative_constraint, int batch_size);
 
 	/* incomplete execution version */
-	IESyntaxTree* enumerate_random_v2(std::vector<IEExample*> examples, int batch_size);
+	std::vector<IESyntaxTree*> enumerate_random_v2(std::vector<IEExample*> examples);
 };
 
 #endif

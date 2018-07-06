@@ -105,7 +105,7 @@ class RegexIEProgram: public IEProgram {
 class LHSABC : public IESyntaxLeftHandSide {
 	public:
 	LHSABC() {
-		name = "[ABC]";
+		name = "\\C";
 		is_term = false;
 	}
 
@@ -131,7 +131,7 @@ class LHSABC : public IESyntaxLeftHandSide {
 class LHSabc : public IESyntaxLeftHandSide {
 	public:
 	LHSabc() {
-		name = "[abc]";
+		name = "\\c";
 		is_term = false;
 	}
 
@@ -157,7 +157,7 @@ class LHSabc : public IESyntaxLeftHandSide {
 class LHS123 : public IESyntaxLeftHandSide {
 	public:
 	LHS123() {
-		name = "[123]";
+		name = "\\d";
 		is_term = false;
 	}
 
@@ -184,7 +184,7 @@ class LHSGeneralChar : public IESyntaxLeftHandSide {
 	public:
 	LHSGeneralChar(char ch0) {
 		ch = ch0;
-		name = "?";
+		name = "_";
 		name[0] = ch;
 		is_term = true;
 	}
@@ -242,7 +242,7 @@ class LHSRepeatClause : public IESyntaxLeftHandSide {
 		nfa->states.insert(op);
 		nfa->states.insert(ed);
 		nfa->start_states.insert(zero);
-		nfa->accept_states.insert(zero);
+//		nfa->accept_states.insert(zero);
 		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
@@ -282,7 +282,7 @@ class LHSRe : public IESyntaxLeftHandSide {
 		nfa->states.insert(op);
 		nfa->states.insert(ed);
 		nfa->start_states.insert(zero);
-		nfa->accept_states.insert(zero);
+//		nfa->accept_states.insert(zero);
 		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
@@ -431,7 +431,7 @@ class LHSClause : public IESyntaxLeftHandSide {
 		nfa->states.insert(op);
 		nfa->states.insert(ed);
 		nfa->start_states.insert(zero);
-		nfa->accept_states.insert(zero);
+//		nfa->accept_states.insert(zero);
 		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
@@ -470,7 +470,7 @@ class LHSStar : public IESyntaxLeftHandSide {
 		nfa->states.insert(op);
 		nfa->states.insert(ed);
 		nfa->start_states.insert(zero);
-		nfa->accept_states.insert(zero);
+//		nfa->accept_states.insert(zero);
 		nfa->accept_states.insert(ed);
 		
 		RegexIEProgram* p = new RegexIEProgram(nfa, false);
@@ -698,6 +698,7 @@ class RHSStarUnfold : public IESyntaxRightHandSide {
 			e_trans.insert(root->start_states.begin(), root->start_states.end());
 			(*i)->transitions[Epsilon] = e_trans;
 		}
+		root->accept_states.erase(zero); // disable zero matching
 		root->start_states.clear();
 		root->start_states.insert(zero);
 		return new RegexIEProgram(root, ((RegexIEProgram*)subprograms[0])->complete);
@@ -793,7 +794,7 @@ void init()
 
 	l_re->option.push_back(r_concat);
 	l_re->option.push_back(r_clause);
-	l_re->option.push_back(r_or);
+//	l_re->option.push_back(r_or);
 	l_clause->option.push_back(r_ch);
 	l_clause->option.push_back(r_star);
 	l_repeat_clause->option.push_back(r_ch);
@@ -834,26 +835,26 @@ void init()
 
 int main() {
 	init();
-	int d;
-	std::cin>>d;
-	SearchGraph g(d, l_re);
+	int d, b, a;
+	std::cin>>d>>b>>a;
+	SearchGraph g(d, b, a, l_re);
 	std::vector<IEExample*> example;
 	int positive_num, negative_num;
 	std::cin>>positive_num;
+	std::cin>>negative_num;
 	for (int i=0; i<positive_num; i++)
 	{
 		std::string example_string;
 		std::cin>>example_string;
 		example.push_back(new RegexIEExample(O_YES, example_string));
 	}
-	std::cin>>negative_num;
 	for (int i=0; i<negative_num; i++)
 	{
 		std::string example_string;
 		std::cin>>example_string;
 		example.push_back(new RegexIEExample(O_NO, example_string));
 	}
-	IESyntaxTree* program = g.search_top_level_v2(example);
+	std::vector<IESyntaxTree*> program = g.search_top_level_v2(example);
 	std::cout<<"====================================================\n";
 	std::cout<<"Positive Examples:\n";
 	for (int i=0; i<positive_num; i++)
@@ -863,9 +864,12 @@ int main() {
 	for (int i=0; i<negative_num; i++)
 		std::cout<<((RegexIEExample*)(example[i+positive_num]))->s<<std::endl;
 	std::cout<<std::endl;
-	std::cout<<"Synthesized Program:\n";
-	if (program == nullptr)
+	std::cout<<"Synthesized Programs:\n";
+	if (program.size() == 0)
 		std::cout<<"Not Found!\n";
 	else
-		std::cout<<program->to_string()<<std::endl;
+	{
+		for (int i=0; i<program.size(); i++)
+			std::cout<<program[i]->to_string()<<std::endl;
+	}
 }

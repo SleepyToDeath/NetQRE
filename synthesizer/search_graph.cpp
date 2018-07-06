@@ -2,7 +2,9 @@
 #include <experimental/random>
 #include <algorithm>
 
-SearchGraph::SearchGraph(int depth_threshold0, SyntaxLeftHandSide* starting_symbol0, RHSToDivider* r2d0, SearchTreeCacheFactory<LNode*>* cache_pool0) {
+SearchGraph::SearchGraph(int depth_threshold0, int batch_size0, int answer_count0, SyntaxLeftHandSide* starting_symbol0, RHSToDivider* r2d0, SearchTreeCacheFactory<LNode*>* cache_pool0) {
+	batch_size = batch_size0;
+	answer_count = answer_count0;
 	depth_threshold = depth_threshold0;
 	starting_symbol = starting_symbol0;
 	cache_pool = cache_pool0;
@@ -198,19 +200,22 @@ SyntaxTree* SearchGraph::enumerate_random(std::vector<LNode*> positive_constrain
 }
 
 
-SearchGraph::SearchGraph(int depth_threshold0, IESyntaxLeftHandSide* starting_symbol0) {
+SearchGraph::SearchGraph(int depth_threshold0, int batch_size0, int answer_count0, IESyntaxLeftHandSide* starting_symbol0) {
+	batch_size = batch_size0;
+	answer_count = answer_count0;
 	depth_threshold = depth_threshold0;
 	starting_symbol = starting_symbol0;
 }
 
-IESyntaxTree* SearchGraph::search_top_level_v2(std::vector<IEExample*> examples) {
-	IESyntaxTree* ans = enumerate_random_v2(examples, 100);
-	return ans;
+std::vector<IESyntaxTree*> SearchGraph::search_top_level_v2(std::vector<IEExample*> examples) {
+	return enumerate_random_v2(examples);
 }
 
-IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples, int batch_size) {
+std::vector<IESyntaxTree*> SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples) {
 	std::vector<IESyntaxTree*> this_round;
 	std::vector<IESyntaxTree*> buffer;
+	std::vector<IESyntaxTree*> answer;
+	int answer_counter = 0;
 
 	double progress = 0;
 
@@ -267,14 +272,22 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 							counter++;
 							if (candidate[j]->is_complete())
 							{
-//								std::cout<<candidate[j]->to_string()<<std::endl;
-								for (int k=j+1; k<candidate.size(); k++)
-									delete candidate[k];
-								for (int k=0; k<this_round.size(); k++)
-									delete this_round[k];
-								for (int k=0; k<buffer.size()-1; k++)
-									delete buffer[k];
-								return candidate[j];
+								answer_counter ++;
+								std::cout<<"ANSWER FOUND: "<<candidate[j]->to_string()<<std::endl;
+								answer.push_back(candidate[j]);
+								buffer.pop_back();
+								if (answer_counter == answer_count)
+								{
+									/*
+									for (int k=j+1; k<candidate.size(); k++)
+										delete candidate[k];
+									for (int k=0; k<this_round.size(); k++)
+										delete this_round[k];
+									for (int k=0; k<buffer.size()-1; k++)
+										delete buffer[k];
+										*/
+									return answer;
+								}
 							}
 						}
 						else
@@ -313,7 +326,10 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree);
 			std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
 			std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
-			std::cout<<"Buffer size: "<<buffer.size()<<std::endl<<std::endl;
+			std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
+			std::cout<<"Answers found: "<<answer_counter<<std::endl;
+			std::cout<<"One current sample: "<<(buffer[std::experimental::randint(0,(int)buffer.size()-1)]->to_string())<<std::endl;
+			std::cout<<std::endl;
 			/*
 			if (flag_deadend)
 			{
@@ -337,7 +353,9 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 				for (int k=0; k<batch_size; k++)
 				{
 					{
-						int l = std::experimental::randint(0,(int)buffer.size()/2-2) + buffer.size()/2;
+						int l = std::experimental::randint(0,(int)buffer.size()/2) + buffer.size()/2;
+						if (l>=buffer.size())
+							l = buffer.size()-1;
 						IESyntaxTree* tmp = buffer.back();
 						buffer.back() = buffer[l];
 						buffer[l] = tmp;
@@ -349,7 +367,7 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 		}
 	}
 
-	return nullptr;
+	return answer;
 
 }
 
