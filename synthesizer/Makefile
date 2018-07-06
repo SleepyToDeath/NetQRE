@@ -1,6 +1,12 @@
-all: regex4
+all: regex5
 
-g: regex4-g
+g: regex5-g
+
+gen: example/gen.cpp
+	cd example; g++ -o gen ./gen.cpp;
+
+test:
+	time example/gen | ./regex
 
 regex: lang/regex.cpp search_tree.h search_tree.cpp search_graph.h search_graph.cpp syntax_tree.h syntax_tree.cpp
 	g++ -o regex lang/regex.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -O2 -std=c++11
@@ -25,6 +31,12 @@ regex4: lang/regex4.cpp incomplete_execution.cpp incomplete_execution.h search_t
 
 regex4-g: lang/regex4.cpp incomplete_execution.h search_tree.h search_tree.cpp search_graph.h search_graph.cpp syntax_tree.h syntax_tree.cpp
 	g++ -o regex lang/regex4.cpp incomplete_execution.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -g -std=c++11
+
+regex5: lang/regex5.cpp incomplete_execution.cpp incomplete_execution.h search_tree.h search_tree.cpp search_graph.h search_graph.cpp syntax_tree.h syntax_tree.cpp
+	g++ -o regex lang/regex5.cpp incomplete_execution.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -O2 -std=c++11
+
+regex5-g: lang/regex5.cpp incomplete_execution.h search_tree.h search_tree.cpp search_graph.h search_graph.cpp syntax_tree.h syntax_tree.cpp
+	g++ -o regex lang/regex5.cpp incomplete_execution.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -g -std=c++11
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./regex

@@ -13,10 +13,13 @@ class IEProgram {
 
 class IESyntaxTree : public SyntaxTree {
 	public:
+	~IESyntaxTree();
 	IESyntaxTree(SyntaxTreeNode* root);
 	IESyntaxTree(SyntaxTree* src); /* copy constructor */
 
 	IEProgram* to_program();
+
+	std::string to_string();
 
 	private:
 	IEProgram* p;

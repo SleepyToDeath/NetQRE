@@ -81,7 +81,7 @@ class LanguageSyntax
 
 class SyntaxLeftHandSide {
 	public:
-	int id;
+//	int id;
 	int size();
 	std::string name;
 	std::vector<SyntaxRightHandSide*> option;
@@ -92,11 +92,13 @@ class SyntaxLeftHandSide {
 
 class SyntaxRightHandSide {
 	public:
-	int id;
+//	int id;
 	int size();
 	std::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
 	std::vector<SyntaxLeftHandSide*> subexp;
+
+	virtual std::string to_string(std::vector<std::string> subs) {return "";};
 };
 
 

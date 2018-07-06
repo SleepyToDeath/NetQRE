@@ -214,6 +214,8 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 
 	double progress = 0;
 
+	double total_drop = 0;
+	double complete_drop = 0;
 //	for (int depth = 0; depth<depth_threshold; depth++)
 	int depth = depth_threshold;
 	{
@@ -249,10 +251,14 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 						{
 							if (!candidate[j]->to_program()->accept(examples[k]))
 							{
+								total_drop += 1.0;
+								if (candidate[j]->is_complete())
+									complete_drop += 1.0;
 								flag_acc = false;
 								break;
 							}
 						}
+//						std::cout<<"----------------------\n";
 						if (flag_acc)
 						{
 //							std::cout<<"Progress:"<<progress<<" | +"<<candidate[j]->weight<<std::endl;
@@ -261,6 +267,7 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 							counter++;
 							if (candidate[j]->is_complete())
 							{
+//								std::cout<<candidate[j]->to_string()<<std::endl;
 								for (int k=j+1; k<candidate.size(); k++)
 									delete candidate[k];
 								for (int k=0; k<this_round.size(); k++)
@@ -273,7 +280,8 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 						else
 						{
 							progress += candidate[j]->weight;
-							std::cout<<"Progress: "<<progress*100.0<<"% | +"<<candidate[j]->weight<<std::endl;
+//							std::cout<<"Progress: "<<progress*100.0<<"% | +"<<candidate[j]->weight
+//								<<"  |  ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<std::endl;
 //							std::cout<<candidate[j]->get_complexity()<<std::endl;
 							flag_deadend = true;
 							delete candidate[j];
@@ -303,7 +311,9 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 			}
 			buffer = buffer2;
 			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree);
-			std::cout<<"buffer size: "<<buffer.size()<<std::endl;
+			std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
+			std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
+			std::cout<<"Buffer size: "<<buffer.size()<<std::endl<<std::endl;
 			/*
 			if (flag_deadend)
 			{
@@ -326,7 +336,12 @@ IESyntaxTree* SearchGraph::enumerate_random_v2(std::vector<IEExample*> examples,
 			{
 				for (int k=0; k<batch_size; k++)
 				{
-//					int l = std::experimental::randint(0,bsize);
+					{
+						int l = std::experimental::randint(0,(int)buffer.size()/2-2) + buffer.size()/2;
+						IESyntaxTree* tmp = buffer.back();
+						buffer.back() = buffer[l];
+						buffer[l] = tmp;
+					}
 					this_round.push_back(buffer.back());
 					buffer.pop_back();
 				}

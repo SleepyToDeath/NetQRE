@@ -1,4 +1,28 @@
 #include "incomplete_execution.h"
+IESyntaxTree::~IESyntaxTree() {
+	delete p;
+}
+
+std::string IESyntaxTree::to_string() {
+	std::string s;
+	if (root->get_type()->is_term) 
+		s = root->get_type()->name;
+	else if (root->get_option() == SyntaxLeftHandSide::NoOption)
+		s = root->get_type()->name;
+	else
+	{
+		SyntaxRightHandSide* rhs = root->get_type()->option[root->get_option()];
+		std::vector<std::string> subs;
+
+		for (int i=0; i<this->subtree.size(); i++)
+			subs.push_back(((IESyntaxTree*)(subtree[i]))->to_string());
+
+		s = rhs->to_string(subs);
+	}
+	return s;
+}
+
+
 
 IESyntaxTree::IESyntaxTree(SyntaxTreeNode* root)
 :SyntaxTree(root)

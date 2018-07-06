@@ -20,6 +20,12 @@ class NFA {
 	NFA() {
 	}
 
+	~NFA() {
+		for (NFAIt i = states.begin(); i!=states.end(); i++)
+			delete (*i);
+	}
+
+
 	NFA(NFA* src) {
 		std::map<NFAState*, NFAState*> m;
 		for (NFAIt i = src->states.begin(); i!=src->states.end(); i++)
@@ -71,7 +77,9 @@ class NFA {
 		active_states = find_neighbours(start_states);
 
 		for (int i=0; i<input.size(); i++)
+		{
 			active_states = find_neighbours(transition(active_states, input[i]));
+		}
 
 		for (NFAIt i = active_states.begin(); i!=active_states.end(); i++)
 			if (accept_states.find(*i) != accept_states.end())

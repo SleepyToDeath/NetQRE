@@ -140,12 +140,14 @@ std::string SyntaxTree::to_string() {
 		s = root->get_type()->name;
 	else
 	{
-		if ((subtree.size() > 1) || (!root->get_type()->option[root->get_option()]->independent))
-			s = root->get_type()->option[root->get_option()]->name + "(";
+//		if ((subtree.size() > 1) || (!root->get_type()->option[root->get_option()]->independent))
+		if ((!root->get_type()->option[root->get_option()]->independent))
+			s = root->get_type()->option[root->get_option()]->name + "( ";
 		for (int i=0; i<this->subtree.size(); i++)
-			s = s+subtree[i]->to_string() + (i==subtree.size()-1?"":",");
-		if ((subtree.size() > 1) || (!root->get_type()->option[root->get_option()]->independent))
-			s = s + ")";
+			s = s+subtree[i]->to_string() + (i==subtree.size()-1?"":" ");
+//		if ((subtree.size() > 1) || (!root->get_type()->option[root->get_option()]->independent))
+		if ((!root->get_type()->option[root->get_option()]->independent))
+			s = s + " )";
 	}
 	return s;
 }
