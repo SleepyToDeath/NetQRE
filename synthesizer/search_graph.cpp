@@ -251,7 +251,7 @@ std::vector<IESyntaxTree*> SearchGraph::enumerate_random_v2(std::vector<IEExampl
 					for (int j=0; j<candidate.size(); j++)
 					{
 						bool flag_acc = true;
-//						std::cout<<candidate[j]->to_string()<<std::endl;
+						std::cout<<candidate[j]->to_string()<<std::endl;
 						for (int k=0; k<examples.size(); k++)
 						{
 							if (!candidate[j]->to_program()->accept(examples[k]))
