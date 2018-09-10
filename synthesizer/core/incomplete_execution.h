@@ -17,9 +17,11 @@ class IESyntaxTree : public SyntaxTree {
 	IESyntaxTree(SyntaxTreeNode* root);
 	IESyntaxTree(SyntaxTree* src); /* copy constructor */
 
-	IEProgram* to_program();
+	virtual IEProgram* to_program();
 
-	std::string to_string();
+	virtual std::string to_string();
+
+	copy_initializer(SyntaxTree* src);
 
 	private:
 	IEProgram* p;

@@ -1,0 +1,35 @@
+[
+	{ "syntax" : [ 
+		{ "program" : [
+				[ "conjunction" ],
+				[ "bool" ]
+		] },
+		{ "conjunction" : [
+				[ "$(",	"conjunction",	"$&&", "bool",	"$)" ],
+				[ "bool" ]
+		] },
+		{ "bool" : [
+				[ "0" ],
+				[ "1" ],
+				[ "any"	]
+		] }
+	] },
+
+	{ "execution" : [
+		{ "program" : "any" },
+		{ "conjunction" : "any" },
+		{ "bool" : "any" }
+	] }
+]
+
+[ 
+	"Document: the top level should contain 2 elements, named \"syntax\" and \"execution\" respectively. ",
+	"Syntax contains an array describing the grammar in a form similar to BNF. Each entry starts with the",
+	"name of LHS. The value is an array containing mutation options. Each option is an array containing ",
+	"the symbol list after mutation. If a symbol is not functional, such as \"(\", \")\", start that symbol",
+	"with $ to help the synthesizer recognize it (although it's okay not to do so).",
+	"Execution contains an array describing an incomplete syntax tree's equivalent complete program.",
+	"Each entry's name is a non-terminal name and the value is a SINGLE string describing the SOURCE CODE",
+	"of the program that will replace it"
+]
+

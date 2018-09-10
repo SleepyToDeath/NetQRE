@@ -12,10 +12,16 @@ SyntaxTree::SyntaxTree(SyntaxTreeNode* r) {
 }
 
 SyntaxTree::SyntaxTree(SyntaxTree* t) {
+	/* shared part */
 	root = new SyntaxTreeNode(t->root);
 	this->weight = t->weight;
 	complete = UNKNOWN;
 	complexity = 0;
+	/* to be overridden */
+	copy_initializer(t);
+}
+
+void SyntaxTree::copy_initializer(SyntaxTree* t) {
 	for (int i=0; i<t->subtree.size(); i++)
 		subtree.push_back(new SyntaxTree(t->subtree[i]));
 }

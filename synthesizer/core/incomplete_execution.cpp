@@ -3,6 +3,7 @@ IESyntaxTree::~IESyntaxTree() {
 	delete p;
 }
 
+/*
 std::string IESyntaxTree::to_string() {
 	std::string s;
 	if (root->get_type()->is_term) 
@@ -21,8 +22,7 @@ std::string IESyntaxTree::to_string() {
 	}
 	return s;
 }
-
-
+*/
 
 IESyntaxTree::IESyntaxTree(SyntaxTreeNode* root)
 :SyntaxTree(root)
@@ -31,15 +31,17 @@ IESyntaxTree::IESyntaxTree(SyntaxTreeNode* root)
 }
 
 IESyntaxTree::IESyntaxTree(SyntaxTree* src)
-:SyntaxTree(src->root)
+:SyntaxTree(src)
 {
-	root = new SyntaxTreeNode(src->root);
-	weight = src->weight;
 	p = nullptr;
+}
+
+IESyntaxTree::copy_initializer(SyntaxTree* src) {
 	for (int i=0; i<src->subtree.size(); i++)
 		subtree.push_back(new IESyntaxTree(src->subtree[i]));
 }
 
+/*
 IEProgram* IESyntaxTree::to_program() {
 	if (p != nullptr)
 		return p;
@@ -58,4 +60,5 @@ IEProgram* IESyntaxTree::to_program() {
 	}
 	return p;
 }
+*/
 

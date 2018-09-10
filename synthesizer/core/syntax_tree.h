@@ -21,7 +21,7 @@ enum SyntaxTreeCompleteness {
 
 /*	This data structure is immutable.
 	Every time it mutates, you get a new one */
-class SyntaxTree {
+class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	public:
 	std::vector<SyntaxTree*> subtree; // read only
 	SyntaxTreeNode* root; // read only
@@ -47,6 +47,8 @@ class SyntaxTree {
 	double complexity;
 
 	void mutate(int option);
+
+	virtual void copy_initializer();
 };
 
 bool compare_syntax_tree(SyntaxTree* a, SyntaxTree* b);
@@ -67,36 +69,24 @@ class SyntaxTreeNode {
 	int option;
 };
 
-/* [TODO] useless? */
-class LanguageSyntax
-{
-	public:
-	int add_rule(SyntaxLeftHandSide* r);
-	SyntaxLeftHandSide* get_rule(int id);
-	int size();
-
-	private:
-	std::vector<SyntaxLeftHandSide*> rule;
-};
-
-class SyntaxLeftHandSide {
+class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide> {
 	public:
 //	int id;
 	int size();
 	std::string name;
-	std::vector<SyntaxRightHandSide*> option;
+	std::vector<std::shared_ptr<SyntaxRightHandSide> > option;
 	bool is_term;
 
 	static const int NoOption = -1;
 };
 
-class SyntaxRightHandSide {
+class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSide> {
 	public:
 //	int id;
 	int size();
 	std::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
-	std::vector<SyntaxLeftHandSide*> subexp;
+	std::vector<std::shared_ptr<SyntaxLeftHandSide> > subexp;
 
 	virtual std::string to_string(std::vector<std::string> subs) {return "";};
 };
