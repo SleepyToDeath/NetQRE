@@ -2,39 +2,41 @@
 #define INCOMPLETE_EXECUTION_H
 
 #include "syntax_tree.h"
+#include <memory>
+
+using std::shared_ptr;
 
 class IEExample {
 };
 
 class IEProgram {
 	public:
-	virtual bool accept(IEExample* e) = 0;
+	virtual bool accept( shared_ptr<IEExample> e) = 0;
 };
 
 class IESyntaxTree : public SyntaxTree {
 	public:
-	~IESyntaxTree();
-	IESyntaxTree(SyntaxTreeNode* root);
-	IESyntaxTree(SyntaxTree* src); /* copy constructor */
+	IESyntaxTree( shared_ptr<SyntaxTreeNode> root);
+	IESyntaxTree( shared_ptr<SyntaxTree> src); /* copy constructor */
 
-	virtual IEProgram* to_program();
+	virtual shared_ptr<IEProgram> to_program();
 
 	virtual std::string to_string();
 
-	copy_initializer(SyntaxTree* src);
+	void copy_initializer(shared_ptr<SyntaxTree> src);
 
 	private:
-	IEProgram* p;
+	shared_ptr<IEProgram> p;
 };
 
 class IESyntaxLeftHandSide : public SyntaxLeftHandSide {
 	public:
-	virtual IEProgram* to_program() = 0;
+	virtual shared_ptr<IEProgram> to_program() = 0;
 };
 
 class IESyntaxRightHandSide : public SyntaxRightHandSide {
 	public:
-	virtual IEProgram* combine_subprograms(std::vector<IEProgram*> subprograms) = 0;
+	virtual shared_ptr<IEProgram> combine_subprograms(std::vector< shared_ptr<IEProgram> > subprograms) = 0;
 };
 
 #endif

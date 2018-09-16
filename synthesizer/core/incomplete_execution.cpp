@@ -1,7 +1,4 @@
 #include "incomplete_execution.h"
-IESyntaxTree::~IESyntaxTree() {
-	delete p;
-}
 
 /*
 std::string IESyntaxTree::to_string() {
@@ -24,21 +21,29 @@ std::string IESyntaxTree::to_string() {
 }
 */
 
-IESyntaxTree::IESyntaxTree(SyntaxTreeNode* root)
+IESyntaxTree::IESyntaxTree(shared_ptr<SyntaxTreeNode> root)
 :SyntaxTree(root)
 {
 	p = nullptr;
 }
 
-IESyntaxTree::IESyntaxTree(SyntaxTree* src)
+IESyntaxTree::IESyntaxTree(shared_ptr<SyntaxTree> src)
 :SyntaxTree(src)
 {
 	p = nullptr;
 }
 
-IESyntaxTree::copy_initializer(SyntaxTree* src) {
+void IESyntaxTree::copy_initializer(shared_ptr<SyntaxTree> src) {
 	for (int i=0; i<src->subtree.size(); i++)
-		subtree.push_back(new IESyntaxTree(src->subtree[i]));
+		subtree.push_back(shared_ptr<IESyntaxTree>(new IESyntaxTree(src->subtree[i])));
+}
+
+shared_ptr<IEProgram> IESyntaxTree::to_program() {
+	return nullptr;
+}
+
+std::string IESyntaxTree::to_string() {
+	return nullptr;
 }
 
 /*

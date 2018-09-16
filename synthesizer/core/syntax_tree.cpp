@@ -1,19 +1,19 @@
 #include "syntax_tree.h"
 #include <cmath>
 
-bool compare_syntax_tree(SyntaxTree* a, SyntaxTree* b) {
+bool compare_syntax_tree(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
 }
 
-SyntaxTree::SyntaxTree(SyntaxTreeNode* r) {
+SyntaxTree::SyntaxTree(shared_ptr<SyntaxTreeNode> r) {
 	root = r;
 	complete = UNKNOWN;
 	complexity = 0;
 }
 
-SyntaxTree::SyntaxTree(SyntaxTree* t) {
+SyntaxTree::SyntaxTree(shared_ptr<SyntaxTree> t) {
 	/* shared part */
-	root = new SyntaxTreeNode(t->root);
+	root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->root));
 	this->weight = t->weight;
 	complete = UNKNOWN;
 	complexity = 0;
@@ -21,15 +21,12 @@ SyntaxTree::SyntaxTree(SyntaxTree* t) {
 	copy_initializer(t);
 }
 
-void SyntaxTree::copy_initializer(SyntaxTree* t) {
+void SyntaxTree::copy_initializer(shared_ptr<SyntaxTree> t) {
 	for (int i=0; i<t->subtree.size(); i++)
-		subtree.push_back(new SyntaxTree(t->subtree[i]));
+		subtree.push_back(shared_ptr<SyntaxTree>(new SyntaxTree(t->subtree[i])));
 }
 
 SyntaxTree::~SyntaxTree() {
-	delete root;
-	for (int i=0; i<subtree.size(); i++)
-		delete subtree[i];
 }
 
 void SyntaxTree::mutate(int option) {
@@ -38,7 +35,6 @@ void SyntaxTree::mutate(int option) {
 	{
 		while(subtree.size()>0)
 		{
-			delete subtree.back();
 			subtree.pop_back();
 		}
 	}
@@ -48,9 +44,11 @@ void SyntaxTree::mutate(int option) {
 	/* new mutation */
 	if (option != SyntaxLeftHandSide::NoOption)
 	{
-		SyntaxRightHandSide* r = root->get_type()->option[option];
+		shared_ptr<SyntaxRightHandSide> r = root->get_type()->option[option];
 		for (int i=0; i<r->subexp.size(); i++)
-			subtree.push_back(new SyntaxTree(new SyntaxTreeNode(r->subexp[i])));
+			subtree.push_back(
+				shared_ptr<SyntaxTree>(new SyntaxTree( 
+					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(r->subexp[i])))));
 	}
 
 }
@@ -105,7 +103,7 @@ double SyntaxTree::get_complexity() {
 	return complexity;
 }
 
-bool SyntaxTree::multi_mutate(SyntaxTree* top, int max_depth, std::vector<SyntaxTree*> * queue) {
+bool SyntaxTree::multi_mutate(shared_ptr<SyntaxTree> top, int max_depth, shared_ptr<SyntaxTree::Queue> queue) {
 
 	if (root->get_type()->is_term)
 		return false;
@@ -118,8 +116,8 @@ bool SyntaxTree::multi_mutate(SyntaxTree* top, int max_depth, std::vector<Syntax
 			for (int i=0; i<branch_num; i++)
 			{
 				mutate(i);
-				queue->push_back(new SyntaxTree(top));
-				queue->back()->weight = top->weight/branch_num;
+				queue->q.push_back(shared_ptr<SyntaxTree>(new SyntaxTree(top)));
+				queue->q.back()->weight = top->weight/branch_num;
 			}
 			mutate(SyntaxLeftHandSide::NoOption);
 			return true;
@@ -158,7 +156,7 @@ std::string SyntaxTree::to_string() {
 	return s;
 }
 
-bool SyntaxTree::equal(SyntaxTree* t) {
+bool SyntaxTree::equal(shared_ptr<SyntaxTree> t) {
 	if (!root->equal(t->root))
 		return false;
 	if (subtree.size() != t->subtree.size())
@@ -169,21 +167,21 @@ bool SyntaxTree::equal(SyntaxTree* t) {
 	return true;
 }
 
-SyntaxTreeNode::SyntaxTreeNode(SyntaxLeftHandSide* l) {
+SyntaxTreeNode::SyntaxTreeNode(shared_ptr<SyntaxLeftHandSide> l) {
 	type = l;
 	option = SyntaxLeftHandSide::NoOption;
 }
 
-SyntaxTreeNode::SyntaxTreeNode(SyntaxTreeNode* src) {
+SyntaxTreeNode::SyntaxTreeNode(shared_ptr<SyntaxTreeNode> src) {
 	option = src->option;
 	type = src->type;
 }
 
-bool SyntaxTreeNode::equal(SyntaxTreeNode* n) {
+bool SyntaxTreeNode::equal(shared_ptr<SyntaxTreeNode> n) {
 	return (option == n->option) && (type == n->type);
 }
 
-SyntaxLeftHandSide* SyntaxTreeNode::get_type() {
+shared_ptr<SyntaxLeftHandSide> SyntaxTreeNode::get_type() {
 	return type;
 }
 
@@ -193,19 +191,6 @@ void SyntaxTreeNode::set_option(int op) {
 
 int SyntaxTreeNode::get_option() {
 	return option;
-}
-
-int LanguageSyntax::add_rule(SyntaxLeftHandSide* r) {
-	rule.push_back(r);
-	return rule.size()-1;
-}
-
-SyntaxLeftHandSide* LanguageSyntax::get_rule(int id) {
-	return rule[id];
-}
-
-int LanguageSyntax::size() {
-	return rule.size();
 }
 
 int SyntaxLeftHandSide::size() {

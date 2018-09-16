@@ -7,9 +7,13 @@
 #define DEBUG_PRINT_9
 #define DEBUG_PRINT_8
 
-#include<vector>
-#include<string>
-#include<iostream>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <memory>
+
+using std::shared_ptr;
+using std::vector;
 
 class SyntaxRightHandSide;
 class SyntaxLeftHandSide;
@@ -23,16 +27,22 @@ enum SyntaxTreeCompleteness {
 	Every time it mutates, you get a new one */
 class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	public:
-	std::vector<SyntaxTree*> subtree; // read only
-	SyntaxTreeNode* root; // read only
+	std::vector< shared_ptr<SyntaxTree> > subtree; // read only
+	shared_ptr<SyntaxTreeNode> root; // read only
 	double weight;
 
-	SyntaxTree(SyntaxTreeNode* root);
-	SyntaxTree(SyntaxTree* src); /* copy constructor */
+	SyntaxTree(shared_ptr<SyntaxTreeNode> root);
+	SyntaxTree(shared_ptr<SyntaxTree> src); /* copy constructor */
 	~SyntaxTree();
 
+	class Queue
+	{
+		public:
+		std::vector< shared_ptr<SyntaxTree> > q;
+	};
+
 	/* mutate a node of depth AT MOST `max_depth` into all possible RHS, and append the results to `queue` */
-	bool multi_mutate(SyntaxTree* root, int max_depth, std::vector<SyntaxTree*> * queue);
+	bool multi_mutate(shared_ptr<SyntaxTree> root, int max_depth, shared_ptr<Queue> queue);
 	/* check if all leaf nodes are terminal */
 	bool is_complete();
 
@@ -40,7 +50,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 
 	std::string to_string();
 
-	bool equal(SyntaxTree* t);
+	bool equal(shared_ptr<SyntaxTree> t);
 
 	private:
 	SyntaxTreeCompleteness complete;
@@ -48,24 +58,24 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 
 	void mutate(int option);
 
-	virtual void copy_initializer();
+	virtual void copy_initializer(shared_ptr<SyntaxTree> src);
 };
 
-bool compare_syntax_tree(SyntaxTree* a, SyntaxTree* b);
+bool compare_syntax_tree(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b);
 
 class SyntaxTreeNode {
 
 	public:
-	SyntaxTreeNode(SyntaxLeftHandSide* type);
-	SyntaxTreeNode(SyntaxTreeNode* src);
-	SyntaxLeftHandSide* get_type();
+	SyntaxTreeNode(shared_ptr<SyntaxLeftHandSide> type);
+	SyntaxTreeNode(shared_ptr<SyntaxTreeNode> src);
+	shared_ptr<SyntaxLeftHandSide> get_type();
 	void set_option(int option);
 	int get_option();
 
-	bool equal(SyntaxTreeNode* n);
+	bool equal(shared_ptr<SyntaxTreeNode> n);
 	
 	private:
-	SyntaxLeftHandSide* type;
+	shared_ptr<SyntaxLeftHandSide> type;
 	int option;
 };
 
