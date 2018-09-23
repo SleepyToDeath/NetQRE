@@ -10,39 +10,34 @@ const char Epsilon = '#';
 
 class NFAState {
 	public:
-	std::map<char, std::set<NFAState*> > transitions;
+	std::map<char, std::set<shared_ptr<NFAState> > > transitions;
 };
 
-typedef std::set<NFAState*>::iterator NFAIt;
+typedef std::set< shared_ptr<NFAState> >::iterator NFAIt;
 
 class NFA {
 	public:
 	NFA() {
 	}
 
-	~NFA() {
-		for (NFAIt i = states.begin(); i!=states.end(); i++)
-			delete (*i);
-	}
 
-
-	NFA(NFA* src) {
-		std::map<NFAState*, NFAState*> m;
+	NFA(shared_ptr<NFA> src) {
+		std::map<shared_ptr<NFAState>, shared_ptr<NFAState> > m;
 		for (NFAIt i = src->states.begin(); i!=src->states.end(); i++)
 		{
-			NFAState* new_state = new NFAState();
+			auto new_state = shared_ptr<NFAState>(new NFAState());
 			new_state->transitions = (*i)->transitions;
 			states.insert(new_state);
 			m[(*i)] = new_state;
 		}
 		for (NFAIt i = states.begin(); i!=states.end(); i++)
 		{
-			NFAState* new_state = (*i);
-			std::map<char, std::set<NFAState*> > new_transitions;
-			for (std::map<char, std::set<NFAState*> >::iterator j = new_state->transitions.begin(); j!=new_state->transitions.end(); j++)
+			auto new_state = (*i);
+			std::map<char, std::set<shared_ptr<NFAState> > > new_transitions;
+			for (std::map<char, std::set<shared_ptr<NFAState> > >::iterator j = new_state->transitions.begin(); j!=new_state->transitions.end(); j++)
 			{
 				char ch = j->first;
-				std::set<NFAState*> new_transition;
+				std::set<shared_ptr<NFAState> > new_transition;
 				for (NFAIt k = j->second.begin(); k!=j->second.end(); k++)
 					new_transition.insert(m[(*k)]);
 				new_transitions[ch] = new_transition;
@@ -55,8 +50,8 @@ class NFA {
 			accept_states.insert(m[(*i)]);
 	}
 
-	std::set<NFAState*> find_neighbours(std::set<NFAState*> the_set) {
-		std::set<NFAState*> neighbours;
+	std::set<shared_ptr<NFAState> > find_neighbours(std::set<shared_ptr<NFAState> > the_set) {
+		std::set<shared_ptr<NFAState> > neighbours;
 		for (NFAIt i = the_set.begin(); i!=the_set.end(); i++)
 			neighbours.insert((*i)->transitions[Epsilon].begin(), (*i)->transitions[Epsilon].end());
 		neighbours.insert(the_set.begin(), the_set.end());
@@ -66,8 +61,8 @@ class NFA {
 			return find_neighbours(neighbours);
 	}
 
-	std::set<NFAState*> transition(std::set<NFAState*> current, char s) {
-		std::set<NFAState*> next;
+	std::set<shared_ptr<NFAState> > transition(std::set<shared_ptr<NFAState> > current, char s) {
+		std::set<shared_ptr<NFAState> > next;
 		for (NFAIt i = current.begin(); i!=current.end(); i++)
 			next.insert((*i)->transitions[s].begin(), (*i)->transitions[s].end());
 		return next;
@@ -88,10 +83,10 @@ class NFA {
 		return false;
 	}
 
-	std::set<NFAState*> active_states;
-	std::set<NFAState*> start_states;
-	std::set<NFAState*> accept_states;
-	std::set<NFAState*> states;
+	std::set<shared_ptr<NFAState> > active_states;
+	std::set<shared_ptr<NFAState> > start_states;
+	std::set<shared_ptr<NFAState> > accept_states;
+	std::set<shared_ptr<NFAState> > states;
 };
 
 #endif

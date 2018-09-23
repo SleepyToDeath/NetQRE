@@ -34,7 +34,10 @@ std::shared_ptr<GJson> GJson::get(int index) {
 }
 
 std::string GJson::name() {
-	return real_json.object_items().begin()->first;
+	if (real_json.is_string())
+		return real_json.string_value();
+	else
+		return real_json.object_items().begin()->first;
 }
 
 std::shared_ptr<GJson> GJson::value() {

@@ -8,18 +8,28 @@ using std::ifstream;
 using std::endl;
 using std::string;
 using std::shared_ptr;
+using std::unique_ptr;
 using std::cin;
 using std::cout;
 using std::vector;
+
+/*========== regex implementation =============*/
+#include "../regex_interpreter.hpp"
+std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(new RegexInterpreter());
+/*=============================================*/
 
 /*
 	3 arguments
 	./regex grammar_file example_file config_file
 */
 int main(int argc, char *argv[]) {
-	ifstream fin_g(argv[1]);
-	ifstream fin_e(argv[2]);
-	ifstream fin_c(argv[3]);
+
+//	test_interpretor();
+//	return 0;
+
+	ifstream fin_g(argv[1]); // grammar
+	ifstream fin_e(argv[2]); // example
+	ifstream fin_c(argv[3]); // config
 
 	shared_ptr<GeneralSyntaxLeftHandSide> start = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());
@@ -68,6 +78,8 @@ int main(int argc, char *argv[]) {
 	SearchGraph graph(search_depth, batch_size, answer_count, start);
 	shared_ptr<IEExample> examples_up = examples;
 	answer = graph.search_top_level_v2(examples_up);
+	if (answer.size() == 0)
+		cout<<"Not found!"<<endl;
 	for (int i=0; i<answer.size(); i++)
 		cout<<answer[i]->to_string()<<endl;
 }

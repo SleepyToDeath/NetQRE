@@ -23,6 +23,8 @@ enum SyntaxTreeCompleteness {
 	UNKNOWN, COMPLETE, INCOMPLETE
 };
 
+class SyntaxTreeFactory;
+
 /*	This data structure is immutable.
 	Every time it mutates, you get a new one */
 class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
@@ -48,9 +50,11 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 
 	double get_complexity();
 
-	std::string to_string();
+	virtual std::string to_string();
 
 	bool equal(shared_ptr<SyntaxTree> t);
+
+	static std::unique_ptr<SyntaxTreeFactory> factory;
 
 	private:
 	SyntaxTreeCompleteness complete;
@@ -99,6 +103,19 @@ class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSi
 	std::vector<std::shared_ptr<SyntaxLeftHandSide> > subexp;
 
 	virtual std::string to_string(std::vector<std::string> subs) {return "";};
+};
+
+class SyntaxTreeFactory {
+	public:
+	virtual shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root) 
+	{
+		return shared_ptr<SyntaxTree>(new SyntaxTree(root));
+	}
+
+	virtual shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTree> src) 
+	{
+		return shared_ptr<SyntaxTree>(new SyntaxTree(src));
+	}
 };
 
 

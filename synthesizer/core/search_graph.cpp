@@ -19,6 +19,8 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 	std::vector<shared_ptr<IESyntaxTree> > answer;
 	int answer_counter = 0;
 
+	int search_counter = 0;
+
 	double progress = 0;
 
 	double total_drop = 0;
@@ -27,13 +29,13 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 	int depth = depth_threshold;
 	{
 //		std::cout<<"Depth:"<<depth<<std::endl;
-		auto s = shared_ptr<IESyntaxTree> (new IESyntaxTree(shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(starting_symbol))));
+		shared_ptr<IESyntaxTree> s = std::static_pointer_cast<IESyntaxTree>(SyntaxTree::factory->get_new(shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(starting_symbol))));
 		s->weight = 1;
 		this_round.push_back(s);
 		while (this_round.size()>0)
 		{
 			std::vector<shared_ptr<IESyntaxTree> > candidate;
-			shared_ptr<SyntaxTree::Queue> tmp;
+			auto tmp = shared_ptr<SyntaxTree::Queue>(new SyntaxTree::Queue());
 			int counter = 0;
 			int done = -1;
 			bool flag_deadend = false;
@@ -46,20 +48,22 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				{
 					for (int j=0; j<tmp->q.size(); j++)
 					{
-						candidate.push_back(shared_ptr<IESyntaxTree>(new IESyntaxTree(tmp->q[j])));
-//						std::cout<<tmp[j]->weight<<" "<<candidate[j]->weight<<std::endl;;
+						candidate.push_back(std::static_pointer_cast<IESyntaxTree>(SyntaxTree::factory->get_new(tmp->q[j])));
+//						std::cout<<"[New!]"<<candidate[j]->to_string()<<std::endl;;
+						search_counter++;
 					}
 					for (int j=0; j<candidate.size(); j++)
 					{
 						bool flag_acc = true;
-						std::cout<<candidate[j]->to_string()<<std::endl;
+//						std::cout<<"[Good?]"<<candidate[j]->to_string()<<std::endl;;
 						if (!candidate[j]->to_program()->accept(examples))
 						{
+//							std::cout<<"Rejected:"<<std::endl;
+//							std::cout<<"[Rejected]"<< candidate[j]->to_string()<<std::endl;
 							total_drop += 1.0;
 							if (candidate[j]->is_complete())
 								complete_drop += 1.0;
 							flag_acc = false;
-							break;
 						}
 //						std::cout<<"----------------------\n";
 						if (flag_acc)
@@ -115,7 +119,11 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 			std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
 			std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
 			std::cout<<"Answers found: "<<answer_counter<<std::endl;
-			std::cout<<"One current sample: "<<(buffer[std::experimental::randint(0,(int)buffer.size()-1)]->to_string())<<std::endl;
+			if (buffer.size()>2)
+				std::cout<<"One current sample: "<<(buffer[std::experimental::randint(0,(int)buffer.size()-1)]->to_string())<<std::endl;
+			else
+				std::cout<<"One current sample: "<<(buffer[0]->to_string())<<std::endl;
+			std::cout<<"Programs searched: "<<search_counter<<std::endl;
 			std::cout<<std::endl;
 			/*
 			if (flag_deadend)
@@ -139,6 +147,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 			{
 				for (int k=0; k<batch_size; k++)
 				{
+					/*
 					{
 						int l = std::experimental::randint(0,(int)buffer.size()/2) + buffer.size()/2;
 						if (l>=buffer.size())
@@ -147,6 +156,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 						buffer.back() = buffer[l];
 						buffer[l] = tmp;
 					}
+					*/
 					this_round.push_back(buffer.back());
 					buffer.pop_back();
 				}

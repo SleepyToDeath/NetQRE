@@ -9,7 +9,7 @@ class NFASkip: public NFA {
 	NFASkip():NFA() {
 	}
 
-	NFASkip(NFASkip* src):NFA(src) {
+	NFASkip(shared_ptr<NFASkip> src):NFA(src) {
 	}
 
 	/* can skip is actually a syntactic sugar */
@@ -18,7 +18,7 @@ class NFASkip: public NFA {
 
 		for (int i=0; i<input.size(); i++)
 		{
-			std::set<NFAState*> backup_active_states = active_states;
+			std::set<shared_ptr<NFAState> > backup_active_states = active_states;
 			active_states = find_neighbours(transition(active_states, input[i]));
 			if (can_skip[i])
 			{

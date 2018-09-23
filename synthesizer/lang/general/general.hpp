@@ -4,7 +4,10 @@
 #include "../../core/incomplete_execution.h"
 #include "json_wrapper.h"
 #include <memory>
+#include <iostream>
 
+using std::cout;
+using std::endl;
 using std::string;
 using std::vector;
 using std::map;
@@ -16,7 +19,7 @@ class GeneralSyntaxRightHandSide;
 
 class GeneralInterpreter {
 	public:
-	virtual bool accept(std::string code, shared_ptr<GeneralExample> input);
+	virtual bool accept(std::string code, bool complete,  shared_ptr<GeneralExample> input) = 0;
 };
 
 class GeneralExample: public IEExample {
@@ -30,17 +33,19 @@ class GeneralExample: public IEExample {
  * accept() will feed the source code and input to external interpreter */
 class GeneralProgram: public IEProgram {
 	public:
-	GeneralProgram(std::string src) {
+	GeneralProgram(std::string src, bool complete) {
 		source_code = src;
+		this->complete = complete;
 	}
 
 	bool accept(shared_ptr<IEExample> input) {
-		return interpreter->accept(source_code, std::static_pointer_cast<GeneralExample>(input));
+		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input));
 	}
 
 	/* set this to the interpreter of your specific language */
 	static std::unique_ptr<GeneralInterpreter> interpreter;
 
+	bool complete;
 	std::string source_code;
 };
 
@@ -90,12 +95,12 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 				state->name_list[names->get(i)->name()]->from_json(names->get(i), state);
 			}
 			/* init incomplete execution */
-			std::shared_ptr<GJson> exec = j->get(1)->value();
-			for (int i=0; i<exec->size(); i++) {
-
-			}
+//			std::shared_ptr<GJson> exec = j->get(1)->value();
+//			for (int i=0; i<exec->size(); i++) {
+//			}
 		}
 		else { /* this is not the root */
+//			cout<<"initializing LHS "<<name<<endl;
 			std::shared_ptr<GJson> mutations = j->value();
 			for (int i=0; i<mutations->size(); i++)
 			{
@@ -103,13 +108,16 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 				std::shared_ptr<GeneralSyntaxRightHandSide> r(new GeneralSyntaxRightHandSide());
 				for (int j=0; j<rhs->size(); j++)
 				{
-					std::shared_ptr<GeneralSyntaxLeftHandSide> l = state->name_list[rhs->get(i)->name()];
+					std::shared_ptr<GeneralSyntaxLeftHandSide> l = state->name_list[rhs->get(j)->name()];
 					if (l->is_functional())
 						r->subexp.push_back(l);
 					r->subexp_full.push_back(l);
 				}
+//				cout<<"#"<<i<<" subexp size: "<<r->subexp.size()<<endl;
+//				cout<<"#"<<i<<" subexp full size: "<<r->subexp_full.size()<<endl;
 				option.push_back(r);
 			}
+//			cout<<"total options: "<<option.size()<<endl;
 		}
 	}
 
@@ -135,8 +143,13 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 			/* Add LHS to the name list
 			 * LHS must be non-terminal and functional */
 			std::string name = syntax->get(i)->name();
+//			cout<<name<<endl;
 			if (state->name_list.count(name) == 0)
+			{
 				state->name_list[name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+				state->name_list[name]->name = name;
+//				cout<<"this name is: "<<name<<endl;
+			}
 			state->name_list[name]->is_term = false;
 			state->name_list[name]->functional = true;
 			/* Add elements in RHS to the name list 
@@ -149,9 +162,16 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 				{
 					std::string name2 = rhs_entry->get(k)->name();
 					if (state->name_list.count(name2) == 0)
+					{
 						state->name_list[name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+						state->name_list[name2]->name = name2;
+//						cout<<"this name is: "<<name2<<endl;
+					}
 					if (name2[0] == '$')
+					{
 						state->name_list[name2]->functional = false;
+						state->name_list[name2]->name = name2.substr(1, name2.length()-1);
+					}
 					else
 						state->name_list[name2]->functional = true;
 				}
@@ -171,33 +191,78 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 class GeneralSyntaxTree : public IESyntaxTree {
 	public:
 	GeneralSyntaxTree(shared_ptr<SyntaxTree> src):	IESyntaxTree(src) {}
+	GeneralSyntaxTree(shared_ptr<SyntaxTreeNode> root): IESyntaxTree(root) {}
 	shared_ptr<IEProgram> to_program() {
-		return shared_ptr<IEProgram>(new GeneralProgram(to_string()));
+		return shared_ptr<IEProgram>(new GeneralProgram(to_code(), is_complete()));
 	}
 
-	std::string to_string() {
+	std::string to_code() {
 		std::string s;
 		if (root->get_type()->is_term) 
 			s = root->get_type()->name;
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
-			s = root->get_type()->name;
+			s = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->equivalent_complete_program;
 		else
 		{
 			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (root->get_type()->option[root->get_option()]);
 			int j = 0;
 			for (int i=0; i<rhs->subexp_full.size(); i++)	{
 				if (rhs->subexp_full[i]->is_functional()) {
-					s.append(subtree[j]->to_string());
+					s = s + " " + (std::static_pointer_cast<GeneralSyntaxTree>(subtree[j])->to_code());
 					j++;
 				}
 				else {
-					s.append(rhs->subexp_full[i]->name);
+					s = s + " " + (rhs->subexp_full[i]->name);
 				}
 			}
 		}
 		return s;
 	}
+
+
+	std::string to_string() {
+		std::string s;
+		if (root->get_type()->is_term) 
+			s = root->get_type()->name;
+		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
+			s = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->name;
+		else
+		{
+			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (root->get_type()->option[root->get_option()]);
+			int j = 0;
+			for (int i=0; i<rhs->subexp_full.size(); i++)	{
+				if (rhs->subexp_full[i]->is_functional()) {
+					s = s + (subtree[j]->to_string());
+					j++;
+				}
+				else {
+					s = s + (rhs->subexp_full[i]->name);
+				}
+			}
+		}
+		return s;
+	}
+
+	void copy_initializer(shared_ptr<SyntaxTree> src) {
+		for (int i=0; i<src->subtree.size(); i++)
+			subtree.push_back(shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(src->subtree[i])));
+	}
 };
 
+class GeneralSyntaxTreeFactory : public SyntaxTreeFactory {
+	public:
+
+	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root) 
+	{
+		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root));
+	}
+
+	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTree> src) 
+	{
+		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(src));
+	}
+};
+
+std::unique_ptr<SyntaxTreeFactory> SyntaxTree::factory = unique_ptr<GeneralSyntaxTreeFactory>(new GeneralSyntaxTreeFactory());
 
 #endif

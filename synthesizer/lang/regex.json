@@ -1,0 +1,39 @@
+[
+	{ "syntax" : [ 
+		{ "program" : [
+				[ "concat" ],
+				[ "star" ],
+				[ "char" ]
+		] },
+		{ "concat" : [
+				[ "concat_clause","$ ", "program" ]
+		] },
+		{ "concat_clause" : [
+			[ "star" ],
+			[ "char" ]
+		] },
+		{ "star" : [
+			[ "$*( ", "star_clause", "$ )" ]
+		] },
+		{ "star_clause" : [
+			[ "concat" ],
+			[ "char" ]
+		] },
+		{ "char" : [
+			["0"],
+			["1"],
+			["?"]
+		] }
+	] },
+
+	{ "execution" : [
+		{ "program" : "*( ? )" },
+		{ "concat" : "*( ? )" },
+		{ "concat_clause" : "*( ? )" },
+		{ "star" : "*( ? )" },
+		{ "star_clause" : "*( ? )" },
+		{ "char" : "?" }
+	] }
+]
+
+

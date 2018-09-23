@@ -1,6 +1,10 @@
 #include "syntax_tree.h"
 #include <cmath>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 bool compare_syntax_tree(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
 }
@@ -23,13 +27,14 @@ SyntaxTree::SyntaxTree(shared_ptr<SyntaxTree> t) {
 
 void SyntaxTree::copy_initializer(shared_ptr<SyntaxTree> t) {
 	for (int i=0; i<t->subtree.size(); i++)
-		subtree.push_back(shared_ptr<SyntaxTree>(new SyntaxTree(t->subtree[i])));
+		subtree.push_back(SyntaxTree::factory->get_new(t->subtree[i]));
 }
 
 SyntaxTree::~SyntaxTree() {
 }
 
 void SyntaxTree::mutate(int option) {
+//	cout<<"doing mutation "<<option<<endl;
 	/* clean up previous mutation */
 	if (root->get_option() != SyntaxLeftHandSide::NoOption)
 	{
@@ -47,8 +52,9 @@ void SyntaxTree::mutate(int option) {
 		shared_ptr<SyntaxRightHandSide> r = root->get_type()->option[option];
 		for (int i=0; i<r->subexp.size(); i++)
 			subtree.push_back(
-				shared_ptr<SyntaxTree>(new SyntaxTree( 
-					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(r->subexp[i])))));
+				SyntaxTree::factory->get_new( 
+					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(r->subexp[i]))));
+//		cout<<"subtree size: "<<subtree.size()<<endl;
 	}
 
 }
@@ -79,25 +85,17 @@ double SyntaxTree::get_complexity() {
 	if (complexity == 0)
 	{
 		if (root->get_type()->is_term)
-			complexity = 1;
+			complexity = -20;
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
-			complexity = root->get_type()->option.size();
-//			complexity = 1;
+//			complexity = root->get_type()->option.size();
+			complexity = 100;
 		}
 		else
 		{
 			complexity = 0;
 			for (int i=0; i<subtree.size(); i++)
 				complexity += subtree[i]->get_complexity();
-			if (root->get_type()->option[root->get_option()]->independent)
-			{
-				complexity *= subtree.size();
-			}
-			else
-			{
-				complexity *= sqrt(complexity*4);
-			}
 		}
 	}
 	return complexity;
@@ -113,11 +111,14 @@ bool SyntaxTree::multi_mutate(shared_ptr<SyntaxTree> top, int max_depth, shared_
 		if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
 			int branch_num = root->get_type()->option.size();
+//			if(root->get_type()->name == "char")
+//				cout<<"branch_num: "<<branch_num<<endl;
 			for (int i=0; i<branch_num; i++)
 			{
 				mutate(i);
-				queue->q.push_back(shared_ptr<SyntaxTree>(new SyntaxTree(top)));
+				queue->q.push_back(SyntaxTree::factory->get_new(top));
 				queue->q.back()->weight = top->weight/branch_num;
+//				cout<<"[New] "<<queue->q.back()->to_string()<<endl;
 			}
 			mutate(SyntaxLeftHandSide::NoOption);
 			return true;

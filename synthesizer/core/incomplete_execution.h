@@ -5,6 +5,7 @@
 #include <memory>
 
 using std::shared_ptr;
+using std::unique_ptr;
 
 class IEExample {
 };
@@ -13,6 +14,8 @@ class IEProgram {
 	public:
 	virtual bool accept( shared_ptr<IEExample> e) = 0;
 };
+
+class IESyntaxTreeFactory;
 
 class IESyntaxTree : public SyntaxTree {
 	public:
@@ -27,7 +30,9 @@ class IESyntaxTree : public SyntaxTree {
 
 	private:
 	shared_ptr<IEProgram> p;
+
 };
+
 
 class IESyntaxLeftHandSide : public SyntaxLeftHandSide {
 	public:
