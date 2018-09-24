@@ -2,18 +2,88 @@
 #define NFA_HPP
 
 #include <vector>
-#include <set>
+#include <unordered_set>
 #include <map>
 #include <iostream>
 
+using std::unordered_set;
+using std::vector;
+
 const char Epsilon = '#';
+
+class BitSet {
+	public:
+
+	BitSet(unsigned long size) {
+		bits = vector<unsigned long>(size/int_size + 1, 0);
+		this->size = size;
+	}
+
+	BitSet(shared_ptr<BitSet> src) {
+		bits = src->bits;
+		size = src->size;
+	}
+
+
+	void insert(unsigned long index) {
+		unsigned long a = index / int_size;
+		unsigned long b = index % int_size;
+		bits[a] = bits[a] | (1<<b);
+	}
+
+	bool get(unsigned long index) {
+		unsigned long a = index / int_size;
+		unsigned long b = index % int_size;
+		return (bits[a] & (1<<b));
+	}
+
+	/* return if the intersection with src is empty ([!] but won't apply the intersection) */
+	/* [!] The sizes are assumed to be the same */
+	bool intersect(shared_ptr<BitSet> src) {
+		unsigned long isize = bits.size();
+		bool flag = false;
+		for (int i=0; i<isize; i++)
+			flag = flag || (bits[i] & src->bits[i]);
+		return flag;
+	}
+
+	/* merge bits from src to this */
+	/* [!] The sizes are assumed to be the same */
+	void merge(shared_ptr<BitSet> src) {
+		unsigned long isize = bits.size();
+		for (int i=0; i<isize; i++)
+			bits[i] = bits[i] | src->bits[i];
+	}
+
+	bool equal(shared_ptr<BitSet> src) {
+		for (int i=0; i<bits.size(); i++)
+			if (bits[i]!=src->bits[i])
+				return false;
+		return true;
+	}
+
+	static const unsigned long int_size = sizeof(int)*8;
+
+	unsigned long size;
+
+	vector<unsigned long> bits;
+
+};
 
 class NFAState {
 	public:
-	std::map<char, std::set<shared_ptr<NFAState> > > transitions;
+	unsigned long id;
+	std::map<char, unordered_set<shared_ptr<NFAState> > > transitions;
 };
 
-typedef std::set< shared_ptr<NFAState> >::iterator NFAIt;
+class NFARuntimeState {
+	public:
+	unsigned long id;
+	vector<shared_ptr<BitSet> > transitions;
+	shared_ptr<NFAState> origin;
+};
+
+typedef unordered_set< shared_ptr<NFAState> >::iterator NFAIt;
 
 class NFA {
 	public:
@@ -33,11 +103,11 @@ class NFA {
 		for (NFAIt i = states.begin(); i!=states.end(); i++)
 		{
 			auto new_state = (*i);
-			std::map<char, std::set<shared_ptr<NFAState> > > new_transitions;
-			for (std::map<char, std::set<shared_ptr<NFAState> > >::iterator j = new_state->transitions.begin(); j!=new_state->transitions.end(); j++)
+			std::map<char, unordered_set<shared_ptr<NFAState> > > new_transitions;
+			for (std::map<char, unordered_set<shared_ptr<NFAState> > >::iterator j = new_state->transitions.begin(); j!=new_state->transitions.end(); j++)
 			{
 				char ch = j->first;
-				std::set<shared_ptr<NFAState> > new_transition;
+				unordered_set<shared_ptr<NFAState> > new_transition;
 				for (NFAIt k = j->second.begin(); k!=j->second.end(); k++)
 					new_transition.insert(m[(*k)]);
 				new_transitions[ch] = new_transition;
@@ -50,8 +120,8 @@ class NFA {
 			accept_states.insert(m[(*i)]);
 	}
 
-	std::set<shared_ptr<NFAState> > find_neighbours(std::set<shared_ptr<NFAState> > the_set) {
-		std::set<shared_ptr<NFAState> > neighbours;
+	unordered_set<shared_ptr<NFAState> > find_neighbours(unordered_set<shared_ptr<NFAState> > the_set) {
+		unordered_set<shared_ptr<NFAState> > neighbours;
 		for (NFAIt i = the_set.begin(); i!=the_set.end(); i++)
 			neighbours.insert((*i)->transitions[Epsilon].begin(), (*i)->transitions[Epsilon].end());
 		neighbours.insert(the_set.begin(), the_set.end());
@@ -61,10 +131,29 @@ class NFA {
 			return find_neighbours(neighbours);
 	}
 
-	std::set<shared_ptr<NFAState> > transition(std::set<shared_ptr<NFAState> > current, char s) {
-		std::set<shared_ptr<NFAState> > next;
+	shared_ptr<BitSet> find_neighbours_fast(shared_ptr<BitSet> the_set) {
+		auto neighbours = shared_ptr<BitSet>(new BitSet(the_set));
+		for (int i=0; i<the_set->size; i++)
+			if (the_set->get(i) && runtime_states[i]->transitions[Epsilon]!=nullptr)
+				neighbours->merge(runtime_states[i]->transitions[Epsilon]);
+		if (neighbours->equal(the_set))
+			return neighbours;
+		else
+			return find_neighbours_fast(neighbours);
+	}
+
+	unordered_set<shared_ptr<NFAState> > transition(unordered_set<shared_ptr<NFAState> > current, char s) {
+		unordered_set<shared_ptr<NFAState> > next;
 		for (NFAIt i = current.begin(); i!=current.end(); i++)
 			next.insert((*i)->transitions[s].begin(), (*i)->transitions[s].end());
+		return next;
+	}
+
+	shared_ptr<BitSet> transition_fast( shared_ptr<BitSet> current, char s) {
+		shared_ptr<BitSet> next = shared_ptr<BitSet>(new BitSet(current->size));
+		for (int i=0; i<current->size; i++)
+			if (current->get(i) && runtime_states[i]->transitions[s]!=nullptr)
+				next->merge(runtime_states[i]->transitions[s]);
 		return next;
 	}
 
@@ -83,10 +172,53 @@ class NFA {
 		return false;
 	}
 
-	std::set<shared_ptr<NFAState> > active_states;
-	std::set<shared_ptr<NFAState> > start_states;
-	std::set<shared_ptr<NFAState> > accept_states;
-	std::set<shared_ptr<NFAState> > states;
+	unordered_set<shared_ptr<NFAState> > active_states;
+	unordered_set<shared_ptr<NFAState> > start_states;
+	unordered_set<shared_ptr<NFAState> > accept_states;
+	unordered_set<shared_ptr<NFAState> > states;
+
+	void prepare_runtime() {
+		runtime_states.clear();
+		int count = 0;
+		for (NFAIt i = states.begin(); i!=states.end(); i++)
+		{
+			auto tmp = shared_ptr<NFARuntimeState>(new NFARuntimeState());
+			(*i)->id = count;
+			tmp->id = count;
+			tmp->origin = (*i);
+			tmp->transitions = vector<shared_ptr<BitSet> >(256, nullptr);
+			runtime_states.push_back(tmp);
+			count++;
+		}
+
+		for (int i=0; i<runtime_states.size(); i++)
+		{
+			auto origin = runtime_states[i]->origin;
+			for (auto j = origin->transitions.begin(); j!=origin->transitions.end(); j++)
+			{
+				runtime_states[i]->transitions[j->first] = shared_ptr<BitSet>(new BitSet(states.size()));
+				for (auto k = j->second.begin(); k!=j->second.end(); k++)
+					runtime_states[i]->transitions[j->first]->insert((*k)->id);
+			}
+		}
+
+		runtime_start_states = shared_ptr<BitSet>(new BitSet(states.size()));
+		for (NFAIt i = start_states.begin(); i!= start_states.end(); i++)
+		{
+			runtime_start_states->insert((*i)->id);
+		}
+
+		runtime_accept_states = shared_ptr<BitSet>(new BitSet(states.size()));
+		for (NFAIt i = accept_states.begin(); i!= accept_states.end(); i++)
+		{
+			runtime_accept_states->insert((*i)->id);
+		}
+	}
+
+	vector<shared_ptr<NFARuntimeState> > runtime_states;
+	shared_ptr<BitSet> runtime_start_states;
+	shared_ptr<BitSet> runtime_accept_states;
+	shared_ptr<BitSet> runtime_active_states;
 };
 
 #endif

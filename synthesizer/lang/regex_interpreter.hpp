@@ -33,7 +33,7 @@ class RegexAST {
 				if (name != '?')
 				{
 					auto op = shared_ptr<NFAState>(new NFAState());
-					std::set<shared_ptr<NFAState> > op_trans;
+					unordered_set<shared_ptr<NFAState> > op_trans;
 					auto ed = shared_ptr<NFAState>(new NFAState());
 
 					op_trans.insert(ed);
@@ -46,7 +46,7 @@ class RegexAST {
 				else
 				{
 					auto op = shared_ptr<NFAState>(new NFAState());
-					std::set<shared_ptr<NFAState> > op_trans;
+					unordered_set<shared_ptr<NFAState> > op_trans;
 					auto ed = shared_ptr<NFAState>(new NFAState());
 
 					op_trans.insert(ed);

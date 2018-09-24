@@ -3,7 +3,8 @@
 		{ "program" : [
 				[ "concat" ],
 				[ "star" ],
-				[ "char" ]
+				[ "char" ],
+				[ "*(0)program*(0)program*(0)program*(0)" ]
 		] },
 		{ "concat" : [
 				[ "concat_clause","$ ", "program" ]

@@ -14,11 +14,14 @@ class NFASkip: public NFA {
 
 	/* can skip is actually a syntactic sugar */
 	bool accept(std::string input, std::vector<bool> can_skip) {
+
+		return accept_fast(input, can_skip);
+
 		active_states = find_neighbours(start_states);
 
 		for (int i=0; i<input.size(); i++)
 		{
-			std::set<shared_ptr<NFAState> > backup_active_states = active_states;
+			unordered_set<shared_ptr<NFAState> > backup_active_states = active_states;
 			active_states = find_neighbours(transition(active_states, input[i]));
 			if (can_skip[i])
 			{
@@ -32,6 +35,26 @@ class NFASkip: public NFA {
 				return true;
 
 		return false;
+	}
+
+	bool accept_fast(std::string input, std::vector<bool> can_skip) {
+
+		prepare_runtime();
+
+		runtime_active_states = find_neighbours_fast(runtime_start_states);
+
+		for (int i=0; i<input.size(); i++)
+		{
+			auto backup_active_states = shared_ptr<BitSet>(new BitSet(runtime_active_states));
+			runtime_active_states = find_neighbours_fast( transition_fast(runtime_active_states, input[i]) );
+			if (can_skip[i])
+			{
+				runtime_active_states->merge(backup_active_states);
+			}
+		}
+
+		return runtime_active_states->intersect(runtime_accept_states);
+
 	}
 
 };
