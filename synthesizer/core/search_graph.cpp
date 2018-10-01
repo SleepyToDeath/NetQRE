@@ -1,6 +1,7 @@
 #include "search_graph.h"
 #include <experimental/random>
 #include <algorithm>
+#include <cmath>
 
 SearchGraph::SearchGraph(int depth_threshold, int batch_size, int answer_count, shared_ptr<IESyntaxLeftHandSide> starting_symbol) {
 	this->batch_size = batch_size;
@@ -55,7 +56,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 					for (int j=0; j<candidate.size(); j++)
 					{
 						bool flag_acc = true;
-//						std::cout<<"[Good?]"<<candidate[j]->to_string()<<std::endl;;
+//						std::cout<<"[Good?]"<<candidate[j]->to_string()<<" | "<<candidate[j]->get_complexity()<<std::endl;;
 						if (!candidate[j]->to_program()->accept(examples))
 						{
 //							std::cout<<"Rejected:"<<std::endl;
@@ -115,16 +116,19 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 			}
 			buffer = buffer2;
 			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree);
-			std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
-			std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
-			std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
-			std::cout<<"Answers found: "<<answer_counter<<std::endl;
-			if (buffer.size()>2)
-				std::cout<<"One current sample: "<<(buffer[std::experimental::randint(0,(int)buffer.size()-1)]->to_string())<<std::endl;
-			else
-				std::cout<<"One current sample: "<<(buffer[0]->to_string())<<std::endl;
-			std::cout<<"Programs searched: "<<search_counter<<std::endl;
-			std::cout<<std::endl;
+
+			{
+				std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
+				std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
+				std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
+				std::cout<<"Answers found: "<<answer_counter<<std::endl;
+				if (buffer.size()>2)
+					std::cout<<"One current sample: "<<(buffer[std::experimental::randint(0,(int)buffer.size()-1)]->to_string())<<std::endl;
+				else
+					std::cout<<"One current sample: "<<(buffer[0]->to_string())<<std::endl;
+				std::cout<<"Programs searched: "<<search_counter<<std::endl;
+				std::cout<<std::endl;
+			}
 			/*
 			if (flag_deadend)
 			{
@@ -149,7 +153,11 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				{
 					/*
 					{
-						int l = std::experimental::randint(0,(int)buffer.size()/2) + buffer.size()/2;
+						int l = std::experimental::randint(0,(int)buffer.size()-1);
+						double ratio = ((double)l) / ((double)buffer.size());
+						ratio = pow(ratio, 100);
+						l = buffer.size() * (1.0 - ratio);
+						std::cout<<"[RND]"<<buffer.size()-l<<std::endl;;
 						if (l>=buffer.size())
 							l = buffer.size()-1;
 						auto tmp = buffer.back();

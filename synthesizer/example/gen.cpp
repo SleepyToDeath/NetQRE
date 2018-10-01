@@ -53,23 +53,20 @@ void xlarge3()
 
 void random_small() {
 
-	int len0 = 5;
-
-
-
-	cout<<10000<<endl;
-	cout<<2<<endl;
+	int len0 = 20;
+	int sizep = 3;
+	int sizen = 2;
+	cout<<sizep<<" "<<sizen<<endl;
 	int upper = len0*11/10;
 	int lower = len0*9/10;
-	for (int i=0; i<2; i++)
+	for (int i=0; i<sizep; i++)
 	{
 		int len = experimental::randint(lower,upper);
 		for (int j=0; j<len; j++)
 			cout<<experimental::randint(0,1);
 		cout<<endl;
 	}
-	cout<<3<<endl;
-	for (int i=0; i<3; i++)
+	for (int i=0; i<sizen; i++)
 	{
 		int len = experimental::randint(lower,upper);
 		for (int j=0; j<len; j++)
@@ -79,6 +76,6 @@ void random_small() {
 }
 
 int main() {
-//	random_small();
-	xlarge3();
+	random_small();
+//	xlarge3();
 }

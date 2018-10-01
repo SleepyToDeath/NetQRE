@@ -1,7 +1,8 @@
 [
 	{ "syntax" : [ 
 		{ "program": [
-			[ "no_templates" ]
+				[ "$*(", "star_clause",  "$)", "concat_clause", "$*(", "star_clause", "$)", "concat_clause", "$*(", "star_clause", "$)", "concat_clause", "$*(", "star_clause", "$)" ],
+				[ "1", "1", "0", "$*(", "star_clause", "$)", "no_template" ]
 		] },
 		{ "no_templates" : [
 				[ "concat" ],

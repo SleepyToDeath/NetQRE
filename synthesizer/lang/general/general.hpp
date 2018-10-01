@@ -191,7 +191,7 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 class GeneralSyntaxTree : public IESyntaxTree {
 	public:
 	GeneralSyntaxTree(shared_ptr<SyntaxTree> src):	IESyntaxTree(src) {}
-	GeneralSyntaxTree(shared_ptr<SyntaxTreeNode> root): IESyntaxTree(root) {}
+	GeneralSyntaxTree(shared_ptr<SyntaxTreeNode> root, int depth): IESyntaxTree(root, depth) {}
 	shared_ptr<IEProgram> to_program() {
 		return shared_ptr<IEProgram>(new GeneralProgram(to_code(), is_complete()));
 	}
@@ -252,9 +252,14 @@ class GeneralSyntaxTree : public IESyntaxTree {
 class GeneralSyntaxTreeFactory : public SyntaxTreeFactory {
 	public:
 
+	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root, int depth) 
+	{
+		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root, depth));
+	}
+
 	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root) 
 	{
-		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root));
+		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root, 0));
 	}
 
 	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTree> src) 

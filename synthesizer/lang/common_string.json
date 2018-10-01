@@ -1,0 +1,27 @@
+[
+	{ "syntax" : [ 
+		{ "program" : [
+				[ "$*(?)", "concat", "$*(?)" ]
+		] },
+		{ "concat" : [
+				[ "concat_clause" ],
+				[ "concat_clause", "concat" ]
+		] },
+		{ "concat_clause" : [
+			[ "char" ]
+		] },
+		{ "char" : [
+			["0"],
+			["1"]
+		] }
+	] },
+
+	{ "execution" : [
+		{ "program" : "*( ? )" },
+		{ "concat" : "*( ? )" },
+		{ "concat_clause" : "*( ? )" },
+		{ "char" : "?" }
+	] }
+]
+
+

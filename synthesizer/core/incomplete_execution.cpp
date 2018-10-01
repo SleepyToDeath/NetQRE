@@ -21,8 +21,8 @@ std::string IESyntaxTree::to_string() {
 }
 */
 
-IESyntaxTree::IESyntaxTree(shared_ptr<SyntaxTreeNode> root)
-:SyntaxTree(root)
+IESyntaxTree::IESyntaxTree(shared_ptr<SyntaxTreeNode> root, int depth)
+:SyntaxTree(root, depth)
 {
 	p = nullptr;
 }

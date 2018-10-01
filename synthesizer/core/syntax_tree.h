@@ -33,7 +33,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	shared_ptr<SyntaxTreeNode> root; // read only
 	double weight;
 
-	SyntaxTree(shared_ptr<SyntaxTreeNode> root);
+	SyntaxTree(shared_ptr<SyntaxTreeNode> root, int depth);
 	SyntaxTree(shared_ptr<SyntaxTree> src); /* copy constructor */
 	~SyntaxTree();
 
@@ -59,6 +59,8 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	private:
 	SyntaxTreeCompleteness complete;
 	double complexity;
+
+	int depth; // depth of the root
 
 	void mutate(int option);
 
@@ -107,9 +109,15 @@ class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSi
 
 class SyntaxTreeFactory {
 	public:
+
+	virtual shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root, int depth) 
+	{
+		return shared_ptr<SyntaxTree>(new SyntaxTree(root,depth));
+	}
+
 	virtual shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root) 
 	{
-		return shared_ptr<SyntaxTree>(new SyntaxTree(root));
+		return shared_ptr<SyntaxTree>(new SyntaxTree(root,0));
 	}
 
 	virtual shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTree> src) 

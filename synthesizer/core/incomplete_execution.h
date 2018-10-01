@@ -19,7 +19,7 @@ class IESyntaxTreeFactory;
 
 class IESyntaxTree : public SyntaxTree {
 	public:
-	IESyntaxTree( shared_ptr<SyntaxTreeNode> root);
+	IESyntaxTree( shared_ptr<SyntaxTreeNode> root, int depth);
 	IESyntaxTree( shared_ptr<SyntaxTree> src); /* copy constructor */
 
 	virtual shared_ptr<IEProgram> to_program();

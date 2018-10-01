@@ -9,16 +9,18 @@ bool compare_syntax_tree(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
 }
 
-SyntaxTree::SyntaxTree(shared_ptr<SyntaxTreeNode> r) {
+SyntaxTree::SyntaxTree(shared_ptr<SyntaxTreeNode> r, int depth) {
 	root = r;
 	complete = UNKNOWN;
 	complexity = 0;
+	this->depth = depth;
 }
 
 SyntaxTree::SyntaxTree(shared_ptr<SyntaxTree> t) {
 	/* shared part */
 	root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->root));
 	this->weight = t->weight;
+	this->depth = t->depth;
 	complete = UNKNOWN;
 	complexity = 0;
 	/* to be overridden */
@@ -53,7 +55,9 @@ void SyntaxTree::mutate(int option) {
 		for (int i=0; i<r->subexp.size(); i++)
 			subtree.push_back(
 				SyntaxTree::factory->get_new( 
-					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(r->subexp[i]))));
+					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(r->subexp[i])),
+					depth+1
+				));
 //		cout<<"subtree size: "<<subtree.size()<<endl;
 	}
 
@@ -85,17 +89,26 @@ double SyntaxTree::get_complexity() {
 	if (complexity == 0)
 	{
 		if (root->get_type()->is_term)
-			complexity = -20;
+		{
+			if (depth>1)
+				complexity = -100.0;
+		}
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
 //			complexity = root->get_type()->option.size();
-			complexity = 100;
+			if (depth>1)
+				complexity = 100.0;
 		}
 		else
 		{
 			complexity = 0;
 			for (int i=0; i<subtree.size(); i++)
 				complexity += subtree[i]->get_complexity();
+			if (subtree.size() > 2)
+				complexity -= 200;
+//				complexity -= (subtree.size()) * 200;
+			else
+				complexity += (subtree.size()-1) * 100.0;
 		}
 	}
 	return complexity;
