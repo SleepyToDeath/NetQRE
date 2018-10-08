@@ -1,5 +1,8 @@
 #include "circuit.h"
 
+using std::shared_ptr;
+using std::vector;
+
 namespace DT {
 
 	Circuit::Circuit()
@@ -7,7 +10,7 @@ namespace DT {
 
 	}
 
-	int Circuit::add_gate(Gate* g, GateType t)
+	int Circuit::add_gate(shared_ptr<Gate> g, GateType t)
 	{
 		int id = 0;
 		switch (t)
@@ -63,7 +66,7 @@ namespace DT {
 		return id * (int)NUM_GATE_TYPE + (int)t;
 	}
 
-	Gate* Circuit::get_gate(int id)
+	shared_ptr<Gate> Circuit::get_gate(int id)
 	{
 		GateType t = (GateType)(id % (int)NUM_GATE_TYPE);
 		int index = id / (int)NUM_GATE_TYPE;
@@ -193,7 +196,7 @@ namespace DT {
 			persistent[i]->posedge();
 	}
 
-	int Circuit::combine_char(Circuit* c, CombineType t)
+	int Circuit::combine_char(shared_ptr<Circuit> c, CombineType t)
 	{
 		switch(t)
 		{
@@ -214,7 +217,7 @@ namespace DT {
 		}
 	}
 
-	int Circuit::combine_epsilon(Circuit* c, CombineType t)
+	int Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t)
 	{
 		switch(t)
 		{
@@ -235,7 +238,7 @@ namespace DT {
 		}
 	}
 
-	int Circuit::combine_char_parallel(Circuit* c)
+	int Circuit::combine_char_parallel(shared_ptr<Circuit> c)
 	{
 		for (int i=0; i<c->stateii.size(); i++)
 			stateii.push_back(c->stateii[i]);
@@ -256,12 +259,12 @@ namespace DT {
 		return 0;
 	}
 
-	int Circuit::combine_char_union(Circuit* c)
+	int Circuit::combine_char_union(shared_ptr<Circuit> c)
 	{
 		return combine_char_parallel(c);
 	}
 
-	int Circuit::combine_char_concatenation(Circuit* c)
+	int Circuit::combine_char_concatenation(shared_ptr<Circuit> c)
 	{
 		return combine_char_parallel(c);
 	}
@@ -271,13 +274,13 @@ namespace DT {
 		return 0;
 	}
 
-	int Circuit::combine_epsilon_parallel(Circuit* c)
+	int Circuit::combine_epsilon_parallel(shared_ptr<Circuit> c)
 	{
 		int l = stateii.size();
 		combine_char_parallel(c);
 		for (int i=l-1; i>=0; i--)
 		{
-			stateii[i+l].set_op(new CopyOp());
+			stateii[i+l].set_op(shared_ptr<CopyOp>(new CopyOp()));
 			stateii[i+l].wire_in(Wire(stateii[i],CMB));
 			stateii[i].wire_out(Wire(stateii[i+l],CMB));
 			gate.push_back(stateii[i+l]);
@@ -285,7 +288,7 @@ namespace DT {
 		}
 	}
 
-	int Circuit::combine_epsilon_union(Circuit* c)
+	int Circuit::combine_epsilon_union(shared_ptr<Circuit> c)
 	{
 		int l = stateof.size();
 		combine_epsilon_parallel(c);
@@ -294,7 +297,7 @@ namespace DT {
 			gate.push_back(stateof[i]);
 			gate.push_back(stateof[i+l]);
 
-			Gate* tmp = new Gate(UNDEF,new UnionOp());
+			shared_ptr<Gate> tmp = shared_ptr<Gate>(new Gate(UNDEF,shared_ptr<UnionOp>(new UnionOp())));
 			tmp->wire_in(Wire(stateof[i],CMB));
 			tmp->wire_in(Wire(stateof[i+l],CMB));
 			stateof[i]->wire_out(Wire(tmp,CMB));
@@ -309,7 +312,7 @@ namespace DT {
 		return 0;
 	}
 
-	int Circuit::combine_epsilon_concatenation(Circuit* c)
+	int Circuit::combine_epsilon_concatenation(shared_ptr<Circuit> c)
 	{
 		int l = stateii.size();
 		combine_char_parallel(c);
@@ -317,7 +320,7 @@ namespace DT {
 		{
 			stateii[i+l]->wire_in(stateof[i]);
 			stateof[i]->wire_out(stateii[i+l]);
-			stateii[i+l]->set_op(new CopyOp);
+			stateii[i+l]->set_op(shared_ptr<CopyOp>(new CopyOp));
 
 			gate.push_back(stateii[i+l]);
 			gate.push_back(stateof[i]);
@@ -335,12 +338,12 @@ namespace DT {
 	{
 		for (int i=0; i<stateii.size(); i++)
 		{
-			Gate* new_ii = new Gate(UNDEF,new ConstOp);
-			Gate* new_of = new Gate(UNDEF,new CopyOp);
-			Gate* old_ii = stateii[i];
-			Gate* old_of = stateof[i];
+			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(UNDEF,shared_ptr<ConstOp>(new ConstOp)));
+			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(UNDEF,shared_ptr<CopyOp>(new CopyOp)));
+			shared_ptr<Gate> old_ii = stateii[i];
+			shared_ptr<Gate> old_of = stateof[i];
 
-			old_ii->set_op(new UnionOp);
+			old_ii->set_op(shared_ptr<UnionOp>(new UnionOp));
 			old_ii->wire_in(Wire(old_of,SEQ));
 			old_of->wire_out(Wire(old_ii,SEQ));
 			old_ii->wire_in(Wire(new_ii,CMB));

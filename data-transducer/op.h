@@ -9,6 +9,11 @@ namespace DT
 		UNDEF = -1, CONF = -2, MINIMAL_VALID_VALUE = 0;
 	};
 
+	class DataValue 
+	{
+
+	};
+
 	/*
 		All true operators must be subclass of op
 		and override () operator.
@@ -16,25 +21,25 @@ namespace DT
 	class Op
 	{
 		public:
-		virtual int operator ()(vector<int> l, int current)=0;
+		virtual int operator ()(vector<DataValue> l, int current)=0;
 	};
 
 	class ConstOp
 	{
 		public:
-		int operator ()(vector<int> param, int current);
+		int operator ()(vector<DataValue> param, int current);
 	};
 
 	class CopyOp
 	{
 		public:
-		int operator ()(vector<int> param, int current);
+		int operator ()(vector<DataValue> param, int current);
 	};
 
 	class UnionOp
 	{
 		public:
-		int operator ()(vector<int> param, int current);
+		int operator ()(vector<DataValue> param, int current);
 	}
 
 	class BasicBinaryOp

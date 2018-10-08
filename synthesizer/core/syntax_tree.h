@@ -48,7 +48,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	/* check if all leaf nodes are terminal */
 	bool is_complete();
 
-	double get_complexity();
+	virtual double get_complexity();
 
 	virtual std::string to_string();
 
@@ -56,11 +56,15 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 
 	static std::unique_ptr<SyntaxTreeFactory> factory;
 
-	private:
-	SyntaxTreeCompleteness complete;
+	protected:
+
 	double complexity;
 
 	int depth; // depth of the root
+
+	private:
+
+	SyntaxTreeCompleteness complete;
 
 	void mutate(int option);
 

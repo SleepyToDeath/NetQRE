@@ -7,8 +7,13 @@ p: profile-regex
 r: 
 	g++ -o ./example/gen ./example/gen.cpp -O2
 
+test-pwd:
+	g++ -o ./example/gen ./example/gen.cpp -O2
+	./example/gen | tee example/pwd.input
+	./testbed/regex lang/regex.json example/pwd.input example/config
+
 test:
-	./testbed/regex lang/regex.json example/xlarge2.input example/config
+	./testbed/regex lang/regex.json example/pwd.input example/config
 
 test-c:
 	./testbed/regex lang/common_string.json example/xlarge2.input example/config

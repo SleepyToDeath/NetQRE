@@ -20,6 +20,7 @@ class GeneralSyntaxRightHandSide;
 class GeneralInterpreter {
 	public:
 	virtual bool accept(std::string code, bool complete,  shared_ptr<GeneralExample> input) = 0;
+	virtual double extra_complexity(std::string) { return 0.0; }
 };
 
 class GeneralExample: public IEExample {
@@ -195,6 +196,40 @@ class GeneralSyntaxTree : public IESyntaxTree {
 	shared_ptr<IEProgram> to_program() {
 		return shared_ptr<IEProgram>(new GeneralProgram(to_code(), is_complete()));
 	}
+
+	virtual double get_complexity() {
+		if (complexity == 0)
+		{
+			if (root->get_type()->is_term)
+			{
+				if (depth>1)
+					complexity = -100.0;
+			}
+			else if (root->get_option() == SyntaxLeftHandSide::NoOption)
+			{
+	//			complexity = root->get_type()->option.size();
+				if (depth>1)
+					complexity = 100.0;
+			}
+			else
+			{
+				complexity = 0;
+				for (int i=0; i<subtree.size(); i++)
+					complexity += subtree[i]->get_complexity();
+				if (subtree.size() > 2)
+					complexity -= 200;
+	//				complexity -= (subtree.size()) * 200;
+				else
+					complexity += (subtree.size()-1) * 100.0;
+			}
+			if (depth == 0)
+				complexity += GeneralProgram::interpreter->extra_complexity(to_code());
+		}
+		if (complexity == 0)
+			complexity = 0.01;
+		return complexity;
+	}
+
 
 	std::string to_code() {
 		std::string s;

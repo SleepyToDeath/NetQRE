@@ -13,9 +13,10 @@ using std::cout;
 using std::endl;
 
 enum RegexWordType {
-	CONCAT, STAR, CHAR, RE
+	CONCAT, STAR, CHAR, RE, ESC, UNION
 };
 
+const char CHAR_SET[] = { '.' , ':', '/', '?', '_', '-' };
 
 class RegexAST {
 	public:
@@ -23,10 +24,68 @@ class RegexAST {
 	char name;
 	vector<shared_ptr<RegexAST> > subtree;
 
+	double get_complexity()
+	{
+		double sum = 0.0;
+		for (int i=0; i<subtree.size(); i++)
+			sum += subtree[i]->get_complexity();
+		if (type == UNION)
+			return sum + 100.0;
+		else
+			return sum;
+	}
+
 	shared_ptr<NFASkip> to_nfa()
 	{
 		switch (type)
 		{
+			case ESC:
+			{
+				auto nfa = shared_ptr<NFASkip>(new NFASkip());
+				if (name == 'c')
+				{
+					auto op = shared_ptr<NFAState>(new NFAState());
+					unordered_set<shared_ptr<NFAState> > op_trans;
+					auto ed = shared_ptr<NFAState>(new NFAState());
+
+					op_trans.insert(ed);
+					for (char c = 'a'; c<='z'; c++)
+						op->transitions[c] = op_trans;
+					nfa->states.insert(op);
+					nfa->states.insert(ed);
+					nfa->start_states.insert(op);
+					nfa->accept_states.insert(ed);
+				}
+				else if (name == 'C')
+				{
+					auto op = shared_ptr<NFAState>(new NFAState());
+					unordered_set<shared_ptr<NFAState> > op_trans;
+					auto ed = shared_ptr<NFAState>(new NFAState());
+
+					op_trans.insert(ed);
+					for (char c = 'A'; c<='Z'; c++)
+						op->transitions[c] = op_trans;
+					nfa->states.insert(op);
+					nfa->states.insert(ed);
+					nfa->start_states.insert(op);
+					nfa->accept_states.insert(ed);
+				}
+				else if (name == 'd')
+				{
+					auto op = shared_ptr<NFAState>(new NFAState());
+					unordered_set<shared_ptr<NFAState> > op_trans;
+					auto ed = shared_ptr<NFAState>(new NFAState());
+
+					op_trans.insert(ed);
+					for (char c = '0'; c<='9'; c++)
+						op->transitions[c] = op_trans;
+					nfa->states.insert(op);
+					nfa->states.insert(ed);
+					nfa->start_states.insert(op);
+					nfa->accept_states.insert(ed);
+				}
+				return nfa;
+			}
 			case CHAR:
 			{
 				auto nfa = shared_ptr<NFASkip>(new NFASkip());
@@ -50,8 +109,14 @@ class RegexAST {
 					auto ed = shared_ptr<NFAState>(new NFAState());
 
 					op_trans.insert(ed);
-					for (char c = '0'; c<='1'; c++)
+					for (char c = 'A'; c<='Z'; c++)
 						op->transitions[c] = op_trans;
+					for (char c = 'a'; c<='z'; c++)
+						op->transitions[c] = op_trans;
+					for (char c = '0'; c<='9'; c++)
+						op->transitions[c] = op_trans;
+					for (int i=0; i<sizeof(CHAR_SET); i++)
+						op->transitions[CHAR_SET[i]] = op_trans;
 					nfa->states.insert(op);
 					nfa->states.insert(ed);
 					nfa->start_states.insert(op);
@@ -75,7 +140,7 @@ class RegexAST {
 					e_trans.insert(root->start_states.begin(), root->start_states.end());
 					(*i)->transitions[Epsilon] = e_trans;
 				}
-				root->accept_states.erase(zero); // disable zero matching
+//				root->accept_states.erase(zero); // disable zero matching
 				root->start_states.clear();
 				root->start_states.insert(zero);
 
@@ -106,6 +171,32 @@ class RegexAST {
 				return root;
 			}
 
+			case UNION:
+			{
+				auto root = shared_ptr<NFASkip>(new NFASkip());
+				auto left = shared_ptr<NFASkip>(new NFASkip(subtree[0]->to_nfa()));
+				auto right = shared_ptr<NFASkip>(new NFASkip(subtree[1]->to_nfa()));
+				auto zero = shared_ptr<NFAState>(new NFAState());
+				root->states.insert(left->states.begin(), left->states.end());
+				root->states.insert(right->states.begin(), right->states.end());
+				root->states.insert(zero);
+
+				unordered_set<shared_ptr<NFAState> > zero_trans;
+				zero_trans.clear();
+				zero_trans.insert(left->start_states.begin(), left->start_states.end());
+				zero_trans.insert(right->start_states.begin(), right->start_states.end());
+				zero->transitions[Epsilon] = zero_trans;
+
+				root->start_states.clear();
+				root->start_states.insert(zero);
+
+				root->accept_states = right->accept_states;
+				root->accept_states.insert(left->accept_states.begin(), left->accept_states.end());
+
+				return root;
+			}
+
+	
 
 			case RE:
 			return subtree[0]->to_nfa();
@@ -120,6 +211,14 @@ class RegexAST {
 class RegexInterpreter : public GeneralInterpreter
 {
 	public:
+
+	virtual double extra_complexity(std::string code) {
+		auto cursor = shared_ptr<int>(new int);
+		(*cursor) = 0;
+		auto ast = parse(code, cursor);
+		return ast->get_complexity();
+	}
+
 	bool accept(string code, bool complete, shared_ptr<GeneralExample> input) {
 
 //		cout<<"interpreting code: "<<code<<" is complete? "<<complete<<endl;
@@ -172,15 +271,35 @@ class RegexInterpreter : public GeneralInterpreter
 				(*cursor)++;
 			if (code[(*cursor)] == '*')
 			{
-				(*cursor) += 2;
+				(*cursor) += 2; /* *( */
 				auto clause = shared_ptr<RegexAST>(new RegexAST());
 				clause->type = STAR;
 				clause->subtree.push_back(parse(code, cursor));
-				(*cursor)++;
+				(*cursor)++; /* ) */
 				root->subtree.push_back(clause);
 			}
 			else if (code[(*cursor)] == ')')
 				return root;
+			else if (code[(*cursor)] == '\\' )
+			{
+				(*cursor)++; /* \ */
+				auto clause = shared_ptr<RegexAST>(new RegexAST());
+				clause->type = ESC;
+				clause->name = code[(*cursor)];
+				(*cursor)++; /* char */
+				root->subtree.push_back(clause);
+			}
+			else if (code[(*cursor)] == '|')
+			{
+				(*cursor) += 4; /* ||(( */
+				auto clause = shared_ptr<RegexAST>(new RegexAST());
+				clause->type = UNION;
+				clause->subtree.push_back(parse(code, cursor));
+				(*cursor) += 3; /* ),( */
+				clause->subtree.push_back(parse(code, cursor));
+				(*cursor) ++; /* ) */
+				root->subtree.push_back(clause);
+			}
 			else
 			{
 				auto clause = shared_ptr<RegexAST>(new RegexAST());

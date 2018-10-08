@@ -111,6 +111,8 @@ double SyntaxTree::get_complexity() {
 				complexity += (subtree.size()-1) * 100.0;
 		}
 	}
+	if (complexity == 0)
+		complexity = 0.01;
 	return complexity;
 }
 

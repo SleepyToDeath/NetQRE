@@ -24,12 +24,12 @@ void Transducer::destroy()
 		circuits[i]->destroy();
 }
 
-void Transducer::add_circuit(Circuit* c, int character)
+void Transducer::add_circuit(shared_ptr<Circuit> c, int character)
 {
 	circuits[character] = c;
 }
 
-int Transducer::combine(Transducer* dt, CombineType t)
+int Transducer::combine(shared_ptr<Transducer> dt, CombineType t)
 {
 	circuits[0]->combine_epsilon(dt->circuits[0],t);
 	for (int i=1; i<max_character; i++)
@@ -48,7 +48,7 @@ std::vector<int> Transducer::process(std::vector<Word> stream)
 	{
 		{
 			states.fin = NullPort;
-			Circuit* c = circuits[0];
+			shared_ptr<Circuit> c = circuits[0];
 			c->reset();
 			c->set_stream_in(stream[i].val);
 			c->set_state_in(states);
@@ -59,7 +59,7 @@ std::vector<int> Transducer::process(std::vector<Word> stream)
 
 		{
 			states.fin = NullPort;
-			Circuit* c = circuits[stream[i].key];
+			shared_ptr<Circuit> c = circuits[stream[i].key];
 			c->reset();
 			c->set_stream_in(stream[i].val);
 			c->set_state_in(states);
@@ -71,7 +71,7 @@ std::vector<int> Transducer::process(std::vector<Word> stream)
 
 	{
 		states.fin = NullPort;
-		Circuit* c = circuits[0];
+		shared_ptr<Circuit> c = circuits[0];
 		c->reset();
 		c->set_stream_in(stream[i].val);
 		c->set_state_in(states);
@@ -88,13 +88,13 @@ std::vector<int> Transducer::get_signature()
 	return std::vector<int>(1,0);
 }
 
-Circuit* Transducer::get_default_circuit()
+shared_ptr<Circuit> Transducer::get_default_circuit()
 {
-	Circuit* c = new Circuit();
+	shared_ptr<Circuit> c = new Circuit();
 	for (int i=0; i<state_number; i++)
 	{
-		Gate* in = new Gate(0, new ConstOp);
-		Gate* out = new Gate(0, new CopyOp);
+		shared_ptr<Gate> in = new Gate(0, new ConstOp);
+		shared_ptr<Gate> out = new Gate(0, new CopyOp);
 		out->wire_in(Wire(in,CMB));
 		in->wire_out(Wire(out,CMB));
 		c->add_gate(in, STATE_IN);

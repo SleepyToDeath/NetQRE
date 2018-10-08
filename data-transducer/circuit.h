@@ -1,6 +1,8 @@
 #ifndef _DT_CIRCUIT_H
 #define _DT_CIRCUIT_H
 
+#include<memory>
+
 namespace DT
 {
 	enum GateType {
@@ -27,9 +29,9 @@ namespace DT
 		public:
 		Circuit();
 
-		int add_gate(Gate* g, GateType t); /* return the gate's id */
-		Gate* get_gate(int id);
-		void combine(Circuit* c);
+		int add_gate(std::shared_ptr<Gate> g, GateType t); /* return the gate's id */
+		shared_ptr<Gate> get_gate(int id);
+		void combine(shared_ptr<Circuit> c);
 
 		void reset();
 		void set_state_in(Port states);
@@ -37,33 +39,33 @@ namespace DT
 		void tick();
 		Port get_state_out();
 
-		int combine_char(Circuit* c, CombineType t);
-		int combine_epsilon(Circuit* c, CombineType t);
+		int combine_char(shared_ptr<Circuit> c, CombineType t);
+		int combine_epsilon(shared_ptr<Circuit> c, CombineType t);
 
 		void destroy(); /* free all gates */
 
 		private:
-		vector<Gate*> statei;
-		vector<Gate*> stateii;
-		vector<Gate*> stateif;
+		vector< std::shared_ptr<Gate> > statei;
+		vector< std::shared_ptr<Gate> > stateii;
+		vector< std::shared_ptr<Gate> > stateif;
 
-		vector<Gate*> stateo;
-		vector<Gate*> stateoi;
-		vector<Gate*> stateof;
+		vector< std::shared_ptr<Gate> > stateo;
+		vector< std::shared_ptr<Gate> > stateoi;
+		vector< std::shared_ptr<Gate> > stateof;
 
-		vector<Gate*> streami;
+		vector< std::shared_ptr<Gate> > streami;
 
-		vector<Gate*> gate;
+		vector< std::shared_ptr<Gate> > gate;
 
-		vector<Gate*> persistent; /* value won't be cleared by reset */
+		vector< std::shared_ptr<Gate> > persistent; /* value won't be cleared by reset */
 
-		int combine_char_union(Circuit* c);
-		int combine_char_parallel(Circuit* c);
-		int combine_char_concatenation(Circuit* c);
+		int combine_char_union(std::shared_ptr<Circuit> c);
+		int combine_char_parallel(std::shared_ptr<Circuit> c);
+		int combine_char_concatenation(std::shared_ptr<Circuit> c);
 		int combine_char_star();
-		int combine_epsilon_union(Circuit* c);
-		int combine_epsilon_parallel(Circuit* c);
-		int combine_epsilon_concatenation(Circuit* c);
+		int combine_epsilon_union(std::shared_ptr<Circuit> c);
+		int combine_epsilon_parallel(std::shared_ptr<Circuit> c);
+		int combine_epsilon_concatenation(std::shared_ptr<Circuit> c);
 		int combine_epsilon_star();
 	};
 }

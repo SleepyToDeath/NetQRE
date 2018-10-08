@@ -1,6 +1,9 @@
 #ifndef _DT_GATE_H
 #define _DT_GATE_H
 
+#include <vector>
+#include <memory>
+
 namespace DT
 {
 	/*
@@ -17,8 +20,8 @@ namespace DT
 	{
 		public:
 		wire(){};
-		wire(Gate* g0, WireType t0):g(g0),t(t0){};
-		Gate* g;
+		wire(shared_ptr<Gate> g0, WireType t0):g(g0),t(t0){};
+		shared_ptr<Gate> g;
 		WireType t;
 	};
 
@@ -42,21 +45,21 @@ namespace DT
 	class Gate
 	{
 		public:
-		Gate(int init, Op* op);
+		Gate(int init, shared_ptr<Op> op);
 		~Gate();
 
 		void wire_in(Wire w); /* add an input wire */
 		void wire_out(Wire w); /* add an output wire */
 		void wire_ready(); /* a CMB wire is ready to be read for this cycle */
 		void set_value(int val); /* literally set value, should only use for input gates of a circuit */
-		void set_op(Op* op); /* literally set op */
+		void set_op(shared_ptr<Op> op); /* literally set op */
 		void posedge(); /* see above */
 		void negedge(); /* see above */
 		int output(WireType t); /* get the output value based on wire type */
 		void reset(); /* set val to init, set ready_wires to 0 */
 
 		private:
-		Op* op;
+		shared_ptr<Op> op;
 		std::vector<Wire> in;
 		std::vector<Wire> out;
 		int val, val_old, val_init;

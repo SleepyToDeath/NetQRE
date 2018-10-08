@@ -2,7 +2,7 @@
 
 namespace DT {
 
-Gate::Gate(int init, Op* op)
+Gate::Gate(int init, shared_ptr<Op> op)
 {
 	val = init;
 	val_old = init;
@@ -13,7 +13,6 @@ Gate::Gate(int init, Op* op)
 
 Gate::~Gate()
 {
-	delete op;
 }
 
 void Gate::wire_in(Wire w)
@@ -43,7 +42,7 @@ void Gate::posedge()
 			{
 				param.push_back( in[i].g->output( in[i].t ) );
 			}
-			val = (*op)(param, val);
+			val = (shared_ptr<op>)(param, val);
 		}
 		
 		for (int i=0; i<out.size(); i++)
@@ -83,7 +82,7 @@ void Gate::set_value(int val)
 	this->val = val;
 }
 
-void Gate::set_op(Op* op)
+void Gate::set_op(shared_ptr<Op> op)
 {
 	delete this->op;
 	this->op = op;

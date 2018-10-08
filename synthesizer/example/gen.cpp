@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <experimental/random>
 
 using namespace std;
@@ -75,7 +76,77 @@ void random_small() {
 	}
 }
 
+bool accept_passwd(string passwd)
+{
+	bool flag_len = false;
+	bool flag_d = false;
+	bool flag_c = false;
+	bool flag_C = false;
+	int threshold = 8;
+
+	for (char c='A'; c<='Z'; c++)
+		if (string::npos != passwd.find(c))
+		{
+			flag_C = true;
+			break;
+		}
+	for (char c='a'; c<='z'; c++)
+		if (string::npos != passwd.find(c))
+		{
+			flag_c = true;
+			break;
+		}
+	for (char c='0'; c<='9'; c++)
+		if (string::npos != passwd.find(c))
+		{
+			flag_d = true;
+			break;
+		}
+
+	return flag_d || flag_C;
+}
+
+void passwd()
+{
+	int num = 200;
+	int lower = 5;
+	int upper = 15;
+
+	vector<char> char_set;
+	for (char c='a'; c<='z'; c++)
+		char_set.push_back(c);
+	for (char c='A'; c<='B'; c++)
+		char_set.push_back(c);
+	for (char c='0'; c<='1'; c++)
+		char_set.push_back(c);
+
+	vector<string> pos;
+	vector<string> neg;
+
+	for (int i=0; i<num; i++)
+	{
+		int len = experimental::randint(lower,upper);
+		string s;
+		for (int j=0; j<len; j++)
+		{
+			char next = char_set[experimental::randint(0, (int)char_set.size()-1)];
+			s.append(1, next);
+		}
+		if (accept_passwd(s))
+			pos.push_back(s);
+		else
+			neg.push_back(s);
+	}
+
+	cout<<pos.size()<<" "<<neg.size()<<endl;
+	for (int i=0; i<pos.size(); i++)
+		cout<<pos[i]<<endl;
+	for (int i=0; i<neg.size(); i++)
+		cout<<neg[i]<<endl;
+}
+
 int main() {
-	random_small();
+//	random_small();
 //	xlarge3();
+	passwd();
 }
