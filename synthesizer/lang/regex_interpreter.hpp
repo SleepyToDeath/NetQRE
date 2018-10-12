@@ -30,9 +30,14 @@ class RegexAST {
 		for (int i=0; i<subtree.size(); i++)
 			sum += subtree[i]->get_complexity();
 		if (type == UNION)
+			return sum + 300.0;
+		else if (type == CONCAT)
 			return sum + 100.0;
-		else
-			return sum;
+		else if (type == STAR)
+			return sum + 200.0;
+		else if (type == CHAR && name != '?')
+			return sum - 0.0;
+		return sum;
 	}
 
 	shared_ptr<NFASkip> to_nfa()
@@ -129,6 +134,8 @@ class RegexAST {
 
 			case STAR:
 			{
+				if (subtree.size() == 0)
+					return shared_ptr<NFASkip>(new NFASkip());
 				auto child = subtree[0]->to_nfa();
 				auto root = shared_ptr<NFASkip>(new NFASkip(child));
 				auto zero = shared_ptr<NFAState>(new NFAState());
@@ -140,7 +147,7 @@ class RegexAST {
 					e_trans.insert(root->start_states.begin(), root->start_states.end());
 					(*i)->transitions[Epsilon] = e_trans;
 				}
-//				root->accept_states.erase(zero); // disable zero matching
+				root->accept_states.erase(zero); // disable zero matching
 				root->start_states.clear();
 				root->start_states.insert(zero);
 
@@ -150,6 +157,8 @@ class RegexAST {
 			
 			case CONCAT:
 			{
+				if (subtree.size() == 0)
+					return shared_ptr<NFASkip>(new NFASkip());
 				auto root = shared_ptr<NFASkip>(new NFASkip(subtree[0]->to_nfa()));
 				for (int i=1; i<subtree.size(); i++)
 				{
@@ -173,6 +182,8 @@ class RegexAST {
 
 			case UNION:
 			{
+				if (subtree.size() == 0)
+					return shared_ptr<NFASkip>(new NFASkip());
 				auto root = shared_ptr<NFASkip>(new NFASkip());
 				auto left = shared_ptr<NFASkip>(new NFASkip(subtree[0]->to_nfa()));
 				auto right = shared_ptr<NFASkip>(new NFASkip(subtree[1]->to_nfa()));
@@ -219,24 +230,25 @@ class RegexInterpreter : public GeneralInterpreter
 		return ast->get_complexity();
 	}
 
-	bool accept(string code, bool complete, shared_ptr<GeneralExample> input) {
+	bool accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input) {
 
 //		cout<<"interpreting code: "<<code<<" is complete? "<<complete<<endl;
 		
 		/* parse code & build NFA */
 		auto cursor = shared_ptr<int>(new int);
 		(*cursor) = 0;
-		auto ast = parse(code, cursor);
-		auto nfa = ast->to_nfa();
+		auto ast_pos = parse(code.pos, cursor);
+		auto ast_neg = parse(code.neg, cursor);
+		auto nfa_pos = ast_pos->to_nfa();
+		auto nfa_neg = ast_neg->to_nfa();
 
 		/* match positive */
 		for (int i=0; i<input->positive.size(); i++)
 		{
 			string example = input->positive[i];
 			vector<bool> dummy(example.size(), false);
-			if (!nfa->accept(example, dummy))
+			if (!nfa_pos->accept(example, dummy))
 			{
-//				cout<<"Reject!\n";
 				return false;
 			}
 		}
@@ -248,13 +260,25 @@ class RegexInterpreter : public GeneralInterpreter
 			{
 				string example = input->negative[i];
 				vector<bool> dummy(example.size(), false);
-				if (nfa->accept(example, dummy))
+				if (nfa_pos->accept(example, dummy))
 				{
-//					cout<<"Reject!\n";
 					return false;
 				}
 			}
 		}
+		else {
+			for (int i=0; i<input->negative.size(); i++)
+			{
+				string example = input->negative[i];
+				vector<bool> dummy(example.size(), false);
+				if (nfa_neg->accept(example, dummy))
+				{
+					return false;
+				}
+			}
+		}
+
+
 		
 //		cout<<"Accept!\n";
 		return true;
@@ -323,7 +347,7 @@ void test_interpretor()
 	getline(cin, candidate);
 	auto e = shared_ptr<GeneralExample>(new GeneralExample());
 	e->positive.push_back(candidate);
-	auto p = shared_ptr<GeneralProgram>(new GeneralProgram(pattern, true));
+	auto p = shared_ptr<GeneralProgram>(new GeneralProgram(AbstractCode(pattern,""), true));
 	cout<<"Matching result: "<<(p->accept(e)?"Match":"Mismatch")<<endl;;
 }
 

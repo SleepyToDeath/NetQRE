@@ -17,9 +17,16 @@ const std::string SYNTAX_ROOT_NAME = "program";
 class GeneralExample;
 class GeneralSyntaxRightHandSide;
 
+class AbstractCode {
+	public:
+	AbstractCode(std::string _pos, std::string _neg):pos(_pos),neg(_neg){}
+	std::string pos;
+	std::string neg;
+};
+
 class GeneralInterpreter {
 	public:
-	virtual bool accept(std::string code, bool complete,  shared_ptr<GeneralExample> input) = 0;
+	virtual bool accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input) = 0;
 	virtual double extra_complexity(std::string) { return 0.0; }
 };
 
@@ -34,9 +41,8 @@ class GeneralExample: public IEExample {
  * accept() will feed the source code and input to external interpreter */
 class GeneralProgram: public IEProgram {
 	public:
-	GeneralProgram(std::string src, bool complete) {
-		source_code = src;
-		this->complete = complete;
+	GeneralProgram(AbstractCode _src, bool _complete):
+	source_code(_src), complete(_complete) {
 	}
 
 	bool accept(shared_ptr<IEExample> input) {
@@ -47,7 +53,7 @@ class GeneralProgram: public IEProgram {
 	static std::unique_ptr<GeneralInterpreter> interpreter;
 
 	bool complete;
-	std::string source_code;
+	AbstractCode source_code;
 };
 
 class GeneralSyntaxLeftHandSide;
@@ -189,6 +195,7 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 	shared_ptr<IEProgram> to_program() {return nullptr;}
 };
 
+
 class GeneralSyntaxTree : public IESyntaxTree {
 	public:
 	GeneralSyntaxTree(shared_ptr<SyntaxTree> src):	IESyntaxTree(src) {}
@@ -223,7 +230,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					complexity += (subtree.size()-1) * 100.0;
 			}
 			if (depth == 0)
-				complexity += GeneralProgram::interpreter->extra_complexity(to_code());
+				complexity += GeneralProgram::interpreter->extra_complexity(to_code().pos);
 		}
 		if (complexity == 0)
 			complexity = 0.01;
@@ -231,27 +238,37 @@ class GeneralSyntaxTree : public IESyntaxTree {
 	}
 
 
-	std::string to_code() {
-		std::string s;
+	AbstractCode to_code() {
+		std::string pos;
+		std::string neg;
 		if (root->get_type()->is_term) 
-			s = root->get_type()->name;
+		{
+			pos = root->get_type()->name;
+			neg = pos;
+		}
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
-			s = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->equivalent_complete_program;
+		{
+			pos = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->equivalent_complete_program;
+			neg = "";
+		}
 		else
 		{
 			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (root->get_type()->option[root->get_option()]);
 			int j = 0;
 			for (int i=0; i<rhs->subexp_full.size(); i++)	{
 				if (rhs->subexp_full[i]->is_functional()) {
-					s = s + " " + (std::static_pointer_cast<GeneralSyntaxTree>(subtree[j])->to_code());
+					auto sub = (std::static_pointer_cast<GeneralSyntaxTree>(subtree[j])->to_code());
+					pos = pos + " " + sub.pos;
+					neg = neg + " " + sub.neg;
 					j++;
 				}
 				else {
-					s = s + " " + (rhs->subexp_full[i]->name);
+					pos = pos + " " + (rhs->subexp_full[i]->name);
+					neg = neg + " " + (rhs->subexp_full[i]->name);
 				}
 			}
 		}
-		return s;
+		return AbstractCode(pos, neg);
 	}
 
 

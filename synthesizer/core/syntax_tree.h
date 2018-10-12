@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <map>
 
 using std::shared_ptr;
 using std::vector;
@@ -24,6 +25,7 @@ enum SyntaxTreeCompleteness {
 };
 
 class SyntaxTreeFactory;
+class SyntaxTreeTemplate;
 
 /*	This data structure is immutable.
 	Every time it mutates, you get a new one */
@@ -43,15 +45,25 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 		std::vector< shared_ptr<SyntaxTree> > q;
 	};
 
+	class VariableMap
+	{
+		public:
+		/* <var name, var value> */
+		std::map<std::string, shared_ptr<SyntaxTree> > map;
+	};
+
 	/* mutate a node of depth AT MOST `max_depth` into all possible RHS, and append the results to `queue` */
 	bool multi_mutate(shared_ptr<SyntaxTree> root, int max_depth, shared_ptr<Queue> queue);
+
+	bool contain_prefix(shared_ptr<SyntaxTreeTemplate> temp);
+
+	shared_ptr<SyntaxTree> search_and_replace(shared_ptr<SyntaxTreeTemplate> temp_src, shared_ptr<SyntaxTreeTemplate> temp_dst);
+
 	/* check if all leaf nodes are terminal */
 	bool is_complete();
-
 	virtual double get_complexity();
-
 	virtual std::string to_string();
-
+	size_t hash();
 	bool equal(shared_ptr<SyntaxTree> t);
 
 	static std::unique_ptr<SyntaxTreeFactory> factory;
@@ -59,19 +71,24 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	protected:
 
 	double complexity;
-
 	int depth; // depth of the root
+	size_t hash_value = 0;
+	SyntaxTreeCompleteness complete;
 
 	private:
 
-	SyntaxTreeCompleteness complete;
-
+	bool real_search_and_replace(shared_ptr<SyntaxTreeTemplate> temp_src, shared_ptr<SyntaxTreeTemplate> temp_dst);
 	void mutate(int option);
-
 	virtual void copy_initializer(shared_ptr<SyntaxTree> src);
+	void collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp);
 };
 
-bool compare_syntax_tree(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b);
+bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b);
+
+class CmpSyntaxTree {
+	public:
+	bool operator ()(const shared_ptr<SyntaxTree> a, const shared_ptr<SyntaxTree> b) const;
+};
 
 class SyntaxTreeNode {
 
@@ -89,9 +106,16 @@ class SyntaxTreeNode {
 	int option;
 };
 
+class SyntaxTreeTemplate: public SyntaxTree {
+	public:
+	std::string var_name;
+	bool is_variable(); /* non-terminal and no option in a template means a variable */
+	shared_ptr<SyntaxTree> to_syntax_tree(shared_ptr<VariableMap> vars, int _depth);
+};
+
 class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide> {
 	public:
-//	int id;
+	int id;
 	int size();
 	std::string name;
 	std::vector<std::shared_ptr<SyntaxRightHandSide> > option;
@@ -102,7 +126,7 @@ class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide
 
 class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSide> {
 	public:
-//	int id;
+	int id;
 	int size();
 	std::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */

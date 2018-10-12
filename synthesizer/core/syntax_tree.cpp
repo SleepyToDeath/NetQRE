@@ -5,8 +5,12 @@
 using std::cout;
 using std::endl;
 
-bool compare_syntax_tree(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
+bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
+}
+
+bool CmpSyntaxTree::operator ()(const shared_ptr<SyntaxTree> a, const shared_ptr<SyntaxTree> b) const {
+	return a->equal(b);
 }
 
 SyntaxTree::SyntaxTree(shared_ptr<SyntaxTreeNode> r, int depth) {
@@ -152,6 +156,85 @@ bool SyntaxTree::multi_mutate(shared_ptr<SyntaxTree> top, int max_depth, shared_
 	}
 }
 
+bool SyntaxTree::contain_prefix(shared_ptr<SyntaxTreeTemplate> temp) {
+	if (temp->is_variable())
+		return root->get_type() == temp->root->get_type();
+	if (!root->equal(temp->root))
+		return false;
+	for (int i=0; i<subtree.size(); i++)
+		if (!subtree[i]->contain_prefix(std::static_pointer_cast<SyntaxTreeTemplate>(temp->subtree[i])))
+			return false;
+	return true;
+}
+
+shared_ptr<SyntaxTree> SyntaxTree::search_and_replace(
+									shared_ptr<SyntaxTreeTemplate> temp_src, 
+									shared_ptr<SyntaxTreeTemplate> temp_dst)
+{
+	/* 	SyntaxTree should show an immutable interface.
+		Too error prone to backup and restore
+		So search and replace on a copied new tree */
+	auto candidate = factory->get_new(shared_from_this());
+	if (candidate->real_search_and_replace(temp_src, temp_dst))
+		return candidate;
+	else
+		return nullptr;
+}
+
+bool SyntaxTree::real_search_and_replace(
+									shared_ptr<SyntaxTreeTemplate> temp_src, 
+									shared_ptr<SyntaxTreeTemplate> temp_dst)
+{
+	/* enforce re-compute after tree is changed */
+	complexity = 0;
+	hash_value = 0;
+	complete = UNKNOWN;
+	if (contain_prefix(temp_src))
+	{
+		/* match, start to replace */
+		auto vars = shared_ptr<VariableMap>(new VariableMap());
+		collect_variable(vars, temp_src);
+		auto tree_dst = temp_dst->to_syntax_tree(vars, depth);
+		root = tree_dst->root;
+		subtree = tree_dst->subtree;
+		complexity = 0;
+		hash_value = 0;
+		complete = UNKNOWN;
+		return true;
+	}
+	else
+	{
+		/* mismatch, try subtrees */
+		for (int i=0; i<subtree.size(); i++)
+			if (subtree[i]->real_search_and_replace(temp_src, temp_dst))
+				return true;
+		return false;
+	}
+}
+
+void SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp) {
+	if (temp->is_variable())
+		vars->map[temp->var_name] = shared_from_this();
+	else {
+		for (int i=0; i<subtree.size();i++)
+			subtree[i]->collect_variable(vars, std::static_pointer_cast<SyntaxTreeTemplate>(temp->subtree[i]));
+	}
+}
+
+bool SyntaxTreeTemplate::is_variable() {
+	return (!root->get_type()->is_term) && (root->get_option() == SyntaxLeftHandSide::NoOption);
+}
+
+shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap> vars, int _depth) {
+	if (is_variable())
+		return vars->map[var_name];
+	auto new_root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(root));
+	auto new_tree = factory->get_new(new_root, _depth);
+	for (int i=0; i<subtree.size(); i++)
+		new_tree->subtree.push_back(std::static_pointer_cast<SyntaxTreeTemplate>(subtree[i])->to_syntax_tree(vars, _depth+1));
+	return new_tree;
+}
+
 std::string SyntaxTree::to_string() {
 	std::string s;
 	if (root->get_type()->is_term) 
@@ -172,7 +255,21 @@ std::string SyntaxTree::to_string() {
 	return s;
 }
 
+size_t SyntaxTree::hash() {
+	if (hash_value != 0)
+		return hash_value;
+	size_t v = root->get_type()->id;
+	for (int i=0; i<subtree.size(); i++)
+		v = v*31 + subtree[i]->hash();
+	hash_value = v;
+	if (hash_value == 0)
+		hash_value = 1;
+	return hash_value;
+}
+
 bool SyntaxTree::equal(shared_ptr<SyntaxTree> t) {
+	if (hash() != t->hash())
+		return false;
 	if (!root->equal(t->root))
 		return false;
 	if (subtree.size() != t->subtree.size())

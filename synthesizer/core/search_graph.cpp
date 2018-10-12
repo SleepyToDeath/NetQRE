@@ -2,6 +2,7 @@
 #include <experimental/random>
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 SearchGraph::SearchGraph(int depth_threshold, int batch_size, int answer_count, shared_ptr<IESyntaxLeftHandSide> starting_symbol) {
 	this->batch_size = batch_size;
@@ -18,14 +19,14 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 	std::vector<shared_ptr<IESyntaxTree> > this_round;
 	std::vector<shared_ptr<IESyntaxTree> > buffer;
 	std::vector<shared_ptr<IESyntaxTree> > answer;
+	std::unordered_set<shared_ptr<SyntaxTree>, std::hash<shared_ptr<SyntaxTree> >, CmpSyntaxTree > visited;
+
 	int answer_counter = 0;
-
 	int search_counter = 0;
-
 	double progress = 0;
-
 	double total_drop = 0;
 	double complete_drop = 0;
+
 //	for (int depth = 0; depth<depth_threshold; depth++)
 	int depth = depth_threshold;
 	{
@@ -115,7 +116,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				buffer.pop_back();
 			}
 			buffer = buffer2;
-			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree);
+			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree_complexity);
 
 			{
 				std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
@@ -123,9 +124,12 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
 				std::cout<<"Answers found: "<<answer_counter<<std::endl;
 				if (buffer.size()>2)
-					std::cout<<"One current sample: "<<(buffer[std::experimental::randint(0,(int)buffer.size()-1)]->to_string())<<std::endl;
+				{
+					int index = std::experimental::randint(0,(int)buffer.size()-1);
+					std::cout<<"One current sample: "<<(buffer[index]->to_string())<<" | #"<<buffer[index]->get_complexity()<<std::endl;
+				}
 				else
-					std::cout<<"One current sample: "<<(buffer[0]->to_string())<<std::endl;
+					std::cout<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
 				std::cout<<"Programs searched: "<<search_counter<<std::endl;
 				std::cout<<std::endl;
 			}
