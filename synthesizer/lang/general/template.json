@@ -13,26 +13,26 @@
 		] }
 	] },
 
-	{ "positive_placeholder" : [
+	{ "positive_abstract" : [
 		{ "program" : "any" },
 		{ "bool" : "any" }
 	] },
 
-	{ "negative_placeholder" : [
+	{ "negative_abstract" : [
 		{ "program" : "0" },
 		{ "bool" : "0" }
 	] },
 
-	{ "conditional_redundant" : [
-		{ "(@1(bool) && @2(bool))" : {
-			"--" : ["(@1 && !(@2))", "(!(@1) && @2)"],
+	{ "conditional_redundancy" : [
+		{ "bool(bool@1 && bool@2)" : {
+			"--" : ["bool(@1 && bool!(@2))", "bool(bool!(@1) && @2)"],
 			"==" : "EAR"
 		} }
 	] },
 	
-	{ "unconditional_redundant" : [
-		{ "(@1(bool) && 0)" : "0" },
-		{ "(@1(bool) && 1)" : "@1" }
+	{ "unconditional_redundancy" : [
+		{ "bool(bool@1 && 0)" : "0" },
+		{ "bool(bool@1 && 1)" : "@1" }
 	] }
 ]
 

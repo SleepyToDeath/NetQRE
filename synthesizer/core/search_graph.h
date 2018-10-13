@@ -3,6 +3,7 @@
 
 #include "syntax_tree.h"
 #include "incomplete_execution.h"
+#include "redundancy.h"
 
 class SearchGraph {
 	public:
