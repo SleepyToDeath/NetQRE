@@ -1,5 +1,5 @@
-#ifndef INCOMPLETE_EXECUTION_H
-#define INCOMPLETE_EXECUTION_H
+#ifndef REDUNDANCY_H
+#define REDUNDANCY_H
 
 #include "syntax_tree.h"
 
@@ -13,6 +13,7 @@ class UnconditionalRedundancyTemplate {
 class ConditionalRedundancyTemplate {
 	public:
 	shared_ptr<SyntaxTreeTemplate> temp;
+	vector<shared_ptr<SyntaxTreeTemplate> > checklist;
 	bool all_example;
 	bool all_program;
 	bool accept;

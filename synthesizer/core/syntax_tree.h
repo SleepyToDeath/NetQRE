@@ -108,6 +108,7 @@ class SyntaxTreeNode {
 
 class SyntaxTreeTemplate: public SyntaxTree {
 	public:
+	SyntaxTreeTemplate(shared_ptr<SyntaxTreeNode> root);
 	std::string var_name;
 	bool is_variable(); /* non-terminal and no option in a template means a variable */
 	shared_ptr<SyntaxTree> to_syntax_tree(shared_ptr<VariableMap> vars, int _depth);

@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	ifstream fin_e(argv[2]); // example
 	ifstream fin_c(argv[3]); // config
 
-	shared_ptr<GeneralSyntaxLeftHandSide> start = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+	auto parser = shared_ptr<GeneralConfigParser>(new GeneralConfigParser());
 	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());
 	int search_depth;
 	int batch_size;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 		string_g.append(tmp);
 	}
 	shared_ptr<GJson> json_g = shared_ptr<GJson>(new GJson(string_g));
-	start->from_json(json_g, nullptr);
+	parser->parse_config(json_g);
 	fin_g.close();
 
 	/* input examples */
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 
 	/* do searching */
 	vector<shared_ptr<IESyntaxTree> > answer;
-	SearchGraph graph(search_depth, batch_size, answer_count, start);
+	SearchGraph graph(search_depth, batch_size, answer_count, parser->root, parser->rp);
 	shared_ptr<IEExample> examples_up = examples;
 	answer = graph.search_top_level_v2(examples_up);
 	if (answer.size() == 0)

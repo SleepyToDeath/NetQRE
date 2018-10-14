@@ -81,12 +81,12 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 		return functional;
 	}
 
-	std::string abstract_positive_code;
-	std::string abstract_negative_code;
+	std::string positive_abstract_code;
+	std::string negative_abstract_code;
+	bool functional; /* example of non-functional symbol : "(", ")", ",", non-functional symbols start with "$" */
 
 	private:
 
-	bool functional; /* example of non-functional symbol : "(", ")", ",", non-functional symbols start with "$" */
 
 	shared_ptr<IEProgram> to_program() {return nullptr;}
 };
@@ -99,7 +99,7 @@ class GeneralConfigParser {
 
 	class State {
 		public:
-		std::map<std::string, std::shared_ptr<GeneralSyntaxLeftHandSide> > name_list;
+		map<std::string, shared_ptr<GeneralSyntaxLeftHandSide> > name_list;
 	};
 
 	class Token {
@@ -107,7 +107,7 @@ class GeneralConfigParser {
 		bool variable;
 		std::string name;
 		shared_ptr<GeneralSyntaxLeftHandSide> lhs;
-	}
+	};
 
 	shared_ptr<State> state;
 
@@ -115,10 +115,30 @@ class GeneralConfigParser {
 		return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || (c=='_');
 	}
 
-	shared_ptr<token> tokenize_next(string code, shared_ptr<int> cursor) {
-		auto t = shared_ptr<token>(new Token());
+	shared_ptr<Token> tokenize_next(string code, shared_ptr<int> cursor) {
+		auto t = shared_ptr<Token>(new Token());
 		int i = (*cursor);
-		while (code[i] == ' ')
+
+		/* parse type */
+		while (i<code.length() && code[i] == ' ')
+			i++;
+		if (code[i] == '@')
+			throw "Invalid LHS name. Can't start with '@'.\n";
+		else
+		{
+			t->variable = false;
+			int j = i;
+			while ((j<code.length()) && (code[j] != ' ') && (state->name_list.count(code.substr(i, j-i)) == 0))
+				j++;
+			if (state->name_list.count(code.substr(i, j-i)) == 0)
+				throw "Invalid LHS name. Not found.\n";
+			t->name = code.substr(i,j-i);
+			t->lhs = state->name_list[t->name];
+			i=j;
+		}
+
+		/* parse variable(if it is) */
+		while (i<code.length() && code[i] == ' ')
 			i++;
 		if (code[i] == '@')
 		{
@@ -132,19 +152,9 @@ class GeneralConfigParser {
 			t->name = code.substr(i,j-i);
 			i=j;
 		}
-		else
-		{
-			t->variable = false;
-			int j = i;
-			while ((j<code.length()) && (code[j] != ' ') && (stat.name_list.count(code.substr(i, j-i)) == 0))
-				j++;
-			if (stat.name_list.count(code.substr(i, j-i)) == 0)
-				throw "Invalid LHS name. Not found.\n";
-			t->name = code.substr(i,j-i);
-			t->lhs = state.name_list[t->name];
-			i=j;
-		}
 
+		while (i<code.length() && code[i] == ' ')
+			i++;
 		(*cursor) = i;
 		return t;
 	}
@@ -152,21 +162,18 @@ class GeneralConfigParser {
 	/* will allocate space for all LHS except for root(terminals are considered to be LHS)
 	 * will determine is_term for all LHS
 	 * will determine functional for all LHS */
-	void scan_names(std::shared_ptr<GJson> j) {
-		shared_ptr<GJson> syntax = j->get(0)->value();
-		shared_ptr<GJson> exec = j->get(1)->value();
+	void scan_names(std::shared_ptr<GJson> json) {
+		shared_ptr<GJson> syntax = json->get(0)->value();
 		/* syntax */
 		for (int i=0; i<syntax->size(); i++)
 		{
 			/* Add LHS to the name list
 			 * LHS must be non-terminal and functional */
 			std::string name = syntax->get(i)->name();
-//			cout<<name<<endl;
 			if (state->name_list.count(name) == 0)
 			{
 				state->name_list[name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 				state->name_list[name]->name = name;
-//				cout<<"this name is: "<<name<<endl;
 			}
 			state->name_list[name]->is_term = false;
 			state->name_list[name]->functional = true;
@@ -183,7 +190,6 @@ class GeneralConfigParser {
 					{
 						state->name_list[name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 						state->name_list[name2]->name = name2;
-//						cout<<"this name is: "<<name2<<endl;
 					}
 					if (name2[0] == '$')
 					{
@@ -197,55 +203,175 @@ class GeneralConfigParser {
 		}
 	}
 
-	shared_ptr<SyntaxTreeTemplate> parse_template(std::string code) {
+	shared_ptr<SyntaxTreeTemplate> parse_template_recursive(string code, shared_ptr<int> cursor) {
+		shared_ptr<Token> t = tokenize_next(code, cursor);
+		if (t->variable || t->lhs->is_term)
+		{
+			auto root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->lhs));
+			auto temp = shared_ptr<SyntaxTreeTemplate>(new SyntaxTreeTemplate(root));
+			temp->var_name = t->name;
+			return temp;
+		}
+		else
+		{
+			auto root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->lhs));
+			auto temp = shared_ptr<SyntaxTreeTemplate>(new SyntaxTreeTemplate(root));
+			vector<shared_ptr<SyntaxTreeTemplate> > subexp_full;
+			while((*cursor) < code.length())
+			{
+				subexp_full.push_back(parse_template_recursive(code, cursor));
+				for (int i=0; i<t->lhs->option.size(); i++)
+				{
+					auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide>(t->lhs->option[i]);
+					bool match_flag = true;
+					if (rhs->subexp_full.size() != subexp_full.size())
+						match_flag = false;
+					else 
+					{
+						for (int j=0; j<subexp_full.size(); j++)
+							if (subexp_full[j]->root->get_type() != rhs->subexp_full[j])
+							{
+								match_flag = false;
+								break;
+							}
+					}
+					if (match_flag)
+					{
+						vector<shared_ptr<SyntaxTree> > subexp;
+						for (int j=0; j<subexp_full.size(); j++)
+						{
+							auto candidate = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(subexp_full[j]->root->get_type());
+							if (candidate->functional)
+								subexp.push_back(subexp_full[j]);
+						}
+						temp->subtree = subexp;
+						root->set_option(i);
+						return temp;
+					}
+				}
+			}
+		}
+		throw "Unable to parse template. Invalid program.\n";
 		return nullptr;
+	}
+
+	shared_ptr<SyntaxTreeTemplate> parse_template(std::string code) {
+		auto cursor = shared_ptr<int>(new int(0));
+		return parse_template_recursive(code, cursor);
 	}
 
 	shared_ptr<RedundancyPlan> parse_redundancy_plan(shared_ptr<GJson> json) {
-		return nullptr;
+		shared_ptr<GJson> cnd_json = json->get(3)->value();
+		shared_ptr<GJson> ucnd_json = json->get(4)->value();
+		auto plan = shared_ptr<RedundancyPlan>(new RedundancyPlan());
+
+		/* parse conditional */
+		for (int i=0; i<cnd_json->size(); i++)
+		{
+			auto temp = shared_ptr<ConditionalRedundancyTemplate>(new ConditionalRedundancyTemplate());
+			auto temp_json = cnd_json->get(i);
+			temp->temp = parse_template(temp_json->get(0)->value()->name());
+			auto checklist_json = temp_json->get(1)->value();
+			for (int j=0; j<checklist_json->size(); j++)
+				temp->checklist.push_back(parse_template(checklist_json->get(j)->name()));
+			string condition = temp_json->get(2)->value()->name();
+			switch (condition[0]) {
+				case 'A':
+					temp->all_example = true;
+					break;
+				case 'E':
+					temp->all_example = false;
+					break;
+				default:
+					throw "Condition format incorrect.\n";
+			}
+			switch (condition[1]) {
+				case 'A':
+					temp->all_program = true;
+					break;
+				case 'E':
+					temp->all_program = false;
+					break;
+				default:
+					throw "Condition format incorrect.\n";
+			}
+			switch (condition[2]) {
+				case 'A':
+					temp->accept = true;
+					break;
+				case 'R':
+					temp->accept = false;
+					break;
+				default:
+					throw "Condition format incorrect.\n";
+			}
+
+			plan->cnd.push_back(temp);
+		}
+
+		/* parse unconditional */
+		for (int i=0; i<ucnd_json->size(); i++)
+		{
+			auto temp_json = ucnd_json->get(i);
+			auto temp = shared_ptr<UnconditionalRedundancyTemplate>(new UnconditionalRedundancyTemplate());
+			temp->temp_src = parse_template(temp_json->name());
+			temp->temp_dst = parse_template(temp_json->value()->name());
+
+			plan->ucnd.push_back(temp);
+		}
+
+		return plan;
 	}
 
 	void parse_abstract_program(shared_ptr<GJson> json) {
-		for (int i=0; i<exec->size(); i++)
+		shared_ptr<GJson> pos_json = json->get(1)->value();
+		shared_ptr<GJson> neg_json = json->get(2)->value();
+		for (int i=0; i<pos_json->size(); i++)
 		{
-			std::string name = exec->get(i)->name();
-			state->name_list[name]->abstract_positive_code = exec->get(i)->value()->name();
+			std::string name = pos_json->get(i)->name();
+			state->name_list[name]->positive_abstract_code = pos_json->get(i)->value()->name();
+		}
+		for (int i=0; i<neg_json->size(); i++)
+		{
+			std::string name = neg_json->get(i)->name();
+			state->name_list[name]->negative_abstract_code = neg_json->get(i)->value()->name();
 		}
 	}
 
 	void parse_grammar(shared_ptr<GJson> json) {
-		if (state == nullptr) { /* this is the root */
-			/* allocate context */
-			state = std::shared_ptr<InitializerState>(new InitializerState());
-			/* scan names */
-			name = SYNTAX_ROOT_NAME;
-			state->name_list[name] = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(shared_from_this());
-			scan_names(j, state);
-			/* init grammar tree */
-			std::shared_ptr<GJson> names = j->get(0)->value();
-			for (int i=0; i<names->size(); i++) {
-				state->name_list[names->get(i)->name()]->from_json(names->get(i), state);
-			}
-		}
-		else { /* this is not the root */
-			std::shared_ptr<GJson> mutations = j->value();
-			for (int i=0; i<mutations->size(); i++)
+		/* init grammar tree */
+		std::shared_ptr<GJson> rules = json->get(0)->value();
+		for (int i=0; i<rules->size(); i++) {
+			auto lhs_json = rules->get(i);
+			auto lhs = state->name_list[lhs_json->name()];
+
+			auto mutations = lhs_json->value();
+			for (int j=0; j<mutations->size(); j++)
 			{
-				std::shared_ptr<GJson> rhs = mutations->get(i);
-				std::shared_ptr<GeneralSyntaxRightHandSide> r(new GeneralSyntaxRightHandSide());
-				for (int j=0; j<rhs->size(); j++)
+				std::shared_ptr<GJson> rhs_json = mutations->get(j);
+				std::shared_ptr<GeneralSyntaxRightHandSide> rhs(new GeneralSyntaxRightHandSide());
+				for (int k=0; k<rhs->size(); k++)
 				{
-					std::shared_ptr<GeneralSyntaxLeftHandSide> l = state->name_list[rhs->get(j)->name()];
-					if (l->is_functional())
-						r->subexp.push_back(l);
-					r->subexp_full.push_back(l);
+					std::shared_ptr<GeneralSyntaxLeftHandSide> sub_lhs = state->name_list[rhs_json->get(k)->name()];
+					if (sub_lhs->is_functional())
+						rhs->subexp.push_back(sub_lhs);
+					rhs->subexp_full.push_back(sub_lhs);
 				}
-				option.push_back(r);
+				lhs->option.push_back(rhs);
 			}
 		}
 	}
 
+	void init_parsing_state() {
+		/* allocate context */
+		state = std::shared_ptr<State>(new State());
+		/* scan names */
+		string name = SYNTAX_ROOT_NAME;
+		state->name_list[name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+	}
+
 	void parse_config(shared_ptr<GJson> json) {
+		init_parsing_state();
 		scan_names(json);
 		parse_grammar(json);
 		parse_abstract_program(json);
@@ -305,8 +431,8 @@ class GeneralSyntaxTree : public IESyntaxTree {
 		}
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
-			pos = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->equivalent_complete_program;
-			neg = "";
+			pos = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->positive_abstract_code;
+			neg = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->negative_abstract_code;
 		}
 		else
 		{

@@ -4,11 +4,16 @@
 #include <cmath>
 #include <unordered_set>
 
-SearchGraph::SearchGraph(int depth_threshold, int batch_size, int answer_count, shared_ptr<IESyntaxLeftHandSide> starting_symbol) {
+SearchGraph::SearchGraph(int depth_threshold, 
+				int batch_size, 
+				int answer_count, 
+				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
+				shared_ptr<RedundancyPlan> rp ) {
 	this->batch_size = batch_size;
 	this->answer_count = answer_count;
 	this->depth_threshold = depth_threshold;
 	this->starting_symbol = starting_symbol;
+	this->rp = rp;
 }
 
 std::vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(shared_ptr<IEExample> examples) {

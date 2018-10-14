@@ -221,6 +221,9 @@ void SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<Synta
 	}
 }
 
+SyntaxTreeTemplate::SyntaxTreeTemplate(shared_ptr<SyntaxTreeNode> root):SyntaxTree(root, 0) {
+}
+
 bool SyntaxTreeTemplate::is_variable() {
 	return (!root->get_type()->is_term) && (root->get_option() == SyntaxLeftHandSide::NoOption);
 }
