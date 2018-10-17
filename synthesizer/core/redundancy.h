@@ -2,6 +2,7 @@
 #define REDUNDANCY_H
 
 #include "syntax_tree.h"
+#include "incomplete_execution.h"
 
 
 class UnconditionalRedundancyTemplate {
@@ -23,6 +24,11 @@ class RedundancyPlan {
 	public:
 	std::vector<shared_ptr<UnconditionalRedundancyTemplate> > ucnd;
 	std::vector<shared_ptr<ConditionalRedundancyTemplate> > cnd;
+	/* If meet any condition, return null, which means drop it
+		Otherwise, return the original/simplified program */
+	/* Will first check all conditional redundancy.
+		Then will apply the first matching unconditional simplification */
+	shared_ptr<IESyntaxTree> filter(shared_ptr<IESyntaxTree> suspect, shared_ptr<IEExample> examples); 
 };
 
 

@@ -27,7 +27,7 @@ class AbstractCode {
 
 class GeneralInterpreter {
 	public:
-	virtual bool accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input) = 0;
+	virtual bool accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
 	virtual double extra_complexity(std::string) { return 0.0; }
 };
 
@@ -46,8 +46,8 @@ class GeneralProgram: public IEProgram {
 	source_code(_src), complete(_complete) {
 	}
 
-	bool accept(shared_ptr<IEExample> input) {
-		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input));
+	bool accept( shared_ptr<IEExample> input, IEConfig cfg = DEFAULT_IE_CONFIG) {
+		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
 	}
 
 	/* set this to the interpreter of your specific language */

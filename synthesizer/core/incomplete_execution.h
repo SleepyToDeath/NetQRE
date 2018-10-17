@@ -10,9 +10,22 @@ using std::unique_ptr;
 class IEExample {
 };
 
+class IEConfig {
+	public:
+	bool pos_check;
+	bool pos_all;
+	bool pos_accept;
+	bool neg_check;
+	bool neg_all;
+	bool neg_accept;
+};
+
+const IEConfig DEFAULT_IE_CONFIG = {true, true, true, true, true, .neg_accept = false};
+
 class IEProgram {
 	public:
-	virtual bool accept( shared_ptr<IEExample> e) = 0;
+	/* can choose between all/exist example accepted/rejected by the program */
+	virtual bool accept( shared_ptr<IEExample> e, IEConfig cfg = DEFAULT_IE_CONFIG) = 0;
 };
 
 class IESyntaxTreeFactory;

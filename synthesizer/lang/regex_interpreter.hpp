@@ -230,7 +230,7 @@ class RegexInterpreter : public GeneralInterpreter
 		return ast->get_complexity();
 	}
 
-	bool accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input) {
+	bool accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input, IEConfig cfg) {
 
 //		cout<<"interpreting code: "<<code<<" is complete? "<<complete<<endl;
 		
@@ -242,46 +242,61 @@ class RegexInterpreter : public GeneralInterpreter
 		auto nfa_pos = ast_pos->to_nfa();
 		auto nfa_neg = ast_neg->to_nfa();
 
-		/* match positive */
-		for (int i=0; i<input->positive.size(); i++)
+		bool pos_flag = cfg.pos_all;
+
+		if (cfg.pos_check)
 		{
-			string example = input->positive[i];
-			vector<bool> dummy(example.size(), false);
-			if (!nfa_pos->accept(example, dummy))
+			/* match positive */
+			for (int i=0; i<input->positive.size(); i++)
 			{
-				return false;
+				string example = input->positive[i];
+				vector<bool> dummy(example.size(), false);
+				bool acc = nfa_pos->accept(example, dummy) xor (!cfg.pos_accept);
+				if (!acc && cfg.pos_all)
+				{
+					pos_flag = false;
+					break;
+				}
+				if (acc && !cfg.pos_all)
+				{
+					pos_flag = true;
+					break;
+				}
 			}
 		}
+		else
+			pos_flag = true;
 
-		/* don't match negative */
-		if (complete)
+		if (!pos_flag)
+			return false;
+
+		bool neg_flag = cfg.neg_all;
+
+		if (cfg.pos_check)
 		{
+			/* don't match negative */
 			for (int i=0; i<input->negative.size(); i++)
 			{
 				string example = input->negative[i];
 				vector<bool> dummy(example.size(), false);
-				if (nfa_pos->accept(example, dummy))
+				bool acc = nfa_neg->accept(example, dummy) xor (!cfg.neg_accept);
+				if (!acc && cfg.neg_all)
 				{
-					return false;
+					neg_flag = false;
+					break;
+				}
+				if (acc && !cfg.neg_all)
+				{
+					neg_flag = true;
+					break;
 				}
 			}
 		}
-		else {
-			for (int i=0; i<input->negative.size(); i++)
-			{
-				string example = input->negative[i];
-				vector<bool> dummy(example.size(), false);
-				if (nfa_neg->accept(example, dummy))
-				{
-					return false;
-				}
-			}
-		}
-
-
+		else
+			neg_flag = true;
 		
 //		cout<<"Accept!\n";
-		return true;
+		return pos_flag && neg_flag;
 	}
 
 	/* parser */
