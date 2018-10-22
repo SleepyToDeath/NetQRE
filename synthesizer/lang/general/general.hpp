@@ -28,7 +28,7 @@ class AbstractCode {
 class GeneralInterpreter {
 	public:
 	virtual bool accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
-	virtual double extra_complexity(std::string) { return 0.0; }
+	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 };
 
 class GeneralExample: public IEExample {
@@ -94,9 +94,6 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 class GeneralConfigParser {
 	public:
 
-	shared_ptr<GeneralSyntaxLeftHandSide> root;
-	shared_ptr<RedundancyPlan> rp;
-
 	class State {
 		public:
 		map<std::string, shared_ptr<GeneralSyntaxLeftHandSide> > name_list;
@@ -110,6 +107,8 @@ class GeneralConfigParser {
 	};
 
 	shared_ptr<State> state;
+	shared_ptr<GeneralSyntaxLeftHandSide> root;
+	shared_ptr<RedundancyPlan> rp;
 
 	bool is_id(char c) {
 		return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || (c=='_');
@@ -119,19 +118,21 @@ class GeneralConfigParser {
 		auto t = shared_ptr<Token>(new Token());
 		int i = (*cursor);
 
+		cout<<code.length()<<endl;
+
 		/* parse type */
 		while (i<code.length() && code[i] == ' ')
 			i++;
 		if (code[i] == '@')
-			throw "Invalid LHS name. Can't start with '@'.\n";
+			throw string("Invalid LHS name. Can't start with '@'.\n");
 		else
 		{
 			t->variable = false;
 			int j = i;
-			while ((j<code.length()) && (code[j] != ' ') && (state->name_list.count(code.substr(i, j-i)) == 0))
+			while ((j<code.length()) && (code[j] != ' ') && (code[j] != '@') && (state->name_list.count(code.substr(i, j-i)) == 0))
 				j++;
 			if (state->name_list.count(code.substr(i, j-i)) == 0)
-				throw "Invalid LHS name. Not found.\n";
+				throw string("Invalid LHS name. Not found: ") + code.substr(i, j-i) + "\n";
 			t->name = code.substr(i,j-i);
 			t->lhs = state->name_list[t->name];
 			i=j;
@@ -148,7 +149,7 @@ class GeneralConfigParser {
 			while (j<code.length() && code[j]>='0' && code[j]<='9')
 				j++;
 			if (i==j)
-				throw "Invalid variable name. Must be numbers.\n";
+				throw string("Invalid variable name. Must be numbers.\n");
 			t->name = code.substr(i,j-i);
 			i=j;
 		}
@@ -172,9 +173,10 @@ class GeneralConfigParser {
 			std::string name = syntax->get(i)->name();
 			if (state->name_list.count(name) == 0)
 			{
+				cout<<"new name: "<<name<<endl;
 				state->name_list[name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
-				state->name_list[name]->name = name;
 			}
+			state->name_list[name]->name = name;
 			state->name_list[name]->is_term = false;
 			state->name_list[name]->functional = true;
 			/* Add elements in RHS to the name list 
@@ -186,18 +188,21 @@ class GeneralConfigParser {
 				for (int k=0; k<rhs_entry->size(); k++)
 				{
 					std::string name2 = rhs_entry->get(k)->name();
-					if (state->name_list.count(name2) == 0)
+					std::string real_name2 = name2;
+					if (name2[0] == '$')
+						real_name2 = name2.substr(1, name2.length()-1);
+					if (state->name_list.count(real_name2) == 0)
 					{
-						state->name_list[name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
-						state->name_list[name2]->name = name2;
+						cout<<"new name: "<<real_name2<<endl;
+						state->name_list[real_name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+						state->name_list[real_name2]->name = real_name2;
 					}
 					if (name2[0] == '$')
 					{
-						state->name_list[name2]->functional = false;
-						state->name_list[name2]->name = name2.substr(1, name2.length()-1);
+						state->name_list[real_name2]->functional = false;
 					}
 					else
-						state->name_list[name2]->functional = true;
+						state->name_list[real_name2]->functional = true;
 				}
 			}
 		}
@@ -205,6 +210,7 @@ class GeneralConfigParser {
 
 	shared_ptr<SyntaxTreeTemplate> parse_template_recursive(string code, shared_ptr<int> cursor) {
 		shared_ptr<Token> t = tokenize_next(code, cursor);
+		cout<<t->variable<<" | "<<t->name<<endl;
 		if (t->variable || t->lhs->is_term)
 		{
 			auto root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->lhs));
@@ -241,17 +247,22 @@ class GeneralConfigParser {
 						for (int j=0; j<subexp_full.size(); j++)
 						{
 							auto candidate = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(subexp_full[j]->root->get_type());
-							if (candidate->functional)
+							if (candidate->is_functional())
 								subexp.push_back(subexp_full[j]);
 						}
 						temp->subtree = subexp;
-						root->set_option(i);
+						/*
+						cout<<"name: "<<temp->root->get_type()->name<<endl;
+						cout<<"subtree size"<<temp->subtree.size()<<endl;
+						cout<<"full subtree size"<<subexp_full.size()<<endl;
+						*/
+						temp->root->set_option(i);
 						return temp;
 					}
 				}
 			}
 		}
-		throw "Unable to parse template. Invalid program.\n";
+		throw string("Unable to parse template. Invalid program.\n");
 		return nullptr;
 	}
 
@@ -283,7 +294,7 @@ class GeneralConfigParser {
 					temp->all_example = false;
 					break;
 				default:
-					throw "Condition format incorrect.\n";
+					throw string("Condition format incorrect.\n");
 			}
 			switch (condition[1]) {
 				case 'A':
@@ -293,7 +304,7 @@ class GeneralConfigParser {
 					temp->all_program = false;
 					break;
 				default:
-					throw "Condition format incorrect.\n";
+					throw string("Condition format incorrect.\n");
 			}
 			switch (condition[2]) {
 				case 'A':
@@ -303,10 +314,14 @@ class GeneralConfigParser {
 					temp->accept = false;
 					break;
 				default:
-					throw "Condition format incorrect.\n";
+					throw string("Condition format incorrect.\n");
 			}
 
 			plan->cnd.push_back(temp);
+			cout<<"CTemplate: "<< endl<<temp->temp->to_string()<<endl;
+			for (int i=0; i<temp->checklist.size(); i++)
+				cout<<temp->checklist[i]->to_string()<<" | ";
+			cout<<endl;
 		}
 
 		/* parse unconditional */
@@ -318,6 +333,8 @@ class GeneralConfigParser {
 			temp->temp_dst = parse_template(temp_json->value()->name());
 
 			plan->ucnd.push_back(temp);
+			cout<<"UTemplate: " <<endl<<temp->temp_src->to_string()<<endl;
+			cout<<temp->temp_dst->to_string()<<endl;
 		}
 
 		return plan;
@@ -350,11 +367,17 @@ class GeneralConfigParser {
 			{
 				std::shared_ptr<GJson> rhs_json = mutations->get(j);
 				std::shared_ptr<GeneralSyntaxRightHandSide> rhs(new GeneralSyntaxRightHandSide());
-				for (int k=0; k<rhs->size(); k++)
+				for (int k=0; k<rhs_json->size(); k++)
 				{
-					std::shared_ptr<GeneralSyntaxLeftHandSide> sub_lhs = state->name_list[rhs_json->get(k)->name()];
+					string name = rhs_json->get(k)->name();
+					if (name[0] == '$')
+						name = name.substr(1, name.length()-1);
+//					cout<<lhs->name<<"-->"<<name<<endl;
+					std::shared_ptr<GeneralSyntaxLeftHandSide> sub_lhs = state->name_list[name];
 					if (sub_lhs->is_functional())
+					{
 						rhs->subexp.push_back(sub_lhs);
+					}
 					rhs->subexp_full.push_back(sub_lhs);
 				}
 				lhs->option.push_back(rhs);
@@ -375,7 +398,8 @@ class GeneralConfigParser {
 		scan_names(json);
 		parse_grammar(json);
 		parse_abstract_program(json);
-		parse_redundancy_plan(json);
+		rp = parse_redundancy_plan(json);
+		root = state->name_list[SYNTAX_ROOT_NAME];
 	}
 };
 
@@ -392,28 +416,28 @@ class GeneralSyntaxTree : public IESyntaxTree {
 		{
 			if (root->get_type()->is_term)
 			{
-				if (depth>1)
-					complexity = -100.0;
+				complexity = -100.0;
 			}
 			else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 			{
-	//			complexity = root->get_type()->option.size();
-				if (depth>1)
-					complexity = 100.0;
+				complexity = 200.0;
 			}
 			else
 			{
 				complexity = 0;
 				for (int i=0; i<subtree.size(); i++)
 					complexity += subtree[i]->get_complexity();
+					/*
 				if (subtree.size() > 2)
 					complexity -= 200;
 	//				complexity -= (subtree.size()) * 200;
 				else
-					complexity += (subtree.size()-1) * 100.0;
+					*/
+					complexity += (subtree.size()-1) * 150.0;
+//				complexity -= 100.0;
 			}
 			if (depth == 0)
-				complexity += GeneralProgram::interpreter->extra_complexity(to_code().pos);
+				complexity += GeneralProgram::interpreter->extra_complexity(to_code());
 		}
 		if (complexity == 0)
 			complexity = 0.01;
@@ -441,13 +465,13 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			for (int i=0; i<rhs->subexp_full.size(); i++)	{
 				if (rhs->subexp_full[i]->is_functional()) {
 					auto sub = (std::static_pointer_cast<GeneralSyntaxTree>(subtree[j])->to_code());
-					pos = pos + " " + sub.pos;
-					neg = neg + " " + sub.neg;
+					pos = pos + sub.pos;
+					neg = neg + sub.neg;
 					j++;
 				}
 				else {
-					pos = pos + " " + (rhs->subexp_full[i]->name);
-					neg = neg + " " + (rhs->subexp_full[i]->name);
+					pos = pos + (rhs->subexp_full[i]->name);
+					neg = neg + (rhs->subexp_full[i]->name);
 				}
 			}
 		}

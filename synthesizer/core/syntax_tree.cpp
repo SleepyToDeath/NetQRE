@@ -4,9 +4,14 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+using std::string;
 
 bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
+}
+
+size_t HashSyntaxTree::operator()(const shared_ptr<SyntaxTree> a) const {
+	return a->hash();
 }
 
 bool CmpSyntaxTree::operator ()(const shared_ptr<SyntaxTree> a, const shared_ptr<SyntaxTree> b) const {
@@ -94,25 +99,25 @@ double SyntaxTree::get_complexity() {
 	{
 		if (root->get_type()->is_term)
 		{
-			if (depth>1)
-				complexity = -100.0;
+			complexity = -100.0;
 		}
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
 //			complexity = root->get_type()->option.size();
-			if (depth>1)
-				complexity = 100.0;
+			complexity = 300.0;
 		}
 		else
 		{
 			complexity = 0;
 			for (int i=0; i<subtree.size(); i++)
 				complexity += subtree[i]->get_complexity();
+				/*
 			if (subtree.size() > 2)
 				complexity -= 200;
 //				complexity -= (subtree.size()) * 200;
 			else
-				complexity += (subtree.size()-1) * 100.0;
+				*/
+			complexity -= (subtree.size()) * 100.0;
 		}
 	}
 	if (complexity == 0)
@@ -189,6 +194,17 @@ bool SyntaxTree::real_search_and_replace(
 	complexity = 0;
 	hash_value = 0;
 	complete = UNKNOWN;
+	bool matching_flag = false;
+
+	{
+		/* in either case, try subtrees */
+		for (int i=0; i<subtree.size(); i++)
+			if (subtree[i]->real_search_and_replace(temp_src, temp_dst))
+//				return true;
+				matching_flag = true;
+	}
+
+
 	if (contain_prefix(temp_src))
 	{
 		/* match, start to replace */
@@ -200,16 +216,10 @@ bool SyntaxTree::real_search_and_replace(
 		complexity = 0;
 		hash_value = 0;
 		complete = UNKNOWN;
-		return true;
+		matching_flag = true;
 	}
-	else
-	{
-		/* mismatch, try subtrees */
-		for (int i=0; i<subtree.size(); i++)
-			if (subtree[i]->real_search_and_replace(temp_src, temp_dst))
-				return true;
-		return false;
-	}
+	
+	return matching_flag;
 }
 
 void SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp) {
@@ -221,6 +231,24 @@ void SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<Synta
 	}
 }
 
+std::string SyntaxTreeTemplate::to_string() {
+	std::string s;
+//	cout<<root->get_type()->name<<"--> subtree size: "<<subtree.size()<<endl;
+	if (root->get_type()->is_term) 
+		s = root->get_type()->name;
+	else if (root->get_option() == SyntaxLeftHandSide::NoOption)
+		s = root->get_type()->name + "@" + var_name;
+	else
+	{
+		auto rhs = (root->get_type()->option[root->get_option()]);
+		s = root->get_type()->name;
+		for (int i=0; i<rhs->subexp.size(); i++)	{
+			s = s + (std::static_pointer_cast<SyntaxTreeTemplate>(subtree[i])->to_string());
+		}
+	}
+	return s;
+}
+
 SyntaxTreeTemplate::SyntaxTreeTemplate(shared_ptr<SyntaxTreeNode> root):SyntaxTree(root, 0) {
 }
 
@@ -230,7 +258,7 @@ bool SyntaxTreeTemplate::is_variable() {
 
 shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap> vars, int _depth) {
 	if (is_variable())
-		return vars->map[var_name];
+		return factory->get_new(vars->map[var_name]);
 	auto new_root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(root));
 	auto new_tree = factory->get_new(new_root, _depth);
 	for (int i=0; i<subtree.size(); i++)
@@ -239,6 +267,7 @@ shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap
 }
 
 std::string SyntaxTree::to_string() {
+	throw string("SyntaxTree::to_string This function shouldn't be called\n");
 	std::string s;
 	if (root->get_type()->is_term) 
 		s = root->get_type()->name;
@@ -309,11 +338,4 @@ int SyntaxTreeNode::get_option() {
 	return option;
 }
 
-int SyntaxLeftHandSide::size() {
-	return option.size();
-}
-
-int SyntaxRightHandSide::size() {
-	return subexp.size();
-}
 

@@ -24,19 +24,27 @@ class RegexAST {
 	char name;
 	vector<shared_ptr<RegexAST> > subtree;
 
+	string to_string() {
+		string s = "0";
+		s[0] = name;
+		for (int i=0; i<subtree.size(); i++)
+			s += subtree[i]->to_string();
+		return s;
+	}
+
 	double get_complexity()
 	{
 		double sum = 0.0;
 		for (int i=0; i<subtree.size(); i++)
 			sum += subtree[i]->get_complexity();
 		if (type == UNION)
-			return sum + 300.0;
-		else if (type == CONCAT)
-			return sum + 100.0;
-		else if (type == STAR)
-			return sum + 200.0;
-		else if (type == CHAR && name != '?')
-			return sum - 0.0;
+			return (sum + 200) * 1.5;
+//		else if (type == CONCAT)
+//			return sum + 100.0;
+		if (type == STAR)
+			return (sum + 200) * 1.2;
+//		else if (type == CHAR && name != '?')
+//			return sum - 0.0;
 		return sum;
 	}
 
@@ -88,6 +96,10 @@ class RegexAST {
 					nfa->states.insert(ed);
 					nfa->start_states.insert(op);
 					nfa->accept_states.insert(ed);
+				}
+				else if (name == '#')
+				{
+					/* do nothing, empty NFA accepting nothing */
 				}
 				return nfa;
 			}
@@ -147,7 +159,7 @@ class RegexAST {
 					e_trans.insert(root->start_states.begin(), root->start_states.end());
 					(*i)->transitions[Epsilon] = e_trans;
 				}
-				root->accept_states.erase(zero); // disable zero matching
+//				root->accept_states.erase(zero); // disable zero matching
 				root->start_states.clear();
 				root->start_states.insert(zero);
 
@@ -223,22 +235,23 @@ class RegexInterpreter : public GeneralInterpreter
 {
 	public:
 
-	virtual double extra_complexity(std::string code) {
+	virtual double extra_complexity(AbstractCode code) {
 		auto cursor = shared_ptr<int>(new int);
 		(*cursor) = 0;
-		auto ast = parse(code, cursor);
+		auto ast = parse(code.neg, cursor);
 		return ast->get_complexity();
 	}
 
 	bool accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input, IEConfig cfg) {
 
-//		cout<<"interpreting code: "<<code<<" is complete? "<<complete<<endl;
-		
 		/* parse code & build NFA */
 		auto cursor = shared_ptr<int>(new int);
 		(*cursor) = 0;
 		auto ast_pos = parse(code.pos, cursor);
+//		cout<<"[Pos Ast]"<<ast_pos->to_string()<<endl;
+		(*cursor) = 0;
 		auto ast_neg = parse(code.neg, cursor);
+//		cout<<"[Neg Ast]"<<ast_neg->to_string()<<endl;
 		auto nfa_pos = ast_pos->to_nfa();
 		auto nfa_neg = ast_neg->to_nfa();
 
@@ -254,11 +267,13 @@ class RegexInterpreter : public GeneralInterpreter
 				bool acc = nfa_pos->accept(example, dummy) xor (!cfg.pos_accept);
 				if (!acc && cfg.pos_all)
 				{
+//					cout<<"[Target Example] "<<example<<endl;
 					pos_flag = false;
 					break;
 				}
 				if (acc && !cfg.pos_all)
 				{
+//					cout<<"[Target Example] "<<example<<endl;
 					pos_flag = true;
 					break;
 				}
@@ -268,7 +283,10 @@ class RegexInterpreter : public GeneralInterpreter
 			pos_flag = true;
 
 		if (!pos_flag)
+		{
+//			cout<<"Rej pos!\n";
 			return false;
+		}
 
 		bool neg_flag = cfg.neg_all;
 
@@ -282,11 +300,13 @@ class RegexInterpreter : public GeneralInterpreter
 				bool acc = nfa_neg->accept(example, dummy) xor (!cfg.neg_accept);
 				if (!acc && cfg.neg_all)
 				{
+//					cout<<"[Target Example] "<<example<<endl;
 					neg_flag = false;
 					break;
 				}
 				if (acc && !cfg.neg_all)
 				{
+//					cout<<"[Target Example] "<<example<<endl;
 					neg_flag = true;
 					break;
 				}
@@ -295,8 +315,14 @@ class RegexInterpreter : public GeneralInterpreter
 		else
 			neg_flag = true;
 		
+		if (!neg_flag)
+		{
+//			cout<<"Rej neg!\n";
+			return false;
+		}
+
 //		cout<<"Accept!\n";
-		return pos_flag && neg_flag;
+		return true;
 	}
 
 	/* parser */
@@ -336,7 +362,7 @@ class RegexInterpreter : public GeneralInterpreter
 				clause->subtree.push_back(parse(code, cursor));
 				(*cursor) += 3; /* ),( */
 				clause->subtree.push_back(parse(code, cursor));
-				(*cursor) ++; /* ) */
+				(*cursor) += 2; /* ) */
 				root->subtree.push_back(clause);
 			}
 			else

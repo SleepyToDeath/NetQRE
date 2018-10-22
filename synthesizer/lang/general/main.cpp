@@ -46,7 +46,14 @@ int main(int argc, char *argv[]) {
 		string_g.append(tmp);
 	}
 	shared_ptr<GJson> json_g = shared_ptr<GJson>(new GJson(string_g));
-	parser->parse_config(json_g);
+	try {
+		parser->parse_config(json_g);
+	}
+	catch (string e)
+	{
+		cout<<e<<endl;
+		exit(1);
+	}
 	fin_g.close();
 
 	/* input examples */

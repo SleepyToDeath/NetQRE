@@ -85,19 +85,19 @@ bool accept_passwd(string passwd)
 	int threshold = 8;
 
 	for (char c='A'; c<='Z'; c++)
-		if (string::npos != passwd.substr(1, passwd.length()-2).find(c))
+		if (string::npos != passwd.find(c))
 		{
 			flag_C = true;
 			break;
 		}
 	for (char c='a'; c<='z'; c++)
-		if (string::npos != passwd.substr(1, passwd.length()-2).find(c))
+		if (string::npos != passwd.find(c))
 		{
 			flag_c = true;
 			break;
 		}
 	for (char c='0'; c<='9'; c++)
-		if (string::npos != passwd.substr(1, passwd.length()-2).find(c))
+		if (string::npos != passwd.find(c))
 		{
 			flag_d = true;
 			break;
@@ -108,7 +108,7 @@ bool accept_passwd(string passwd)
 
 void passwd()
 {
-	int num = 10;
+	int num = 20;
 	int lower = 5;
 	int upper = 15;
 

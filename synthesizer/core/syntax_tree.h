@@ -85,6 +85,11 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 
 bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b);
 
+class HashSyntaxTree {
+	public:
+	size_t operator ()(const shared_ptr<SyntaxTree> a) const;
+};
+
 class CmpSyntaxTree {
 	public:
 	bool operator ()(const shared_ptr<SyntaxTree> a, const shared_ptr<SyntaxTree> b) const;
@@ -110,6 +115,7 @@ class SyntaxTreeTemplate: public SyntaxTree {
 	public:
 	SyntaxTreeTemplate(shared_ptr<SyntaxTreeNode> root);
 	std::string var_name;
+	std::string to_string();
 	bool is_variable(); /* non-terminal and no option in a template means a variable */
 	shared_ptr<SyntaxTree> to_syntax_tree(shared_ptr<VariableMap> vars, int _depth);
 };
@@ -117,7 +123,6 @@ class SyntaxTreeTemplate: public SyntaxTree {
 class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide> {
 	public:
 	int id;
-	int size();
 	std::string name;
 	std::vector<std::shared_ptr<SyntaxRightHandSide> > option;
 	bool is_term;
@@ -128,7 +133,6 @@ class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide
 class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSide> {
 	public:
 	int id;
-	int size();
 	std::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
 	std::vector<std::shared_ptr<SyntaxLeftHandSide> > subexp;
