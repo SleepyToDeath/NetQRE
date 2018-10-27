@@ -118,6 +118,7 @@ double SyntaxTree::get_complexity() {
 			else
 				*/
 			complexity -= (subtree.size()) * 100.0;
+			complexity -= 50.0;
 		}
 	}
 	if (complexity == 0)

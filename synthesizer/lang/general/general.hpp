@@ -18,6 +18,12 @@ const std::string SYNTAX_ROOT_NAME = "program";
 class GeneralExample;
 class GeneralSyntaxRightHandSide;
 
+class GeneralMatchingResult {
+	public:
+	bool accept;
+	double utility_rate;
+};
+
 class AbstractCode {
 	public:
 	AbstractCode(std::string _pos, std::string _neg):pos(_pos),neg(_neg){}
@@ -27,7 +33,7 @@ class AbstractCode {
 
 class GeneralInterpreter {
 	public:
-	virtual bool accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
+	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 };
 
@@ -47,13 +53,16 @@ class GeneralProgram: public IEProgram {
 	}
 
 	bool accept( shared_ptr<IEExample> input, IEConfig cfg = DEFAULT_IE_CONFIG) {
-		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
+		auto r = interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
+		utility_rate = r.utility_rate;
+		return r.accept;
 	}
 
 	/* set this to the interpreter of your specific language */
 	static std::unique_ptr<GeneralInterpreter> interpreter;
 
 	bool complete;
+	double utility_rate = 0.0000000000001;
 	AbstractCode source_code;
 };
 
@@ -216,6 +225,7 @@ class GeneralConfigParser {
 			auto root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->lhs));
 			auto temp = shared_ptr<SyntaxTreeTemplate>(new SyntaxTreeTemplate(root));
 			temp->var_name = t->name;
+			cout<<"<< "<<t->variable<<" | "<<t->name<<endl;
 			return temp;
 		}
 		else
@@ -257,11 +267,13 @@ class GeneralConfigParser {
 						cout<<"full subtree size"<<subexp_full.size()<<endl;
 						*/
 						temp->root->set_option(i);
+						cout<<"<< "<<t->variable<<" | "<<t->name<<endl;
 						return temp;
 					}
 				}
 			}
 		}
+		cout<<"<< "<<t->variable<<" | "<<t->name<<endl;
 		throw string("Unable to parse template. Invalid program.\n");
 		return nullptr;
 	}
@@ -288,20 +300,20 @@ class GeneralConfigParser {
 			string condition = temp_json->get(2)->value()->name();
 			switch (condition[0]) {
 				case 'A':
-					temp->all_example = true;
+					temp->all_program = true;
 					break;
 				case 'E':
-					temp->all_example = false;
+					temp->all_program = false;
 					break;
 				default:
 					throw string("Condition format incorrect.\n");
 			}
 			switch (condition[1]) {
 				case 'A':
-					temp->all_program = true;
+					temp->all_example = true;
 					break;
 				case 'E':
-					temp->all_program = false;
+					temp->all_example = false;
 					break;
 				default:
 					throw string("Condition format incorrect.\n");
@@ -405,10 +417,15 @@ class GeneralConfigParser {
 
 class GeneralSyntaxTree : public IESyntaxTree {
 	public:
+
+	shared_ptr<GeneralProgram> program = nullptr;
+
 	GeneralSyntaxTree(shared_ptr<SyntaxTree> src):	IESyntaxTree(src) {}
 	GeneralSyntaxTree(shared_ptr<SyntaxTreeNode> root, int depth): IESyntaxTree(root, depth) {}
 	shared_ptr<IEProgram> to_program() {
-		return shared_ptr<IEProgram>(new GeneralProgram(to_code(), is_complete()));
+		if (program == nullptr)
+			program = shared_ptr<GeneralProgram>(new GeneralProgram(to_code(), is_complete()));
+		return program;
 	}
 
 	virtual double get_complexity() {
@@ -434,14 +451,19 @@ class GeneralSyntaxTree : public IESyntaxTree {
 				else
 					*/
 					complexity += (subtree.size()-1) * 150.0;
-//				complexity -= 100.0;
+				complexity -= 20.0;
 			}
 			if (depth == 0)
+			{
 				complexity += GeneralProgram::interpreter->extra_complexity(to_code());
+			}
 		}
 		if (complexity == 0)
 			complexity = 0.01;
-		return complexity;
+		if (program != nullptr)
+			return complexity/program->utility_rate;
+		else
+			return complexity;
 	}
 
 

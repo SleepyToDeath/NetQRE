@@ -1,3 +1,2 @@
-Performance bug
-	- unable to produce any meaningful union
-
+Add redunduncy style:
+	- identical complete subexp

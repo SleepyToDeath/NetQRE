@@ -70,7 +70,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 
 	protected:
 
-	double complexity;
+	double complexity = 0;
 	int depth; // depth of the root
 	size_t hash_value = 0;
 	SyntaxTreeCompleteness complete;

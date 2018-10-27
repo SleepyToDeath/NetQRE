@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 	int search_depth;
 	int batch_size;
 	int answer_count;
+	int explore_rate;
 
 	/* input grammar */
 	string string_g;
@@ -78,11 +79,12 @@ int main(int argc, char *argv[]) {
 	/* input config */
 	fin_c>>search_depth;
 	fin_c>>batch_size;
+	fin_c>>explore_rate;
 	fin_c>>answer_count;
 
 	/* do searching */
 	vector<shared_ptr<IESyntaxTree> > answer;
-	SearchGraph graph(search_depth, batch_size, answer_count, parser->root, parser->rp);
+	SearchGraph graph(search_depth, batch_size, explore_rate, answer_count, parser->root, parser->rp);
 	shared_ptr<IEExample> examples_up = examples;
 	answer = graph.search_top_level_v2(examples_up);
 	if (answer.size() == 0)

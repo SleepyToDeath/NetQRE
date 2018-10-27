@@ -6,34 +6,22 @@ shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect
 	/* check conditional */
 	for (int i=0; i<cnd.size(); i++)
 	{
-//		cout<<"[Begin matching]"<<suspect->to_string()<<endl;
 		/* prepare */
 		auto r = cnd[i];
-//		cout<<"Template src:"<<r->temp->to_string()<<endl;
 		vector<shared_ptr<IESyntaxTree> > checklist;
 		bool match_flag = true;
 		for (int j=0; j<r->checklist.size(); j++)
 		{
-//			cout<<"Template dst:"<<r->checklist[j]->to_string()<<endl;
 			auto entry = suspect->search_and_replace(r->temp, r->checklist[j]);
 			if (entry == nullptr)
 			{
 				match_flag = false;
-//				cout<<"[No matching]#"<<i<<endl;
 				break;
 			}
 			checklist.push_back(std::static_pointer_cast<IESyntaxTree>(entry));
 		}
 		if (!match_flag)
 			continue;
-			/*
-		cout<<"[Matching]#"<<i<<endl;
-		{
-			for (int i=0; i<checklist.size(); i++)
-				cout<<checklist[i]->to_string()<<" | ";
-			cout<<endl;
-		}
-		*/
 
 		/* set all/exist program flag */
 		bool program_flag;
@@ -52,6 +40,7 @@ shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect
 		/* check */
 		for (int j=0; j<checklist.size(); j++)
 		{
+//			cout<<"[Checking Redundancy] "<<checklist[j]->to_string()<<endl;
 			bool example_flag = checklist[j]->to_program()->accept(examples, cfg);
 			if (!example_flag && r->all_program)
 			{
@@ -68,19 +57,28 @@ shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect
 		/* summary check */
 		if (program_flag)
 		{
-//			cout<<"[Rejected]\n\n";
 			return nullptr;
 		}
-//		cout<<"[Accepted]\n\n";
 	}
 
 	/* check unconditional */
-	for (int i=0; i<ucnd.size(); i++)
+	while (true)
 	{
-		auto r = ucnd[i];
-		auto maybe = suspect->search_and_replace(r->temp_src, r->temp_dst);
-		if (maybe != nullptr)
+		shared_ptr<SyntaxTree> maybe = suspect;
+		for (int i=0; i<ucnd.size(); i++)
+		{
+			auto r = ucnd[i];
+			auto tmp = maybe->search_and_replace(r->temp_src, r->temp_dst);
+			if (tmp != nullptr)
+			{
+				maybe = tmp;
+				break;
+			}
+		}
+		if (maybe != suspect)
 			return std::static_pointer_cast<IESyntaxTree>(maybe);
+		else
+			break;
 	}
 
 	/* no redundancy */

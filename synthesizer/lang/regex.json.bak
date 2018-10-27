@@ -1,0 +1,69 @@
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "no_templates" ]
+		] },
+		{ "no_templates" : [
+				[ "concat" ],
+				[ "union" ],
+				[ "star" ],
+				[ "char" ]
+		] },
+		{ "union" : [
+			[ "$||((", "union_clause", "$),(", "no_templates", "$)" ]
+		] },
+		{ "union_clause" : [
+			[ "concat" ],
+			[ "star" ],
+			[ "char" ]
+		] },
+		{ "concat" : [
+				[ "concat_clause","$ ", "no_templates" ]
+		] },
+		{ "concat_clause" : [
+			[ "union" ],
+			[ "char" ],
+			[ "star" ]
+		] },
+		{ "star" : [
+			[ "$*( ", "star_clause", "$ )" ]
+		] },
+		{ "star_clause" : [
+			[ "union" ],
+			[ "concat" ],
+			[ "char" ]
+		] },
+		{ "char" : [
+			["decimal"],
+			["lowercase"],
+			["uppercase"],
+			["?"]
+		] },
+		{ "decimal" : [
+			[ "0" ], [ "1" ], [ "2" ], [ "3" ], [ "4" ], [ "5" ], [ "6" ], [ "7" ], [ "8" ], [ "9" ], [ "\\d" ]
+		] },
+		{ "lowercase" : [
+			[ "a" ], [ "b" ], [ "c" ], [ "d" ], [ "e" ], [ "f" ], [ "g" ], [ "h" ], [ "i" ], [ "j" ], [ "k" ], [ "l" ], [ "m" ], [ "n" ], [ "o" ], [ "p" ], [ "q" ], [ "r" ], [ "s" ], [ "t" ], [ "u" ], [ "v" ], [ "w" ], [ "x" ], [ "y" ], [ "z" ], [ "\\c" ]
+		] },
+		{ "uppercase" : [
+			[ "A" ], [ "B" ], [ "C" ], [ "D" ], [ "E" ], [ "F" ], [ "G" ], [ "H" ], [ "I" ], [ "J" ], [ "K" ], [ "L" ], [ "M" ], [ "N" ], [ "O" ], [ "P" ], [ "Q" ], [ "R" ], [ "S" ], [ "T" ], [ "U" ], [ "V" ], [ "W" ], [ "X" ], [ "Y" ], [ "Z" ], [ "\\C" ]
+		] }
+	] },
+
+	{ "execution" : [
+		{ "program" : "*( ? )" },
+		{ "no_templates" : "*( ? )" },
+		{ "concat" : "*( ? )" },
+		{ "concat_clause" : "*( ? )" },
+		{ "union" : "*( ? )"},
+		{ "union_clause" : "*( ? )"},
+		{ "star" : "*( ? )" },
+		{ "star_clause" : "*( ? )" },
+		{ "char" : "?" },
+		{ "decimal" : "\\d" },
+		{ "lowercase" : "\\c" },
+		{ "uppercase" : "\\C" }
+	] }
+]
+
+

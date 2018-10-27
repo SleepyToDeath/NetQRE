@@ -11,6 +11,7 @@ class SearchGraph {
 	/* incomplete execution version */
 	SearchGraph(int depth_threshold, 
 				int batch_size, 
+				int explore_rate, 
 				int answer_count, 
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp );
@@ -19,6 +20,7 @@ class SearchGraph {
 	private:
 	int depth_threshold;
 	int batch_size;
+	int explore_rate;
 	int answer_count;
 	shared_ptr<SyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;

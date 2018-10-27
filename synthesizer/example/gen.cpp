@@ -6,8 +6,7 @@ using namespace std;
 
 void xlarge3()
 {
-	cout<<10<<endl;
-	cout<<5<<endl;
+	cout<<"5 1"<<endl;
 	for (int k=0; k<5; k++)
 	{
 		for (int i=0; i<4; i++)
@@ -34,7 +33,6 @@ void xlarge3()
 		cout<<endl;
 	}
 //	cout<<0<<endl;
-	cout<<1<<endl;
 	for (int i=0; i<4; i++)
 	{
 		int l = experimental::randint(50,100);
@@ -109,8 +107,8 @@ bool accept_passwd(string passwd)
 void passwd()
 {
 	int num = 20;
-	int lower = 5;
-	int upper = 15;
+	int lower = 3;
+	int upper = 30;
 
 	vector<char> char_set;
 	for (char c='a'; c<='z'; c++)
@@ -145,8 +143,30 @@ void passwd()
 		cout<<neg[i]<<endl;
 }
 
+void int_threshold() {
+	int threshold = 256;
+	vector<int> pos;
+	vector<int> neg;
+	int lower = 1;
+	int upper = 1000;
+	for (int i=0; i<20; i++)
+	{
+		int n = experimental::randint(lower,upper);
+		if (n<threshold)
+			pos.push_back(n);
+		else
+			neg.push_back(n);
+	}
+	cout<<pos.size()<<" "<<neg.size()<<endl;
+	for (int i=0; i<pos.size(); i++)
+		cout<<pos[i]<<endl;
+	for (int i=0; i<neg.size(); i++)
+		cout<<neg[i]<<endl;
+}
+
 int main() {
 //	random_small();
 //	xlarge3();
 	passwd();
+//	int_threshold();
 }

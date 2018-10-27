@@ -39,6 +39,10 @@ class NFASkip: public NFA {
 
 	bool accept_fast(std::string input, std::vector<bool> can_skip) {
 
+		example_count ++;
+
+		auto visited = shared_ptr<BitSet>(new BitSet(states.size()));
+
 		prepare_runtime();
 
 		runtime_active_states = find_neighbours_fast(runtime_start_states);
@@ -51,11 +55,20 @@ class NFASkip: public NFA {
 			{
 				runtime_active_states->merge(backup_active_states);
 			}
+
+			visited->merge(runtime_active_states);
 		}
+
+		double this_round_rate= ((double)(visited->count())) / ((double)(states.size()));
+
+		utility_rate = (utility_rate * (double)(example_count-1) + this_round_rate) / (double)example_count;
 
 		return runtime_active_states->intersect(runtime_accept_states);
 
 	}
+
+	double utility_rate = 1.0;
+	int example_count = 0;
 
 };
 

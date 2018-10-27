@@ -62,6 +62,15 @@ class BitSet {
 		return true;
 	}
 
+	/* number of active states */
+	unsigned long count() {
+		unsigned long c = 0;
+		for (int i=0; i<size; i++)
+			if (get(i))
+				c++;
+		return c;
+	}
+
 	static const unsigned long int_size = sizeof(int)*8;
 
 	unsigned long size;

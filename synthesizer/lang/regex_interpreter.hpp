@@ -12,6 +12,8 @@ using std::cin;
 using std::cout;
 using std::endl;
 
+//#define VERBOSE_MODE
+
 enum RegexWordType {
 	CONCAT, STAR, CHAR, RE, ESC, UNION
 };
@@ -38,13 +40,13 @@ class RegexAST {
 		for (int i=0; i<subtree.size(); i++)
 			sum += subtree[i]->get_complexity();
 		if (type == UNION)
-			return (sum + 200) * 1.5;
+			return (sum + 200) * 1.3;
 //		else if (type == CONCAT)
 //			return sum + 100.0;
 		if (type == STAR)
 			return (sum + 200) * 1.2;
 //		else if (type == CHAR && name != '?')
-//			return sum - 0.0;
+//			return sum - 100;
 		return sum;
 	}
 
@@ -242,16 +244,24 @@ class RegexInterpreter : public GeneralInterpreter
 		return ast->get_complexity();
 	}
 
-	bool accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input, IEConfig cfg) {
+
+	GeneralMatchingResult accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input, IEConfig cfg) {
 
 		/* parse code & build NFA */
+		#ifdef VERBOSE_MODE 
+		cout<<"All: " <<cfg.pos_all<<" | "<<"Acc: "<<cfg.pos_accept<<endl;
+		#endif
 		auto cursor = shared_ptr<int>(new int);
 		(*cursor) = 0;
 		auto ast_pos = parse(code.pos, cursor);
-//		cout<<"[Pos Ast]"<<ast_pos->to_string()<<endl;
+		#ifdef VERBOSE_MODE 
+		cout<<"[Pos Ast]"<<ast_pos->to_string()<<endl;
+		#endif
 		(*cursor) = 0;
 		auto ast_neg = parse(code.neg, cursor);
-//		cout<<"[Neg Ast]"<<ast_neg->to_string()<<endl;
+		#ifdef VERBOSE_MODE 
+		cout<<"[Neg Ast]"<<ast_neg->to_string()<<endl;
+		#endif
 		auto nfa_pos = ast_pos->to_nfa();
 		auto nfa_neg = ast_neg->to_nfa();
 
@@ -264,16 +274,20 @@ class RegexInterpreter : public GeneralInterpreter
 			{
 				string example = input->positive[i];
 				vector<bool> dummy(example.size(), false);
-				bool acc = nfa_pos->accept(example, dummy) xor (!cfg.pos_accept);
+				bool acc = ((nfa_pos->accept(example, dummy)) xor (!cfg.pos_accept));
 				if (!acc && cfg.pos_all)
 				{
-//					cout<<"[Target Example] "<<example<<endl;
+					#ifdef VERBOSE_MODE 
+					cout<<"[Target Example] "<<example<<endl;
+					#endif
 					pos_flag = false;
 					break;
 				}
 				if (acc && !cfg.pos_all)
 				{
-//					cout<<"[Target Example] "<<example<<endl;
+					#ifdef VERBOSE_MODE 
+					cout<<"[Target Example] "<<example<<endl;
+					#endif
 					pos_flag = true;
 					break;
 				}
@@ -284,8 +298,12 @@ class RegexInterpreter : public GeneralInterpreter
 
 		if (!pos_flag)
 		{
-//			cout<<"Rej pos!\n";
-			return false;
+			#ifdef VERBOSE_MODE 
+			cout<<"Rej pos!\n";
+			#endif
+			GeneralMatchingResult r;
+			r.accept = false;
+			return r;
 		}
 
 		bool neg_flag = cfg.neg_all;
@@ -297,16 +315,20 @@ class RegexInterpreter : public GeneralInterpreter
 			{
 				string example = input->negative[i];
 				vector<bool> dummy(example.size(), false);
-				bool acc = nfa_neg->accept(example, dummy) xor (!cfg.neg_accept);
+				bool acc = ((nfa_neg->accept(example, dummy)) xor (!cfg.neg_accept));
 				if (!acc && cfg.neg_all)
 				{
-//					cout<<"[Target Example] "<<example<<endl;
+					#ifdef VERBOSE_MODE 
+					cout<<"[Target Example] "<<example<<endl;
+					#endif
 					neg_flag = false;
 					break;
 				}
 				if (acc && !cfg.neg_all)
 				{
-//					cout<<"[Target Example] "<<example<<endl;
+					#ifdef VERBOSE_MODE 
+					cout<<"[Target Example] "<<example<<endl;
+					#endif
 					neg_flag = true;
 					break;
 				}
@@ -317,12 +339,23 @@ class RegexInterpreter : public GeneralInterpreter
 		
 		if (!neg_flag)
 		{
-//			cout<<"Rej neg!\n";
-			return false;
+			#ifdef VERBOSE_MODE 
+			cout<<"Rej neg!\n";
+			#endif
+			GeneralMatchingResult r;
+			r.accept = false;
+			return r;
 		}
 
-//		cout<<"Accept!\n";
-		return true;
+		#ifdef VERBOSE_MODE 
+		cout<<"Accept!\n";
+		#endif
+
+		GeneralMatchingResult r;
+		r.accept = true;
+		r.utility_rate = nfa_pos->utility_rate;
+
+		return r;
 	}
 
 	/* parser */
