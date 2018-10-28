@@ -5,6 +5,7 @@
 #include <cmath>
 #include <unordered_set>
 //#define VERBOSE_MODE
+#define USE_MULTITHREAD
 
 using std::endl;
 using std::cout;
@@ -56,10 +57,13 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 		visited.insert(s);
 		while (this_round.size()>0)
 		{
+			/* prepare this round */
 			std::vector<shared_ptr<IESyntaxTree> > candidate;
 			auto tmp = shared_ptr<SyntaxTree::Queue>(new SyntaxTree::Queue());
 			int counter = 0;
 			int done = -1;
+
+#ifndef USE_MULTITHREAD
 			/* start this round */
 			for (int i=0; i<this_round.size(); i++)
 			{
@@ -157,14 +161,116 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 					}
 				}
 
-
 				/* only explore batch_size new nodes each time */
 				done = i;
 				if (counter >= batch_size)
 					break;
 			}
+#else
+			/* start this round -- multithread version */
+			int i=0;
+			while (true)
+			{
+				/* check if already explored enough programs in this round */
+				/* if not, explore new programs */
+				if (counter < batch_size && i < this_round.size())
+				{
+					/* prepare exploration */
+					tmp->q.clear();
+					shared_ptr<IESyntaxTree> current = this_round[i];
 
-			/* gather all candidates in buffer in LRU order */
+					/* explore new programs */
+					if (current->multi_mutate(current, depth, tmp))
+					{
+						for (int j=0; j<tmp->q.size(); j++)
+						{
+							auto explored = std::static_pointer_cast<IESyntaxTree>(tmp->q[j]);
+							search_counter++;
+							if ((explored != nullptr) && (visited.count(explored) == 0))
+							{
+								visited.insert(explored);
+								/* send redundancy filtering tasks to workers */
+								thread_master->do_filter(explored, examples);
+							}
+						}
+					}
+
+					/* move forward */
+					done = i;
+					i++;
+				}
+
+				/* exhaust all finished tasks so far */
+				Mailbox msg = thread_master->find_finished_task();
+				while (msg.finished_task)
+				{
+					/* if it is redundancy filter task */
+					if (msg.type == FILTER)
+					{
+						auto simplified = msg.simplified;
+						auto explored = msg.candidate;
+						/* not redundant and not repeating */
+						if (simplified == explored)
+						{
+							/* send accept checking tasks to workers */
+							thread_master->do_accept(simplified, examples);
+							helper_counter++;
+						}
+						/* redundant but not repeating */
+						else if ((simplified != nullptr) && (visited.count(simplified) == 0))
+						{
+							/* send accept checking tasks to workers */
+							thread_master->do_accept(simplified, examples);
+							visited.insert(simplified);
+						}
+					}
+
+					/* if it is oracle checking task */
+					if (msg.type == ACCEPT)
+					{
+						auto candidate = msg.candidate;
+						/* if rejected */
+						if (!msg.accept)
+						{
+							/* drop */
+							total_drop += 1.0;
+							if (candidate->is_complete())
+								complete_drop += 1.0;
+							progress += candidate->weight;
+						}
+						/* if accepted */
+						else
+						{
+							/* append to this_round */
+							this_round.push_back(candidate);
+							counter++;
+
+							/* if answer found */
+							if (candidate->is_complete())
+							{
+								answer_counter ++;
+								std::cout<<"ANSWER FOUND: "<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
+								answer.push_back(candidate);
+								this_round.pop_back();
+								if (answer_counter == answer_count)
+								{
+									return answer;
+								}
+							}
+						}
+					}
+
+					/* try to find next finished task */
+					msg = thread_master->find_finished_task();
+				}
+
+				/* if enough programs explored and all tasks submitted  */
+				if (counter >= batch_size && thread_master->all_tasks_done())
+					break;
+			}
+#endif
+
+			/* gather all candidates */
 			for (int k=done+1; k<this_round.size(); k++)
 			{
 				buffer.push_back(this_round[k]);
@@ -177,16 +283,12 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				}
 			}
 	
+			/* sort by complexity */
 			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree_complexity);
 
+			/* print progress */
 			if (buffer.size()>0)
 			{
-				/*
-				for (int i=0; i<buffer.size(); i++)
-					cout<<buffer[i]->get_complexity()<<" | ";
-				cout<<endl;
-				*/
-				/* output progress */
 				std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
 				std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
 				std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
@@ -206,6 +308,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				std::cout<<std::endl<<endl;;
 			}
 
+			/* prepare next round */
 			this_round.clear();
 			if (buffer.size() <= batch_size/explore_rate)
 			{
@@ -219,7 +322,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 			{
 				for (int k=0; k<batch_size/explore_rate; k++)
 				{
-					/* randomly skip out of optimal */
+					/* randomly jump out of optimal */
 					/*
 					{
 						int l = std::experimental::randint(0,(int)buffer.size()-1);

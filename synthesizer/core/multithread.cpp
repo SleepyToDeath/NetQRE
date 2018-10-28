@@ -33,7 +33,7 @@ void MasterThread::do_filter(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEEx
 
 void MasterThread::do_accept(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEExample> examples) {
 	Mailbox msg;
-	msg.type = FILTER;
+	msg.type = ACCEPT;
 	msg.candidate = candidate;
 	msg.examples = examples;
 	do_task(msg);
@@ -60,14 +60,18 @@ Mailbox MasterThread::find_finished_task() {
 }
 
 bool MasterThread::all_tasks_done() {
-	return buzy_workers == 0;
+	task_lock.lock();
+	bool flag = buzy_workers == 0 && pending_tasks.empty() && finished_tasks.empty();
+	task_lock.unlock();
+	return flag;
 }
 
 MasterThread::~MasterThread() {
 
-	task_lock.lock();
 	if (!all_tasks_done())
 		throw string("[ERROR] There's unfinished task when exiting!\n");
+
+	task_lock.lock();
 	for (int i=0; i<population; i++)
 	{
 		Mailbox fire;

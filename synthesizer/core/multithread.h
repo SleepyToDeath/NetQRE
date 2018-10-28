@@ -1,3 +1,6 @@
+#ifndef MULTITHREAD_H
+#define MULTITHREAD_H
+
 #include "redundancy.h"
 #include "incomplete_execution.h"
 #include <mutex>
@@ -72,4 +75,4 @@ class WorkerThread : public std::enable_shared_from_this<WorkerThread> {
 	shared_ptr<MasterThread> master;
 };
 
-
+#endif
