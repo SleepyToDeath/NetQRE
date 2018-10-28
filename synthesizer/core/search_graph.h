@@ -13,6 +13,7 @@ class SearchGraph {
 				int batch_size, 
 				int explore_rate, 
 				int answer_count, 
+				int threads,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp );
 	std::vector<shared_ptr<IESyntaxTree> > search_top_level_v2(shared_ptr<IEExample> example);
@@ -22,6 +23,7 @@ class SearchGraph {
 	int batch_size;
 	int explore_rate;
 	int answer_count;
+	int threads;
 	shared_ptr<SyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
 

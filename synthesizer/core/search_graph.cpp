@@ -1,4 +1,5 @@
 #include "search_graph.h"
+#include "multithread.h"
 #include <experimental/random>
 #include <algorithm>
 #include <cmath>
@@ -12,6 +13,7 @@ SearchGraph::SearchGraph(int depth_threshold,
 				int batch_size, 
 				int explore_rate,
 				int answer_count, 
+				int threads,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp ) {
 	this->batch_size = batch_size;
@@ -19,6 +21,7 @@ SearchGraph::SearchGraph(int depth_threshold,
 	this->depth_threshold = depth_threshold;
 	this->starting_symbol = starting_symbol;
 	this->explore_rate = explore_rate;
+	this->threads = threads;
 	this->rp = rp;
 }
 
@@ -31,6 +34,11 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 	std::vector<shared_ptr<IESyntaxTree> > buffer;
 	std::vector<shared_ptr<IESyntaxTree> > answer;
 	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited;
+
+	MeansOfProduction mop;
+	mop.rp = rp;
+	auto thread_master = shared_ptr<MasterThread>(new MasterThread(threads, mop));
+	thread_master->hire_workers();
 
 	int answer_counter = 0;
 	int search_counter = 0;

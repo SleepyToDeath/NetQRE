@@ -34,10 +34,10 @@ SRC += lang/general/json11/json11.cpp
 SRC += lang/general/json11/json11.hpp
 
 regex-general-test:
-	g++ -o ./testbed/regex $(SRC) -O2 -std=c++11
+	g++ -o ./testbed/regex $(SRC) -O2 -std=c++11 -pthread
 
 regex-general-test-g:
-	g++ -o ./testbed/regex -g $(SRC) -std=c++11
+	g++ -o ./testbed/regex -g $(SRC) -std=c++11 -pthread
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config
