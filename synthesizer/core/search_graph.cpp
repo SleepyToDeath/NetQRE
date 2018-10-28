@@ -156,6 +156,8 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 						}
 					}
 				}
+
+
 				/* only explore batch_size new nodes each time */
 				done = i;
 				if (counter >= batch_size)

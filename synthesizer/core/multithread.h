@@ -18,7 +18,6 @@ class MeansOfProduction {
 class Mailbox {
 	public:
 	TaskType type;
-	bool pending_task;
 	shared_ptr<IESyntaxTree> candidate;
 	shared_ptr<IEExample> examples;
 
@@ -36,6 +35,7 @@ class MasterThread : public std::enable_shared_from_this<MasterThread> {
 
 	void do_filter(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEExample> examples);
 	void do_accept(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEExample> examples);
+	void do_task(Mailbox msg);
 
 	/*	
 		If a task is finished, return snapshot of the worker's mailbox 
@@ -45,15 +45,11 @@ class MasterThread : public std::enable_shared_from_this<MasterThread> {
 	bool all_tasks_done();
 
 	/* runtime */
-	/*	
-		`done_queue` can be updated by any worker or the master,
-		so it requires a lock.
-		`idle_queue` is only updated by the master,
-		so it requires no lock.
-	*/
-	std::mutex done_lock;
-	std::queue<shared_ptr<WorkerThread> > done_queue;
-	std::queue<shared_ptr<WorkerThread> > idle_queue;
+	/* all accesses must have a lock */
+	std::mutex task_lock;
+	int buzy_workers;
+	std::queue<Mailbox> pending_tasks;
+	std::queue<Mailbox> finished_tasks;
 
 	/* configuration */
 	int population;
