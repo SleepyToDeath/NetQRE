@@ -1,5 +1,6 @@
 #include "general.hpp"
 #include "../../core/search_graph.h"
+#include "../network_tokenizer/tcp_ip.hpp"
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -23,6 +24,9 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<Gen
 	./regex grammar_file example_file config_file
 */
 int main(int argc, char *argv[]) {
+
+	test_tcp_ip_parser(argv[1]);
+	return 0;
 
 //	test_interpretor();
 //	return 0;
