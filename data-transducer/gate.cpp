@@ -1,11 +1,14 @@
 #include "gate.h"
 
+using std::move();
+
 namespace DT {
 
-Gate::Gate(int init, shared_ptr<Op> op)
+Gate(shared_ptr<Op> op);
 {
-	val = init;
-	val_old = init;
+	val = DataValue::factory->get_instance(UNDEF);
+	val_old = copy_data(val);
+	val_init = copy_data(val);
 	cmb_wires = 0;
 	ready_wires = 0;
 	this->op = op;
@@ -15,16 +18,15 @@ Gate::~Gate()
 {
 }
 
-void Gate::wire_in(Wire w)
+void Gate::wire_in(share_ptr<Gate> src)
 {
-	in.push_back(w);
-	if (w->t == CMB)
-		cmb_wires ++;
+	in.push_back(src);
+	cmb_wires ++;
 }
 
-void Gate::wire_out(Wire w)
+void Gate::wire_out(share_ptr<Gate> dst)
 {
-	out.push_back(w);
+	out.push_back(dst);
 }
 
 void Gate::wire_ready()
@@ -37,22 +39,21 @@ void Gate::posedge()
 	if (ready_wires == cmb_wires)
 	{
 		{
-			std::vector<int> param;
+			std::vector<unique_ptr<DataValue> > param;
 			for (int i=0; i<in.size(); i++)
 			{
 				param.push_back( in[i].g->output( in[i].t ) );
 			}
-			val = (shared_ptr<op>)(param, val);
+			val = (*shared_ptr<op>)(param, val);
 		}
 		
 		for (int i=0; i<out.size(); i++)
-			if (out[i].t == CMB)
-			{
-				out[i].g->wire_ready();
-				out[i].g->posedge();
-			}
+		{
+			out[i]->wire_ready();
+			out[i]->posedge();
+		}
 
-		ready_wires ++;
+		ready_wires ++; /* only posedge once */
 	}
 }
 
@@ -65,26 +66,22 @@ void Gate::negedge()
 void reset()
 {
 	ready_wires = 0;
-	val = init;
-	val_old = init;
+	val = copy_data(val_init);
+	val_old = copy_data(val_init);
 }
 
-int Gate::output(WireType t)
+unique_ptr<DataValue> Gate::output()
 {
-	if (CMB == t)
-		return val;
-	else
-		return val_old;
+	return copy_data(val);
 }
 
-void Gate::set_value(int val)
+void Gate::set_value(unique_ptr<DataValue> val)
 {
-	this->val = val;
+	this->val = copy_data(val);
 }
 
 void Gate::set_op(shared_ptr<Op> op)
 {
-	delete this->op;
 	this->op = op;
 }
 

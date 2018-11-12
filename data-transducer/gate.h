@@ -1,8 +1,7 @@
 #ifndef _DT_GATE_H
 #define _DT_GATE_H
 
-#include <vector>
-#include <memory>
+#include "op.h"
 
 namespace DT
 {
@@ -10,6 +9,8 @@ namespace DT
 		SEQ: sequential logic, only accept result from previous cycle
 		CMB: combinational logic, only accept result from current cycle
 	*/
+	/* [?] Why did I need this? I can't recall. */
+	/*
 	enum WireType {
 		SEQ, CMB
 	};
@@ -24,6 +25,8 @@ namespace DT
 		shared_ptr<Gate> g;
 		WireType t;
 	};
+	*/
+
 
 	/*
 		Every time a gate receives a posedges, 
@@ -42,27 +45,32 @@ namespace DT
 		Sending a negedge to all gates means the end of a clock cycle.
 	*/
 
+	/* [!] every circuit should be reset every cycle. The only state
+			passed to next cycle is the state set. klenee star should
+			be expressed within this abstraction. Therefore SEQ is 
+			basically useless. But I keep it here just in case. */
+
 	class Gate
 	{
 		public:
-		Gate(int init, shared_ptr<Op> op);
+		Gate(shared_ptr<Op> op);
 		~Gate();
 
-		void wire_in(Wire w); /* add an input wire */
-		void wire_out(Wire w); /* add an output wire */
-		void wire_ready(); /* a CMB wire is ready to be read for this cycle */
-		void set_value(int val); /* literally set value, should only use for input gates of a circuit */
+		void wire_in(share_ptr<Gate> src); /* add an input wire */
+		void wire_out(share_ptr<Gate> dst); /* add an output wire */
+		void wire_ready(); /* a input CMB wire is ready to be read for this cycle */
+		void set_value(const unique_ptr<DataValue> &val); /* literally set value, should only use for input gates of a circuit */
 		void set_op(shared_ptr<Op> op); /* literally set op */
 		void posedge(); /* see above */
 		void negedge(); /* see above */
-		int output(WireType t); /* get the output value based on wire type */
+		unique_ptr<DataValue> output(); /* get the output value based on wire type */
 		void reset(); /* set val to init, set ready_wires to 0 */
 
 		private:
 		shared_ptr<Op> op;
-		std::vector<Wire> in;
-		std::vector<Wire> out;
-		int val, val_old, val_init;
+		std::vector<share_ptr<Gate> > in;
+		std::vector<share_ptr<Gate> > out;
+		unique_ptr<DataValue> val, val_old, val_init;
 		int cmb_wires;
 		int ready_wires;
 	};

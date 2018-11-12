@@ -1,18 +1,58 @@
 #ifndef _DT_OP_H
 #define _DT_OP_H
 
+#include <memory>
+#include <vector>
+
+using std::shared_ptr;
+using std::unique_ptr;
+using std::vector;
+using std::move;
+
+/* syntactic sugar */
+#define copy_data(x) unique_ptr<DT::DataValue>(DT::DataValue::factory->get_instance(x))
+
 namespace DT
 {
 
-	/* Define values for undefined and conflict. All valid values must be non-negtive */
-	enum Constants{
-		UNDEF = -1, CONF = -2, MINIMAL_VALID_VALUE = 0;
+
+	class TagValueFactory;
+	class TagValue
+	{
+		public:
+		TagValue(share_ptr<TagValue> src);
+		TagValue();
+		static unique_ptr<TagValueFactory> factory;
 	};
 
+	class TagValueFactory
+	{
+		public:
+		virtual unique_ptr<TagValue> get_instance() = 0;
+		virtual unique_ptr<TagValue> get_instance(unique_ptr<TagValue> src) = 0;
+	};
+
+	/* Define values for undefined and conflict. All valid values must be non-negtive */
+	enum DataType{
+		UNDEF = 1, CONF = 2, VALID = 0;
+	};
+
+	class DataValueFactory;
 	class DataValue 
 	{
-
+		public:
+		DataValue(shared_ptr<DataValue> src);
+		DataValue(DataType t);
+		DataType type;
+		static unique_ptr<DataValueFactory> factory;
 	};
+
+	class DataValueFactory
+	{
+		public:
+		virtual unique_ptr<DataValue> get_instance(DataType t) = 0;
+		virtual unique_ptr<DataValue> get_instance(unique_ptr<DataValue> src) = 0;
+	}
 
 	/*
 		All true operators must be subclass of op
@@ -21,31 +61,54 @@ namespace DT
 	class Op
 	{
 		public:
-		virtual int operator ()(vector<DataValue> l, int current)=0;
+		virtual unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current) = 0;
 	};
 
-	class ConstOp
+	/* always keep current value, ignore all input */
+	class ConstOp : public Op
 	{
 		public:
-		int operator ()(vector<DataValue> param, int current);
+		unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current);
 	};
 
-	class CopyOp
+	/* always copy the first value in input */
+	class CopyOp : public Op
 	{
 		public:
-		int operator ()(vector<DataValue> param, int current);
+		unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current);
 	};
 
-	class UnionOp
+	/*	
+		Do union operation.
+		Default behavior follows the specification in paper.
+		However, it is allowed to derive this class and do something different 
+			(e.g. resolve the conflict)	if you know its cost.
+	*/
+	class UnionOp : public Op
 	{
 		public:
-		int operator ()(vector<DataValue> param, int current);
+		virtual unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current);
 	}
 
-	class BasicBinaryOp
+	/*
+		Do binary operation.
+		Derive this class to implement your own operation.
+		Should follow the specification in paper when handling conflict and undefined.
+	*/
+	class BasicBinaryOp : public Op
 	{
 		public:
-		int operator ()(vector<int> param, int current);
+		virtual unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current) = 0;
 	}
 
 }

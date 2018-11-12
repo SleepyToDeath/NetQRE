@@ -16,8 +16,8 @@ namespace DT {
 		switch (t)
 		{
 			case GATE:
-				gate.push_back(g);
-				id = gate.size()-1;
+				gates.push_back(g);
+				id = gates.size()-1;
 				break;
 
 			case STREAM_IN:
@@ -73,7 +73,7 @@ namespace DT {
 		switch(t)
 		{
 			case GATE:
-				return gate[index];
+				return gates[index];
 
 			case STREAM_IN:
 				return streami[index];
@@ -162,8 +162,8 @@ namespace DT {
 			statei[i]->reset();
 		for (int i=0; i<stateif.size(); i++)
 			stateif[i]->reset();
-		for (int i=0; i<gate.size(); i++)
-			gate[i]->reset();
+		for (int i=0; i<gates.size(); i++)
+			gates[i]->reset();
 		for (int i=0; i<stateoi.size(); i++)
 			stateoi[i]->reset();
 		for (int i=0; i<stateo.size(); i++)
@@ -184,8 +184,8 @@ namespace DT {
 			statei[i]->posedge();
 		for (int i=0; i<stateif.size(); i++)
 			stateif[i]->posedge();
-		for (int i=0; i<gate.size(); i++)
-			gate[i]->posedge();
+		for (int i=0; i<gates.size(); i++)
+			gates[i]->posedge();
 		for (int i=0; i<stateoi.size(); i++)
 			stateoi[i]->posedge();
 		for (int i=0; i<stateo.size(); i++)
@@ -196,7 +196,7 @@ namespace DT {
 			persistent[i]->posedge();
 	}
 
-	int Circuit::combine_char(shared_ptr<Circuit> c, CombineType t)
+	void Circuit::combine_char(shared_ptr<Circuit> c, CombineType t)
 	{
 		switch(t)
 		{
@@ -217,7 +217,7 @@ namespace DT {
 		}
 	}
 
-	int Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t)
+	void Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t)
 	{
 		switch(t)
 		{
@@ -238,7 +238,7 @@ namespace DT {
 		}
 	}
 
-	int Circuit::combine_char_parallel(shared_ptr<Circuit> c)
+	void Circuit::combine_char_parallel(shared_ptr<Circuit> c)
 	{
 		for (int i=0; i<c->stateii.size(); i++)
 			stateii.push_back(c->stateii[i]);
@@ -254,27 +254,27 @@ namespace DT {
 			stateo.push_back(c->stateo[i]);
 		for (int i=0; i<c->streami.size(); i++)
 			streami.push_back(c->streami[i]);
-		for (int i=0; i<c->gate.size(); i++)
-			gate.push_back(c->gate[i]);
+		for (int i=0; i<c->gates.size(); i++)
+			gates.push_back(c->gates[i]);
 		return 0;
 	}
 
-	int Circuit::combine_char_union(shared_ptr<Circuit> c)
+	void Circuit::combine_char_union(shared_ptr<Circuit> c)
 	{
 		return combine_char_parallel(c);
 	}
 
-	int Circuit::combine_char_concatenation(shared_ptr<Circuit> c)
+	void Circuit::combine_char_concatenation(shared_ptr<Circuit> c)
 	{
 		return combine_char_parallel(c);
 	}
 
-	int Circuit::combine_char_star()
+	void Circuit::combine_char_star()
 	{
-		return 0;
+		return;
 	}
 
-	int Circuit::combine_epsilon_parallel(shared_ptr<Circuit> c)
+	void Circuit::combine_epsilon_parallel(shared_ptr<Circuit> c)
 	{
 		int l = stateii.size();
 		combine_char_parallel(c);
@@ -283,19 +283,19 @@ namespace DT {
 			stateii[i+l].set_op(shared_ptr<CopyOp>(new CopyOp()));
 			stateii[i+l].wire_in(Wire(stateii[i],CMB));
 			stateii[i].wire_out(Wire(stateii[i+l],CMB));
-			gate.push_back(stateii[i+l]);
+			gates.push_back(stateii[i+l]);
 			stateii.pop_back();
 		}
 	}
 
-	int Circuit::combine_epsilon_union(shared_ptr<Circuit> c)
+	void Circuit::combine_epsilon_union(shared_ptr<Circuit> c)
 	{
 		int l = stateof.size();
 		combine_epsilon_parallel(c);
 		for (int i=0; i<l; i++)
 		{
-			gate.push_back(stateof[i]);
-			gate.push_back(stateof[i+l]);
+			gates.push_back(stateof[i]);
+			gates.push_back(stateof[i+l]);
 
 			shared_ptr<Gate> tmp = shared_ptr<Gate>(new Gate(UNDEF,shared_ptr<UnionOp>(new UnionOp())));
 			tmp->wire_in(Wire(stateof[i],CMB));
@@ -312,7 +312,7 @@ namespace DT {
 		return 0;
 	}
 
-	int Circuit::combine_epsilon_concatenation(shared_ptr<Circuit> c)
+	void Circuit::combine_epsilon_concatenation(shared_ptr<Circuit> c)
 	{
 		int l = stateii.size();
 		combine_char_parallel(c);
@@ -322,8 +322,8 @@ namespace DT {
 			stateof[i]->wire_out(stateii[i+l]);
 			stateii[i+l]->set_op(shared_ptr<CopyOp>(new CopyOp));
 
-			gate.push_back(stateii[i+l]);
-			gate.push_back(stateof[i]);
+			gates.push_back(stateii[i+l]);
+			gates.push_back(stateof[i]);
 			stateof[i] = stateof[i+l];
 		}
 
@@ -334,26 +334,26 @@ namespace DT {
 		}
 	}
 
-	int Circuit::combine_epsilon_star()
+	void Circuit::combine_epsilon_star()
 	{
 		for (int i=0; i<stateii.size(); i++)
 		{
-			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(UNDEF,shared_ptr<ConstOp>(new ConstOp)));
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(UNDEF,shared_ptr<CopyOp>(new CopyOp)));
+			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
 			shared_ptr<Gate> old_ii = stateii[i];
 			shared_ptr<Gate> old_of = stateof[i];
 
-			old_ii->set_op(shared_ptr<UnionOp>(new UnionOp));
-			old_ii->wire_in(Wire(old_of,SEQ));
-			old_of->wire_out(Wire(old_ii,SEQ));
-			old_ii->wire_in(Wire(new_ii,CMB));
-			new_ii->wire_out(Wire(old_ii,CMB));
+			old_ii->set_op(shared_ptr<UnionOp>(new UnionOp()));
+			old_ii->wire_in(old_if);
+			old_if->wire_out(old_ii);
+			old_ii->wire_in(new_ii);
+			new_ii->wire_out(old_ii);
 			new_of->wire_in(Wire(old_of,CMB));
 			old_of->wire_out(Wire(new_of,CMB));
 
 			persistent.push_back(old_of);
 			stateof[i] = new_of;
-			gate.push_back(old_ii);
+			gates.push_back(old_ii);
 			stateii[i] = new_ii;
 		}
 	}

@@ -18,12 +18,6 @@ Transducer::~Transducer()
 
 }
 
-void Transducer::destroy()
-{
-	for (int i=0; i<max_character; i++)
-		circuits[i]->destroy();
-}
-
 void Transducer::add_circuit(shared_ptr<Circuit> c, int character)
 {
 	circuits[character] = c;

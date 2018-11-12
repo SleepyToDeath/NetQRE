@@ -1,7 +1,7 @@
 #ifndef _DT_CIRCUIT_H
 #define _DT_CIRCUIT_H
 
-#include<memory>
+#include "gate.h"
 
 namespace DT
 {
@@ -16,12 +16,12 @@ namespace DT
 	class Port
 	{
 		public:
-		std::vector<int> init;
-		std::vector<int> media;
-		std::vector<int> fin;
+		std::vector<unique_ptr<DataValue> > init;
+		std::vector<unique_ptr<DataValue> > media;
+		std::vector<unique_ptr<DataValue> > fin;
 	};
 
-	const std::vector<int> NullPort = std::vector(0);
+	const std::vector<unique_ptr<DataValue> > NullPort = std::vector(0);
 
 	class Circuit
 	{
@@ -33,40 +33,44 @@ namespace DT
 		shared_ptr<Gate> get_gate(int id);
 		void combine(shared_ptr<Circuit> c);
 
+		/* set_state_in -> set_stream_in -> tick -> get_state_out -> reset */
 		void reset();
 		void set_state_in(Port states);
-		void set_stream_in(int val); /* will set this value to all stream in gates */
+		void set_stream_in(unique_ptr<DataValue> val); /* will set this value to all stream in gates */
 		void tick();
 		Port get_state_out();
 
-		int combine_char(shared_ptr<Circuit> c, CombineType t);
-		int combine_epsilon(shared_ptr<Circuit> c, CombineType t);
-
-		void destroy(); /* free all gates */
+		unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t);
+		unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t);
 
 		private:
-		vector< std::shared_ptr<Gate> > statei;
-		vector< std::shared_ptr<Gate> > stateii;
-		vector< std::shared_ptr<Gate> > stateif;
+		vector< std::shared_ptr<Gate> > statei; /* main state */
+		vector< std::shared_ptr<Gate> > stateii; /* input state */
+		vector< std::shared_ptr<Gate> > stateif; /* output state */
 
-		vector< std::shared_ptr<Gate> > stateo;
-		vector< std::shared_ptr<Gate> > stateoi;
-		vector< std::shared_ptr<Gate> > stateof;
+		vector< std::shared_ptr<Gate> > stateo; /* main state */
+		vector< std::shared_ptr<Gate> > stateoi; /* input state */
+		vector< std::shared_ptr<Gate> > stateof; /* output state */
 
+		/* 	value part of a data word
+			Can be merged into one gate
+			But keep copies for convenience of merging circuits 
+			(no need to reconnect wires)
+			They are always set to the same value(by set_stream_in) */
 		vector< std::shared_ptr<Gate> > streami;
 
-		vector< std::shared_ptr<Gate> > gate;
+		vector< std::shared_ptr<Gate> > gates; /* [?] what is this? */
 
-		vector< std::shared_ptr<Gate> > persistent; /* value won't be cleared by reset */
+//		vector< std::shared_ptr<Gate> > persistent; /* value won't be cleared by reset */ /* [?] don't exist */
 
-		int combine_char_union(std::shared_ptr<Circuit> c);
-		int combine_char_parallel(std::shared_ptr<Circuit> c);
-		int combine_char_concatenation(std::shared_ptr<Circuit> c);
-		int combine_char_star();
-		int combine_epsilon_union(std::shared_ptr<Circuit> c);
-		int combine_epsilon_parallel(std::shared_ptr<Circuit> c);
-		int combine_epsilon_concatenation(std::shared_ptr<Circuit> c);
-		int combine_epsilon_star();
+		void combine_char_union(std::shared_ptr<Circuit> c);
+		void combine_char_parallel(std::shared_ptr<Circuit> c);
+		void combine_char_concatenation(std::shared_ptr<Circuit> c);
+		void combine_char_star();
+		void combine_epsilon_union(std::shared_ptr<Circuit> c);
+		void combine_epsilon_parallel(std::shared_ptr<Circuit> c);
+		void combine_epsilon_concatenation(std::shared_ptr<Circuit> c);
+		void combine_epsilon_star();
 	};
 }
 
