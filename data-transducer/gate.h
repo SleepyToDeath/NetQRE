@@ -59,11 +59,12 @@ namespace DT
 		void wire_in(share_ptr<Gate> src); /* add an input wire */
 		void wire_out(share_ptr<Gate> dst); /* add an output wire */
 		void wire_ready(); /* a input CMB wire is ready to be read for this cycle */
-		void set_value(const unique_ptr<DataValue> &val); /* literally set value, should only use for input gates of a circuit */
+		/* literally set value, should only use for input gates of a circuit */
+		void set_value(const unique_ptr<DataValue> &val); 
 		void set_op(shared_ptr<Op> op); /* literally set op */
 		void posedge(); /* see above */
 		void negedge(); /* see above */
-		unique_ptr<DataValue> output(); /* get the output value based on wire type */
+		unique_ptr<DataValue> output(); /* get the output value */
 		void reset(); /* set val to init, set ready_wires to 0 */
 
 		private:

@@ -8,18 +8,24 @@
 namespace DT
 {
 
-
+	template<class CmpTag>
 	class Transducer
 	{
 		public:
-		Transducer(int state_number, int param_number, int final_number);
+		/* assume in and out have same width */
+		Transducer(int param_number);
 		~Transducer();
 
-		void add_circuit(std::shared_ptr<Circuit> c, int character);
-		int combine(std::shared_ptr<Transducer> dt, CombineType t);
+		void add_circuit(std::shared_ptr<Circuit> c, share_ptr<TagValue> tag);
+		void add_epsilon_circuit(std::shared_ptr<Circuit> c);
+		void combine(std::shared_ptr<Transducer> dt, CombineType t);
 
-		void init(std::vector< unique_ptr<DataValue> > parameters); /* input the initial values for init states. other states are assumed to be 0(or undef?) */
-		std::vector<int> process(std::vector<std::pair<int,int> > stream); /* start/continue to process stream, return result so far */
+		/* 	Input the initial values for init states. 
+			other states are assumed to be 0(or undef?) */
+		void init(std::vector< unique_ptr<DataValue> > parameters); 
+
+		/* start/continue to process stream, return result so far */
+		std::vector<int> process(std::vector<Word> stream ); 
 
 		std::vector<int> get_signature();
 
@@ -28,10 +34,10 @@ namespace DT
 		private:
 		int state_number;
 		int param_number;
-		int final_number;
 
 		Port states;
-		std::vector< std::shared_ptr<Circuit> > circuits; 
+		std::shared_ptr<Circuit> epsilon_circuit;
+		std::map<std::shared_ptr<TagValue>, std::shared_ptr<Circuit>, CmpTag> circuits; 
 	};
 }
 
