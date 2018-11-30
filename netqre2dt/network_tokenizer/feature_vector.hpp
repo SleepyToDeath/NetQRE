@@ -2,6 +2,7 @@
 #define FEATURE_VECTOR_HPP
 
 #include <vector>
+#include "../data-transducer/op.h"
 
 class FeatureSlot
 {
@@ -14,9 +15,33 @@ class FeatureSlot
 	unsigned long long value;
 };
 
-class FeatureVector
+class CmpFeatureVector: public DT::CmpTagValue
+{
+	bool operator()(const std::shared_ptr<DT::TagValue> a, const std::shared_ptr<DT::TagValue> b) const {
+		auto fa = std::static_pointer_cast<FeatureVector>(a);
+		auto fb = std::static_pointer_cast<FeatureVector>(b);
+		if (a.size() < b.size())
+			return true;
+		else if (a.size() > b.size())
+			return false;
+		else
+		{
+			for (int i=0; i<a.size(); i++)
+				if (a[i] < b[i])
+					return true;
+				else if (b[i] < a[i])
+					return false;
+		}
+		return false;
+	}
+};
+
+class FeatureVector: public DT::TagValue
 {
 	public:
+	FeatureVector(std::share_ptr<DT::TagValue> src);
+	FeatureVector();
+
 	size_t size() {
 		return features.size();
 	}

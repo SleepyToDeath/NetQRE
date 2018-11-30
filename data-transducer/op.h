@@ -15,7 +15,6 @@ using std::move;
 namespace DT
 {
 
-
 	class TagValueFactory;
 	class TagValue
 	{
