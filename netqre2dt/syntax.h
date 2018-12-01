@@ -1,6 +1,9 @@
 #ifndef NETQRE2DT_SYNTAX_H
 #define NETQRE2DT_SYNTAX_H
 
+#include <vector>
+#include <memory>
+
 /*
 	<program>::=
 		<filter> <qre> <threshold>
@@ -76,26 +79,26 @@
 
 
 enum NetqreExpType {
-	PROGRAM, 
-	FILTER, 
-	PREDICATE_SET, 
-	PREDICATE, 
-	FEATURE_NI, 
-	VALUE, 
-	QRE,
-	QRE_NS, 
-	NUM_OP, 
-	QRE_VS, 
-	AGG_OP, 
-	FEATURE_SET, 
-	FEATURE_I, 
-	QRE_PS,
-	QRE_COND,
-	RE,
-	OUTPUT,
-	WILDCARD,
-	CONST,
-	THRESHOLD
+	PROGRAM, 		//0
+	FILTER, 		//1
+	PREDICATE_SET, 	//2
+	PREDICATE, 		//3
+	FEATURE_NI, 	//4
+	VALUE, 			//5
+	QRE,			//6
+	QRE_NS, 		//7
+	NUM_OP, 		//8
+	QRE_VS, 		//9
+	AGG_OP, 		//10
+	FEATURE_SET,	//11
+	FEATURE_I, 		//12
+	QRE_PS,			//13
+	QRE_COND,		//14
+	RE,				//15
+	OUTPUT,			//16
+	WILDCARD,		//17
+	CONST,			//18
+	THRESHOLD		//19
 };
 
 enum AggOpType {
@@ -112,7 +115,7 @@ enum BoolOpType {
 
 enum RegularOpType {
 	STAR, CONCAT
-}
+};
 
 class NetqreAST
 {
@@ -127,7 +130,7 @@ class NetqreAST
 
 	NetqreExpType type;
 
-	vector< shared_pointer<NetqreAST> > subtree;
+	std::vector< std::shared_ptr<NetqreAST> > subtree;
 };
 
 #endif

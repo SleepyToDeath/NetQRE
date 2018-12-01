@@ -1,53 +1,73 @@
 #include "parser.h"
+#include <string>
+#include <iostream>
 
 using namespace std;
-
-NetqreParser::NetqreParser() {
-	parsers[""] = [](string &code, int &cursor) {
-	}
-}
 
 std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 	int cursor = 0;
 	auto program = shared_ptr<NetqreAST>(new NetqreAST());
 	program->type = PROGRAM;
-	return real_parse(code, cursor, PROGRAM);
+	real_parse(code, cursor, program);
+	return program;
 }
 
 
-void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
+void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
+
+	cout<<context->type<<endl;
 
 	auto skip_name = [&]()
 	{
 		while (code[cursor] != '(')
 			cursor++;
 		cursor++;
-	}
+	};
 
 	auto skip_space = [&]()
 	{
-		while (code[cursor] == ' ')
+		while (cursor < code.length() && code[cursor] == ' ')
 			cursor++;
-	}
+	};
 
 	auto skip_tail = [&]()
 	{
 		skip_space();
 		cursor++;
-	}
+	};
 
 	auto parse_it = [&, this](NetqreExpType type)
 	{
 		auto ast = shared_ptr<NetqreAST>(new NetqreAST());
 		ast->type = type;
-		real_parse(ast);
+		real_parse(code, cursor, ast);
 		context->subtree.push_back(ast);
-	}
+	};
 
 	auto parse_num = [&]() -> int
 	{
-		/* [TODO] */
-	}
+		int old_cursor = cursor;
+		while (cursor < code.length() && code[cursor]>='0' && code[cursor]<='9')
+			cursor++;
+		return stoi(code.substr(old_cursor, cursor-old_cursor));
+	};
+			
+	auto parse_ns = [&,this]()
+	{
+		parse_it(QRE_NS);
+		skip_tail();
+		parse_it(QRE_NS);
+		skip_tail();
+	};
+
+	auto parse_vs = [&,this]() 
+	{
+		skip_name();
+		parse_it(QRE_VS);
+		skip_tail();
+		parse_it(FEATURE_SET);
+		skip_tail();
+	};
 
 	skip_space();
 
@@ -65,7 +85,7 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 			skip_name();
 			parse_it(PREDICATE_SET);
 			skip_tail();
-			break
+			break;
 
 		case QRE:
 
@@ -93,7 +113,7 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 				case '&':
 				context->bool_type = AND;
 				skip_name();
-				parse_it(PREDICATE_SET)
+				parse_it(PREDICATE_SET);
 				skip_tail();
 				parse_it(PREDICATE_SET);
 				skip_tail();
@@ -102,7 +122,7 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 				case '|':
 				context->bool_type = OR;
 				skip_name();
-				parse_it(PREDICATE_SET)
+				parse_it(PREDICATE_SET);
 				skip_tail();
 				parse_it(PREDICATE_SET);
 				skip_tail();
@@ -127,26 +147,17 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 
 		case FEATURE_NI:
 
-			value = parse_num();
+			context->value = parse_num();
 
 			break;
 		
 		case VALUE:
 			
-			value = parse_num();
+			context->value = parse_num();
 
 			break;
 
 		case QRE_NS:
-			
-			auto parse_ns = [&,this]()
-			{
-				parse_it(QRE_NS);
-				skip_tail();
-				parse_it(QRE_NS);
-				skip_tail();
-			}
-
 			switch(code[cursor])
 			{
 				case '+':
@@ -172,17 +183,11 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 						parse_it(CONST);
 			}
 
+			break;
+
 		case QRE_VS:
 
-			auto parse_vs = [&,this]() 
-			{
-				skip_name();
-				parse_it(QRE_VS);
-				skip_tail();
-				parse_it(FEATURE_SET);
-				skip_tail();
-			}
-			
+		
 			if (code[cursor] >= 'a' && code[cursor] <= 'z')
 			{
 				switch (code[cursor])
@@ -301,6 +306,8 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 					context->agg_type = AVG;
 					break;
 			}
+			while(cursor < code.length() && code[cursor] >= 'a' && code[cursor] <= 'z')
+				cursor++;
 			break;
 
 		case QRE_COND:
@@ -319,7 +326,7 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 			break;
 
 		case RE:
-			while(!(code[cursor] == '/' || code[cursor] == ')'));
+			while(!(code[cursor] == '/' || code[cursor] == ')'))
 			{
 				switch (code[cursor])
 				{
@@ -341,6 +348,10 @@ void NetqreParse::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAS
 				}
 				skip_space();
 			}
+			break;
+
+		case WILDCARD:
+			skip_tail();
 			break;
 	}
 

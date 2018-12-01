@@ -1,6 +1,10 @@
 #ifndef NETQRE2DT_PARSER_H
 #define NETQRE2DT_PARSER_H
 
+#include <memory>
+#include <vector>
+#include "syntax.h"
+
 class NetqreParser
 {
 	public:
