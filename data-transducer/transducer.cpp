@@ -3,19 +3,18 @@
 namespace DT
 {
 
-Transducer::Transducer(int param_number)
+Transducer::Transducer(int param_number, int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger);
 {
-	this->state_number = state_number;
 	this->param_number = param_number;
-	states = std::vector<int>(state_number+1);
-	circuits = std::vector<int>(max_character);
+	this->tag_alphabet_size = tag_alphabet_size;
+	this->state_merger = state_merger;
 }
 
 Transducer::~Transducer()
 {
 }
 
-void Transducer::add_circuit(shared_ptr<Circuit> c, share_ptr<TagValue> tag)
+void Transducer::add_circuit(shared_ptr<Circuit> c, TagType tag)
 {
 	circuits[tag] = c;
 }
@@ -23,16 +22,21 @@ void Transducer::add_circuit(shared_ptr<Circuit> c, share_ptr<TagValue> tag)
 void Transducer::combine(shared_ptr<Transducer> dt, CombineType t)
 {
 	epsilon_circuit->combine_epsilon(dt->epsilon_circuit,t);
-	std::map<std::shared_ptr<TagValue>, std::shared_ptr<Circuit>, CmpTag>::iterator i;
-	for (i=circuits.begin(); i!=circuits.end; i++)
+	for_each(circuits.begin(), circuits.end(), [](shared_ptr<circuits> c)
 	{
-		auto key = (*i)->first;
-		circuits[key]->combine_char(dt->circuits[key],t);
-	}
+		c->combine_char(dt->circuits[key],t);
+	} )
 }
 
 int Transducer::init(std::vector<int> parameters)
 {
+	NullPort = copy_port(states);
+	for (int i=0; i<NullPort->init.size(); i++)
+		NullPort->init[i]->type = UNDEF;
+	for (int i=0; i<NullPort->media.size(); i++)
+		NullPort->media[i]->type = UNDEF;
+	for (int i=0; i<NullPort->fin.size(); i++)
+		NullPort->fin[i]->type = UNDEF;
 	states.init = parameters;
 }
 
@@ -51,12 +55,17 @@ std::vector<int> Transducer::process(std::vector<Word> stream)
 		}
 
 		{
-			shared_ptr<Circuit> c = circuits[stream[i].key];
-			c->reset();
-			c->set_stream_in(stream[i].val);
-			c->set_state_in(states);
-			c->tick();
-			states = c->get_state_out();
+			auto backup = copy_port(states);
+			for (int j=0; j<tag_alphabet_size; j++)
+				if (stream[i].tag_bitmap[j])
+				{
+					shared_ptr<Circuit> c = circuits[j];
+					c->reset();
+					c->set_stream_in(stream[i].val);
+					c->set_state_in(backup);
+					c->tick();
+					states.merge(c->get_state_out());
+				}
 		}
 	}
 

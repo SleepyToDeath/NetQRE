@@ -15,6 +15,9 @@ using std::move;
 namespace DT
 {
 
+	typedef TagType int
+
+/*
 	class TagValueFactory;
 	class TagValue
 	{
@@ -35,6 +38,7 @@ namespace DT
 		virtual unique_ptr<TagValue> get_instance() = 0;
 		virtual unique_ptr<TagValue> get_instance(unique_ptr<TagValue> src) = 0;
 	};
+*/
 
 	/* 	Define values for undefined and conflict. 
 		All valid values must be non-negtive */
@@ -61,7 +65,16 @@ namespace DT
 
 	class Word
 	{
-		share_ptr<TagValue> key;
+		/*
+			Each data word may contain multiple tags, e.g., 
+			a packet may satisfy multiple predicates in NetQRE. 
+			Since usually there should be a small fixed number 
+			of tags, we enforce that each tag be converted to an int. 
+			The mapping between the real tag and the int should
+			be maintained by user. This bitmap should specify
+			which tags this data word contains.
+		*/
+		std::vector<bool> tag_bitmap;
 		share_ptr<DataValue> val;
 	};
 
@@ -95,20 +108,6 @@ namespace DT
 			const unique_ptr<DataValue> &current);
 	};
 
-	/*	
-		Do union operation.
-		Default behavior follows the specification in paper.
-		However, it is allowed to derive this class and do something different 
-			(e.g. resolve the conflict)	if you know its cost.
-	*/
-	class UnionOp : public Op
-	{
-		public:
-		virtual unique_ptr<DataValue> operator ()(
-			const vector< unique_ptr<DataValue> > &param, 
-			const unique_ptr<DataValue> &current);
-	}
-
 	/*
 		Do binary operation.
 		Derive this class to implement your own operation.
@@ -123,14 +122,33 @@ namespace DT
 			const unique_ptr<DataValue> &current) = 0;
 	}
 
+	/* 
+		Generalized union.
+		Can be default UnionOp.
+		Can also be customized to resolve conflicts.
+		current is assumed to be nullptr.
+	*/
 	class MergeParallelOp : public BasicBinaryOp
 	{
 		public:
 		virtual unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
-			const unique_ptr<DataValue> &current) = 0;
+			const unique_ptr<DataValue> &current
+		) = 0;
 	}
 
+	/*	
+		Do union operation.
+		Default merging behavior.
+		Follows the specification in paper.
+	*/
+	class UnionOp : public MergeParallelOp
+	{
+		public:
+		virtual unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current);
+	}
 }
 
 #endif

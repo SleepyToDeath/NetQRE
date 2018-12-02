@@ -15,7 +15,7 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 
 void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
 
-	cout<<context->type<<endl;
+//	cout<<context->type<<endl;
 
 	auto skip_name = [&]()
 	{
@@ -317,7 +317,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 				parse_it(RE);
 				skip_tail();
 				skip_tail();
-				skip_tail();
+				parse_num();
 			}
 			else
 			{
@@ -356,3 +356,4 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 	}
 
 }
+

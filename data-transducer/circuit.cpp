@@ -15,9 +15,27 @@ namespace DT {
 		for (int i=0; i<src->init.size(); i++)
 			init.push_back(copy_data(src->init[i]));
 		for (int i=0; i<src->media.size(); i++)
-			init.push_back(copy_data(src->media[i]));
+			media.push_back(copy_data(src->media[i]));
 		for (int i=0; i<src->fin.size(); i++)
-			init.push_back(copy_data(src->fin[i]));
+			fin.push_back(copy_data(src->fin[i]));
+	}
+
+	Port::merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op)
+	{
+		to_param [] (const unique_ptr<DataValue> &a, const unique_ptr<DataValue> &b) -> vector<unique_ptr<DataValue> >
+		{
+			vector<unique_ptr<DataValue> > param;
+			param.push_back(a);
+			param.push_back(b);
+			return param;
+		}
+
+		for (int i=0; i<src->init.size(); i++)
+			init[i] = op(to_param(init[i],src->init[i]), nullptr);
+		for (int i=0; i<src->media.size(); i++)
+			media[i] = op(to_param(media[i],src->media[i]), nullptr);
+		for (int i=0; i<src->fin.size(); i++)
+			fin[i] = op(to_param(fin[i],src->fin[i]), nullptr);
 	}
 
 	Circuit::Circuit()

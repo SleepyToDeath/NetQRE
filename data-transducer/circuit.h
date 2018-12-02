@@ -3,6 +3,8 @@
 
 #include "gate.h"
 
+#define copy_port(x) unique_ptr<DT::Port>(new DT::Port(x))
+
 namespace DT
 {
 	enum GateType {
@@ -18,6 +20,8 @@ namespace DT
 		public:
 		Port();
 		Port(const std::unique_ptr<Port> &src);
+		Port::merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op);
+
 		std::vector<std::unique_ptr<DataValue> > init;
 		std::vector<std::unique_ptr<DataValue> > media;
 		std::vector<std::unique_ptr<DataValue> > fin;
