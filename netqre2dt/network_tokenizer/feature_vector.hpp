@@ -36,7 +36,7 @@ class CmpFeatureVector: public DT::CmpTagValue
 	}
 };
 
-class FeatureVector: public DT::TagValue
+class FeatureVector
 {
 	public:
 	FeatureVector(std::share_ptr<DT::TagValue> src);

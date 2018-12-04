@@ -7,6 +7,6 @@ int main()
 {
 	string code;
 	getline(cin, code);
-	NetqreParser parser;
+	Netqre::NetqreParser parser;
 	auto ast = parser.parse(code);
 }

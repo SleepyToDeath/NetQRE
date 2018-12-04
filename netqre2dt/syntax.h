@@ -18,6 +18,9 @@
 	
 	<predicate>::=
 		[<feature-ni> = <value>]
+		| [<unknown>]
+
+	<unknown> = _
 	
 	<feature-ni>::= <ranged-int> (index in feature vector, must be non-iterative)
 	<value>::= <ranged-int> (range of value)
@@ -77,8 +80,9 @@
 		threshold(<const>)
 */
 
+namespace Netqre {
 
-enum NetqreExpType {
+enum class NetqreExpType {
 	PROGRAM, 		//0
 	FILTER, 		//1
 	PREDICATE_SET, 	//2
@@ -98,23 +102,24 @@ enum NetqreExpType {
 	OUTPUT,			//16
 	WILDCARD,		//17
 	CONST,			//18
-	THRESHOLD		//19
+	THRESHOLD,		//19
+	UNKNOWN			//20
 };
 
-enum AggOpType {
+enum class AggOpType {
 	MAX, MIN, SUM, AVG
 };
 
-enum NumOpType {
-	ADD, SUB, MUL, DIV
+enum class NumOpType {
+	ADD, SUB, MUL, DIV, NONE
 };
 
-enum BoolOpType {
-	AND, OR
+enum class BoolOpType {
+	AND, OR, NONE
 };
 
-enum RegularOpType {
-	STAR, CONCAT
+enum class RegularOpType {
+	STAR, CONCAT, NONE
 };
 
 class NetqreAST
@@ -132,5 +137,7 @@ class NetqreAST
 
 	std::vector< std::shared_ptr<NetqreAST> > subtree;
 };
+ 
+}
 
 #endif

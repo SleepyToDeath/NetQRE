@@ -5,6 +5,8 @@
 #include <vector>
 #include "syntax.h"
 
+namespace Netqre {
+
 class NetqreParser
 {
 	public:
@@ -14,5 +16,7 @@ class NetqreParser
 	void real_parse(std::string &code, int &cursor, std::shared_ptr<NetqreAST> context);
 
 };
+
+}
 
 #endif

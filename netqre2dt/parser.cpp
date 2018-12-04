@@ -2,7 +2,13 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::string;
+using std::vector;
+using std::static_pointer_cast;
+
+namespace Netqre {
 
 std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 	int cursor = 0;
@@ -28,6 +34,12 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 	{
 		while (cursor < code.length() && code[cursor] == ' ')
 			cursor++;
+	};
+
+	auto skip_head = [&]()
+	{
+		cursor++;
+		skip_space();
 	};
 
 	auto skip_tail = [&]()
@@ -131,16 +143,22 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 				case '[':
 				parse_it(PREDICATE);
 				break;
+
 			}
 
 			break;
 
 		case PREDICATE:
 
-			cursor++;
-			parse_it(FEATURE_NI);
-			skip_tail();
-			parse_it(VALUE);
+			skip_head();
+			if (code[cursor] == '_')
+				parse_it(UNKNOWN);
+			else
+			{
+				parse_it(FEATURE_NI);
+				skip_tail();
+				parse_it(VALUE);
+			}
 			skip_tail();
 
 			break;
@@ -239,7 +257,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			skip_space();
 			while(code[cursor] == ',')
 			{
-				cursor++;
+				skip_head();
 				parse_it(FEATURE_I);
 				skip_space();
 			}
@@ -351,9 +369,11 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			break;
 
 		case WILDCARD:
+		case UNKNOWN:
 			skip_tail();
 			break;
 	}
 
 }
 
+}

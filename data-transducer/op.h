@@ -50,7 +50,7 @@ namespace DT
 	class DataValue 
 	{
 		public:
-		DataValue(shared_ptr<DataValue> src);
+		DataValue(const unique_ptr<DataValue> &src);
 		DataValue(DataType t);
 		DataType type;
 		static unique_ptr<DataValueFactory> factory;
@@ -61,7 +61,7 @@ namespace DT
 		public:
 		virtual unique_ptr<DataValue> get_instance(DataType t) = 0;
 		virtual unique_ptr<DataValue> get_instance(unique_ptr<DataValue> src) = 0;
-	}
+	};
 
 	class Word
 	{
@@ -75,7 +75,7 @@ namespace DT
 			which tags this data word contains.
 		*/
 		std::vector<bool> tag_bitmap;
-		share_ptr<DataValue> val;
+		shared_ptr<DataValue> val;
 	};
 
 	/*

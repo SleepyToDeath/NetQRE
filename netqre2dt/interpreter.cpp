@@ -1,8 +1,15 @@
 #include "interpreter.h"
+#include "op.hpp"
 
-using namespace std;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::string;
+using std::vector;
+using std::static_pointer_cast;
 
-DT::Transducer NetqreInterpreter::interpret(std::shared_ptr<NetqreAST> ast) 
+namespace Netqre {
+
+DT::Transducer Interpreter::interpret(std::shared_ptr<NetqreAST> ast) 
 {
 	switch(ast->type)
 	{
@@ -23,9 +30,52 @@ DT::Transducer NetqreInterpreter::interpret(std::shared_ptr<NetqreAST> ast)
 		case QRE_COND:
 		case RE:
 		case OUTPUT:
-		case WILDCARD:
 		case CONST:
 		case THRESHOLD:
+		case WILDCARD:
+		case UNKNOWN:
 	}
 
 }
+
+void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)
+{
+	if (ast->type != PREDICATE_SET)
+	{
+		for (int i=0; i<ast->subtree.size() i++)
+			collect_predicates(ast->subtree[i], predicates);
+	}
+	else
+	{
+		
+	}
+}
+
+vector<DT::Word> Interpreter::generate_tags(std::vector<shared_ptr<NetqreAST> > & predicates, TokenStream feature_stream)
+{
+	vector<DT::Word> tag_stream;
+	for (int i=0; i<feature_stream.size(); i++)
+	{
+		DT::Word w;
+		w->val = DataValue::factory->get_instance(DT::UNDEF);
+		for (int j=0; j<predicates.size(); j++)
+			w->tag_bitmap.push_back(satisfy(predicates[j], feature_stream[i]));
+		tag_stream.push_back(w);
+	}
+	return tag_stream;
+}
+
+bool Interpreter::satisfy(shared_ptr<NetqreAST> predicate, const FeatureVector & fv)
+{
+	switch(predicate->bool_type)
+	{
+		case DT::BoolOpType::OR
+		return satisfy(predicate->subtree[0], fv) || satisfy(predicate->subtree[1], fv);
+
+		case DT::BoolOpType::AND:
+		return satisfy(predicate->subtree[0], fv) && satisfy(predicate->subtree[1], fv);
+
+		case DT::BoolOpType::NONE:
+		
+}
+
