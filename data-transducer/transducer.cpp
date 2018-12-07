@@ -61,7 +61,7 @@ std::vector<int> Transducer::process(std::vector<Word> stream)
 				{
 					shared_ptr<Circuit> c = circuits[j];
 					c->reset();
-					c->set_stream_in(stream[i].val);
+					c->set_stream_in(stream[i].tag_bitmap[j]);
 					c->set_state_in(backup);
 					c->tick();
 					states.merge(c->get_state_out());

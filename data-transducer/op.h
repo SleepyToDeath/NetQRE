@@ -17,29 +17,6 @@ namespace DT
 
 	typedef TagType int
 
-/*
-	class TagValueFactory;
-	class TagValue
-	{
-		public:
-		TagValue(share_ptr<TagValue> src);
-		TagValue();
-		static unique_ptr<TagValueFactory> factory;
-	};
-
-	class CmpTagValue 
-	{
-		virtual bool operator()(const std::shared_ptr<TagValue> a, const std::shared_ptr<TagValue> b) const = 0;
-	};
-
-	class TagValueFactory
-	{
-		public:
-		virtual unique_ptr<TagValue> get_instance() = 0;
-		virtual unique_ptr<TagValue> get_instance(unique_ptr<TagValue> src) = 0;
-	};
-*/
-
 	/* 	Define values for undefined and conflict. 
 		All valid values must be non-negtive */
 	enum DataType{
@@ -71,11 +48,17 @@ namespace DT
 			Since usually there should be a small fixed number 
 			of tags, we enforce that each tag be converted to an int. 
 			The mapping between the real tag and the int should
-			be maintained by user. This bitmap should specify
-			which tags this data word contains.
+			be maintained by user. 
+			In deterministic situation, this should be a bitmap that 
+			specifies which tags this data word contains and a
+			value shared to all matching circuits.
+			But to support undeterministic cases, it is allowed to
+			send different values to different circuits. The tag
+			matching result is assumed to be contained in this value.
+			All circuits will be activated and receive their 
+			corresponding values.
 		*/
-		std::vector<bool> tag_bitmap;
-		shared_ptr<DataValue> val;
+		std::vector<unique_ptr<DataValue> > tag_bitmap;
 	};
 
 	/*
