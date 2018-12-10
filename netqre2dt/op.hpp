@@ -51,6 +51,16 @@ class DataValueFactory
 	}
 };
 
+
+
+
+
+
+/* ============ Data Type Define ===============*/
+
+
+
+
 enum class DataType { BOOL, INT, STATE };
 
 /* int or bool */
@@ -123,14 +133,14 @@ class IntValue: public DataValue
 	int lower;
 };
 
-/* Each aggregation should push a register to value_stack and an aggop
-	to op_stack. Higher level of expression should stay at lower position
+/* Each aggregation should push a register to value_stack -(and an aggop
+	to op_stack)-. Higher level of expression should stay at lower position
 	in the stack. The top of value_stack should be the conditional output.
 	At each transition, register values from different states at the same 
-	level of stack will	be merged by aggop.
+	level of stack will	be merged by -(aggop)- MergeOp.
 	At each checkpoint, value_stack[top] and value_stack[top-1] from the
-	current state will be merged to value_stack[top-1] by aggop. 
-	Both stacks will pop. */
+	current state will be merged to value_stack[top-1] -(by aggop)-. 
+	-(Both stacks)- value_stack will pop. */
 class StateValue: public DataValue
 {
 	public:
@@ -139,7 +149,7 @@ class StateValue: public DataValue
 		sub_type = DataType::STATE;
 		active = unique_ptr<BoolValue>(new BoolValue());
 		value_stack.clear();
-		op_stack.clear();
+//		op_stack.clear();
 	}
 
 	StateValue(const unique_ptr<StateValue>& src) {
@@ -148,13 +158,21 @@ class StateValue: public DataValue
 		active = unique_ptr<BoolValue>(new BoolValue(src->active));
 		for (int i=0; i<src->value_stack.size(); i++)
 			value_stack.push_back(unique_ptr<IntValue>(new IntValue(src->value_stack[i])));
-		op_stack = src->op_stack;
+//		op_stack = src->op_stack;
 	}
 
 	vector<unique_ptr<IntValue> > value_stack;
-	vector<shared_ptr<DT::Op> op_stack;
+//	vector<shared_ptr<DT::Op> op_stack;
 	unique_ptr<BoolValue> active;
 };
+
+
+
+
+
+
+/* ============ Operator Define ===============*/
+
 
 /* StateValue X StateValue -> StateValue 
 	(state) 	(predicate)    (state)*/
@@ -213,42 +231,15 @@ class TransitionOp: public DT::MergeParallelOp
 		if (c->unknown || c->val)
 		{
 			auto ans = unique_ptr<StateValue>(new StateValue(a));
-			for (int i=0; i<op_stack.size
+			for (int i=0; i<value_stack.size(); i++)
+			{
+				 /* [TODO] */
+			}
 			ans->active = unique_ptr<BoolValue>(new BoolValue(c));
 			return ans;
 		}
 		else
 			return DT::DataValue::factory->get_instance(DT::UNDEF);
-};
-
-class PushStackOp: public DT::Op
-{
-
-
-};
-
-class PushMaxOp: public PushStackOp
-{
-
-};
-
-class PushMinOp: public PushStackOp
-{
-
-};
-
-class PushSumOp: public PushStackOp
-{
-
-};
-
-/* [TODO] AVG requires 2 states 
-	(number of iterations & sum)
-	currently not supported */
-
-class PopStackOp: public DT::Op
-{
-
 };
 
 /* bool X bool -> bool */
@@ -357,8 +348,16 @@ class CondOp: public DT::Op
 
 };
 
+
+class MergeIntOp: public DT::MergeParallelOp
+{
+	public:
+	virtual static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b) = 0;
+};
+
+
 /* int X int -> int */
-class AddOp: public DT::BasicBinaryOp
+class AddOp: public MergeIntOp
 {
 	public:
 	unique_ptr<DataValue> operator ()(
@@ -382,7 +381,7 @@ class AddOp: public DT::BasicBinaryOp
 /* int X int -> int */
 /* [?] should we use conflict or undefined ? */
 /* [?] should lower bound < 0 be allowed? */
-class SubOp: public DT::BasicBinaryOp
+class SubOp: public MergeIntOp
 {
 	public:
 	unique_ptr<DataValue> operator ()(
@@ -408,7 +407,7 @@ class SubOp: public DT::BasicBinaryOp
 };
 
 /* int X int -> int */
-class MulOp: public DT::BasicBinaryOp
+class MulOp: public MergeIntOp
 {
 	public:
 	unique_ptr<DataValue> operator ()(
@@ -432,7 +431,7 @@ class MulOp: public DT::BasicBinaryOp
 /* int X int -> int */
 /* [?] should div 0 output inf or error ? */
 /* 		and if error, undef or conf ? */
-class DivOp: public DT::BasicBinaryOp
+class DivOp: public MergeIntOp
 {
 	public:
 	unique_ptr<DataValue> operator ()(
@@ -457,6 +456,161 @@ class DivOp: public DT::BasicBinaryOp
 		return ans;
 	}
 };
+
+/* int X int -> int */
+class MaxOp: public MergeIntOp
+{
+	public:
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
+		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		return eval(a, b);
+	}
+
+	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	{
+		auto max = [](int a, int b) -> int {
+			if (a>b)
+				return a;
+			else
+				return b;
+		};
+
+		auto ans = unique_ptr<IntValue>(new IntValue());
+		ans->lower = max(a->lower, b->lower);
+		ans->upper = max(a->upper, b->upper);
+		return ans;
+	}
+};
+
+/* int X int -> int */
+class MinOp: public MergeIntOp
+{
+	public:
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
+		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		return eval(a, b);
+	}
+
+	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	{
+		auto min = [](int a, int b) -> int {
+			if (a<b)
+				return a;
+			else
+				return b;
+		};
+
+		auto ans = unique_ptr<IntValue>(new IntValue());
+		ans->lower = min(a->lower, b->lower);
+		ans->upper = min(a->upper, b->upper);
+		return ans;
+	}
+};
+
+
+/* int X int -> int */
+class MergeOp: public DT::BasicBinaryOp
+{
+	public:
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
+		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		return eval(a, b);
+	}
+
+	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	{
+		auto max = [](int a, int b) -> int {
+			if (a>b)
+				return a;
+			else
+				return b;
+		};
+
+		auto min = [](int a, int b) -> int {
+			if (a<b)
+				return a;
+			else
+				return b;
+		};
+
+		auto ans = unique_ptr<IntValue>(new IntValue());
+		ans->lower = min(a->lower, b->lower);
+		ans->upper = max(a->upper, b->upper);
+		return ans;
+	}
+};
+
+/* StateValue -> StateValue */
+class PopStackOp: public DT::Op
+{
+	public:
+	PopStackOp(shared_ptr<BasicBinaryOp> op):the_op(op) { }
+
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		unique_ptr<StateValue> & state = copy_data(param[0]);
+		auto len = state->value_stack.size();
+		unique_ptr<StateValue>& a = state->value_stack[len-1];
+		unique_ptr<StateValue>& b = state->value_stack[len-2];
+		state->value_state[len-2] = the_op->eval(a, b);
+		state->value_state.pop_back();
+		return state;
+	}
+
+	private:
+	shared_ptr<BasicBinaryOp> the_op;
+};
+
+/*
+class PushStackOp: public DT::Op
+{
+	public:
+	void push(const std::unique_ptr<StateValue>& state, const std::unique_ptr<IntValue>& val, std::shared_ptr<DT::BasicBinaryOp> op) {
+		state->op_stack.push_back(op);
+		state->value_stack.push_back(val);
+	}
+};
+
+class PushMaxOp: public PushStackOp
+{
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		unique_ptr<> & a = static_pointer_cast<BoolValue>(param[0]);
+		unique_ptr<BoolValue> & b = static_pointer_cast<BoolValue>(param[1]);
+		return eval(a, b);
+	}
+};
+
+class PushMinOp: public PushStackOp
+{
+
+};
+
+class PushSumOp: public PushStackOp
+{
+
+};
+*/
+
+/* [TODO] AVG requires 2 states 
+	(number of iterations & sum)
+	currently not supported */
 
 }
 
