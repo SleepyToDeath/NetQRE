@@ -48,7 +48,8 @@ void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector
 	}
 	else
 	{
-		
+		predicates.push_back(ast);
+		return;
 	}
 }
 
@@ -74,16 +75,33 @@ unique_ptr<BoolValue> Interpreter::satisfy(shared_ptr<NetqreAST> predicate, cons
 {
 	switch(predicate->bool_type)
 	{
-		case DT::BoolOpType::OR
+		case BoolOpType::OR
 		return OrOp::eval(satisfy(predicate->subtree[0], fv), satisfy(predicate->subtree[1], fv));
 
-		case DT::BoolOpType::AND:
+		case BoolOpType::AND:
 		return AndOp::eval(satisfy(predicate->subtree[0], fv), satisfy(predicate->subtree[1], fv));
 
-		case DT::BoolOpType::NONE:
+		case BoolOpType::NONE:
+		if (predicate->subtree.size() == 1)
+		{
+			auto unknown = unique_ptr<BoolValue> (new BoolValue());
+			unknown->unknown = true;
+			unknown->val = true;
+			return unknown;
+		}
+		else
+		{
+			auto l = predicate->subtree[0];
+			auto r = predicate->subtree[1];
+			int index = l->value;
+			unsigned long long value = r->value;
+			auto sat = unique_ptr<BoolValue> (new BoolValue());
+			sat->unknown = false;
+			sat->val = (fv[index].value == value);
+			return sat;
+		}
 		
 	}
-		
 }
 
 }

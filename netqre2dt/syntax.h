@@ -130,7 +130,7 @@ class NetqreAST
 		NumOpType num_type;
 		BoolOpType bool_type;
 		RegularOpType reg_type;
-		int value;
+		unsigned long long value;
 	};
 
 	NetqreExpType type;

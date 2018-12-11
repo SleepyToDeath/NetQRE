@@ -11,7 +11,6 @@ using std::static_pointer_cast;
 
 namespace Netqre {
 
-/* the only interface exposed to DT is StateValue */
 
 class DataValueFactory
 {
@@ -517,7 +516,7 @@ class MinOp: public MergeIntOp
 
 
 /* int X int -> int */
-class MergeOp: public DT::BasicBinaryOp
+class MergeOp: public MergeIntOp
 {
 	public:
 	unique_ptr<DataValue> operator ()(
@@ -564,8 +563,8 @@ class PopStackOp: public DT::Op
 	{
 		unique_ptr<StateValue> & state = copy_data(param[0]);
 		auto len = state->value_stack.size();
-		unique_ptr<StateValue>& a = state->value_stack[len-1];
-		unique_ptr<StateValue>& b = state->value_stack[len-2];
+		unique_ptr<IntValue>& a = state->value_stack[len-1];
+		unique_ptr<IntValue>& b = state->value_stack[len-2];
 		state->value_state[len-2] = the_op->eval(a, b);
 		state->value_state.pop_back();
 		return state;
@@ -573,6 +572,20 @@ class PopStackOp: public DT::Op
 
 	private:
 	shared_ptr<BasicBinaryOp> the_op;
+};
+
+/* StateValue X IntValue -> StateValue */
+class PushStackOp: public DT::BasicBinaryOp
+{
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		unique_ptr<StateValue> & state = static_pointer_cast<StateValue>(copy_data(param[0]));
+		unique_ptr<IntValue> & val = static_pointer_cast<IntValue>(copy_data(param[1]));
+		state->value_stack.push_back(val);
+		return state;
+	}
 };
 
 /*
@@ -609,7 +622,7 @@ class PushSumOp: public PushStackOp
 */
 
 /* [TODO] AVG requires 2 states 
-	(number of iterations & sum)
+	(iteration count & sum)
 	currently not supported */
 
 }
