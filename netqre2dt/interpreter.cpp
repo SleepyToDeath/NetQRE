@@ -10,26 +10,42 @@ using std::move;
 
 namespace Netqre {
 
-DT::Transducer Interpreter::interpret(std::shared_ptr<NetqreAST> ast) 
+/* [TODO] modify parser, remove threshold */
+
+std::unique_ptr<IntValue> Machine::process(std::vector<DT::Word> stream) {
+
+
+}
+
+shared_ptr<Machine> Interpreter::interpret(std::shared_ptr<NetqreAST> ast) 
+{
+	auto machine = shared_ptr<Machine>(new Machine());
+	real_interpret(ast, machine);
+	return machine;
+}
+
+void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine)
 {
 	switch(ast->type)
 	{
 		case PROGRAM:
+		real_interpret(ast->subtree[0], machine);
+		real_interpret(ast->subtree[1], machine);
+		real_interpret(ast->subtree[2], machine);
+		return;
+
 		case FILTER:
-		case PREDICATE_SET:
-		case PREDICAT:
-		case FEATURE_NI:
-		case VALUE:
+		machine->filter = ast->subtree[0];
+		return;
+		
 		case QRE:
+		real_interpret(ast->subtree[0], machine);
+		return;
+
 		case QRE_NS:
-		case NUM_OP:
-		case QRE_VS:
-		case AGG_OP, 		
-		case FEATURE_SET:
-		case FEATURE_I:
-		case QRE_P:
-		case QRE_COND:
-		case RE:
+		machine->num_tree = real_interpret_num(ast, machine);
+		return;
+
 		case OUTPUT:
 		case CONST:
 		case THRESHOLD:
@@ -37,6 +53,75 @@ DT::Transducer Interpreter::interpret(std::shared_ptr<NetqreAST> ast)
 		case UNKNOWN:
 	}
 
+}
+
+std::shared_ptr<NumericalTree> real_interpret_num(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine);
+{
+	auto tree = shared_ptr<NumericalTree>(new NumericalTree());
+	switch(ast->type)
+	{
+		case QRE_NS:
+		tree->is_leaf = false;
+		tree->left = real_interpret_num(ast->subtree[0], machine);
+		tree->right = real_interpret_num(ast->subtree[1], machine);
+		switch(ast->num_type)
+		{
+			case ADD:
+			tree->op = shared_ptr<AddOp>(new AddOp());
+			break;
+
+			case SUB:
+			tree->op = shared_ptr<SubOp>(new SubOp());
+			break;
+
+			case MUL:
+			tree->op = shared_ptr<MulOp>(new MulOp());
+			break;
+
+			case DIV:
+			tree->op = shared_ptr<DivOp>(new DivOp());
+			break;
+		}
+		return tree;
+
+		case QRE_VS:
+		tree->is_leaf = true;
+		tree->leaf = real_interpret_agg(ast);
+		machine->qre_list.push_back( tree->leaf );
+		return tree;
+
+		default:
+		throw string("[real_interpret_num] Shouldn't reach here.");
+	}
+}
+
+std::shared_ptr<QRELeaf> real_interpret_agg(std::shared_ptr<NetqreAST> ast)
+{
+	switch(ast->type)
+	{
+
+
+	}
+
+}
+
+shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast)
+{
+	switch(ast->type)
+	{
+		case PREDICATE_SET:
+		case PREDICAT:
+		case FEATURE_NI:
+		case VALUE:
+		case QRE_VS:
+		case QRE_P:
+		case QRE_COND:
+		case RE:
+		case AGG_OP, 		
+		case FEATURE_SET:
+		case FEATURE_I:
+	}
+	
 }
 
 void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)
