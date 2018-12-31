@@ -2,6 +2,7 @@
 #define NETQRE2DT_OP_HPP
 
 #include "../data-transducer/op.h"
+#include "syntax.h"
 
 using std::unique_ptr;
 using std::shared_ptr;
@@ -132,14 +133,15 @@ class IntValue: public DataValue
 	int lower;
 };
 
-/* Each aggregation should push a register to value_stack -(and an aggop
-	to op_stack)-. Higher level of expression should stay at lower position
-	in the stack. The top of value_stack should be the conditional output.
-	At each transition, register values from different states at the same 
-	level of stack will	be merged by -(aggop)- MergeOp.
-	At each checkpoint, value_stack[top] and value_stack[top-1] from the
-	current state will be merged to value_stack[top-1] -(by aggop)-. 
-	-(Both stacks)- value_stack will pop. */
+/* Each aggregation should push a register to value_stack
+	Higher level of expression should stay at lower position
+	in the stack. The top of value_stack should be the 
+	conditional output.	At each transition, register values 
+	from different states at the same level of stack will be 
+	merged by MergeOp.
+	At each checkpoint, value_stack[top] and value_stack[top-1]
+	from the current state will be merged to value_stack[top-1]. 
+	value_stack will pop. */
 class StateValue: public DataValue
 {
 	public:
@@ -230,9 +232,9 @@ class TransitionOp: public DT::MergeParallelOp
 		if (c->unknown || c->val)
 		{
 			auto ans = unique_ptr<StateValue>(new StateValue(a));
-			for (int i=0; i<value_stack.size(); i++)
+			for (int i=0; i<a->value_stack.size(); i++)
 			{
-				 /* [TODO] */
+				ans->value_stack[i] = MergeOp::eval(a->value_stack[i], b->value_stack[i]);
 			}
 			ans->active = unique_ptr<BoolValue>(new BoolValue(c));
 			return ans;
@@ -555,7 +557,7 @@ class MergeOp: public MergeIntOp
 class PopStackOp: public DT::Op
 {
 	public:
-	PopStackOp(shared_ptr<BasicBinaryOp> op):the_op(op) { }
+	PopStackOp(shared_ptr<MergeParallelOp> op):the_op(op) { }
 
 	unique_ptr<DataValue> operator ()(
 		const vector< unique_ptr<DataValue> > &param, 
@@ -574,7 +576,31 @@ class PopStackOp: public DT::Op
 	shared_ptr<BasicBinaryOp> the_op;
 };
 
+/* push a pre-set init value to stack
+	the value should be set on construction of the op */
+class PushStackOp: public DT::SourceOp
+{
+	public:
+	PushStackOp(unique_ptr<IntValue> val):init_value(val) { }
+
+	unique_ptr<DataValue> operator ()(
+		const vector< unique_ptr<DataValue> > &param, 
+		const unique_ptr<DataValue> &current) 
+	{
+		if (param.size()>0)
+			unique_ptr<StateValue> & state = static_pointer_cast<StateValue>(copy_data(param[0]));
+		else
+			unique_ptr<StateValue> & state = static_pointer_cast<StateValue>(copy_data(current));
+		state->value_stack.push_back(val);
+		return state;
+	}
+
+	private:
+	unique_ptr<IntValue> init_value;
+};
+
 /* StateValue X IntValue -> StateValue */
+/*
 class PushStackOp: public DT::BasicBinaryOp
 {
 	unique_ptr<DataValue> operator ()(
@@ -587,6 +613,7 @@ class PushStackOp: public DT::BasicBinaryOp
 		return state;
 	}
 };
+*/
 
 /*
 class PushStackOp: public DT::Op

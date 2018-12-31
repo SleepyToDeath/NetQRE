@@ -12,9 +12,13 @@ namespace Netqre {
 
 /* [TODO] modify parser, remove threshold */
 
-std::unique_ptr<IntValue> Machine::process(std::vector<DT::Word> stream) {
+std::unique_ptr<IntValue> Machine::process(std::vector<DT::Word> &stream) {
 
 
+}
+
+void Machine::collect_value_space(std::vector<DT::Word> &stream) {
+	
 }
 
 shared_ptr<Machine> Interpreter::interpret(std::shared_ptr<NetqreAST> ast) 
@@ -28,21 +32,21 @@ void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> 
 {
 	switch(ast->type)
 	{
-		case PROGRAM:
+		case NetqreExpType::PROGRAM:
 		real_interpret(ast->subtree[0], machine);
 		real_interpret(ast->subtree[1], machine);
 		real_interpret(ast->subtree[2], machine);
 		return;
 
-		case FILTER:
+		case NetqreExpType::FILTER:
 		machine->filter = ast->subtree[0];
 		return;
 		
-		case QRE:
+		case NetqreExpType::QRE:
 		real_interpret(ast->subtree[0], machine);
 		return;
 
-		case QRE_NS:
+		case NetqreExpType::QRE_NS:
 		machine->num_tree = real_interpret_num(ast, machine);
 		return;
 
@@ -60,7 +64,7 @@ std::shared_ptr<NumericalTree> real_interpret_num(std::shared_ptr<NetqreAST> ast
 	auto tree = shared_ptr<NumericalTree>(new NumericalTree());
 	switch(ast->type)
 	{
-		case QRE_NS:
+		case NetqreExpType::QRE_NS:
 		tree->is_leaf = false;
 		tree->left = real_interpret_num(ast->subtree[0], machine);
 		tree->right = real_interpret_num(ast->subtree[1], machine);
@@ -84,7 +88,7 @@ std::shared_ptr<NumericalTree> real_interpret_num(std::shared_ptr<NetqreAST> ast
 		}
 		return tree;
 
-		case QRE_VS:
+		case NetqreExpType::QRE_VS:
 		tree->is_leaf = true;
 		tree->leaf = real_interpret_agg(ast);
 		machine->qre_list.push_back( tree->leaf );
@@ -97,31 +101,93 @@ std::shared_ptr<NumericalTree> real_interpret_num(std::shared_ptr<NetqreAST> ast
 
 std::shared_ptr<QRELeaf> real_interpret_agg(std::shared_ptr<NetqreAST> ast)
 {
-	switch(ast->type)
+	shared_ptr<NetqreAST> cur = ast;
+	auto leaf = shared_ptr<QRELeaf>(new QRELeaf());
+	while(true)
 	{
+		switch(cur->type)
+		{
+			case NetqreExpType::QRE_VS:
+			Aggregator agg;
+			switch(cur->agg_type)
+			{
+				case MAX:
+				agg->aggop = shared_ptr<MaxOp>(new MaxOp());
+				break;
 
+				case MIN:
+				agg->aggop = shared_ptr<MinOp>(new MinOp());
+				break;
 
+				case SUM:
+				agg->aggop = shared_ptr<AddOp>(new AddOp());
+				break;
+
+				case AVG:
+				throw string("Not supported yet!\n");
+			}
+			auto feat = cur->subtree[1];
+			for (int i = 0; i < feat->subtree.size(); i++)
+				agg.param.push_back(feat->subtree[i]->value);
+			leaf->agg_stack.push_back(agg);
+
+			cur = cur->subtree[0];
+			break;
+
+			case NetqreExpType::QRE_PS:
+			leaf->transducer = real_interpret_qre(cur->subtree[0]);
+			return leaf;
+		}
 	}
-
 }
 
 shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast)
 {
+	auto parse_aggop = [](shared_ptr<NetqreAST> ast) -> shared_ptr<MergeIntOp> {
+		switch(ast->agg_type)
+		{
+			case MAX:
+			return shared_ptr<MaxOp>(new MaxOp());
+
+			case MIN:
+			return shared_ptr<MinOp>(new MinOp());
+
+			case SUM:
+			return shared_ptr<AddOp>(new AddOp());
+
+			case AVG:
+			throw string("Not supported yet!\n");
+		}
+	}
+
 	switch(ast->type)
 	{
-		case PREDICATE_SET:
-		case PREDICAT:
-		case FEATURE_NI:
-		case VALUE:
-		case QRE_VS:
-		case QRE_P:
-		case QRE_COND:
-		case RE:
-		case AGG_OP, 		
-		case FEATURE_SET:
-		case FEATURE_I:
+		case NetqreExpType::QRE_PS:
+		switch(ast->reg_type)
+		{
+			case RegularOpType::STAR:
+			auto aggop = parse_aggop(ast->subtree[1]);
+			/* [TODO] */	
+			case RegularOpType::CONCAT:
+			auto aggop = parse_aggop(ast->subtree[2]);
+			/* [TODO] */
+
+		}
+
+		case NetqreExpType::QRE_COND:
+		auto dt_re = real_interpret_re(ast->subtree[0]);
+		/* [TODO] */
 	}
 	
+}
+
+
+shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<NetqreAST> ast)
+{
+	switch(ast->reg_type)
+
+
+
 }
 
 void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)

@@ -82,8 +82,18 @@ namespace DT
 			const unique_ptr<DataValue> &current);
 	};
 
-	/* always copy the first value in input */
-	class CopyOp : public Op
+	/* can accept 0 or 1 input */
+	class PipelineOp
+	{
+		public:
+		virtual unique_ptr<DataValue> operator ()(
+			const vector< unique_ptr<DataValue> > &param, 
+			const unique_ptr<DataValue> &current) = 0;
+	};
+
+	/* If no input, same as const op
+		Otherwise copy the first value in input */
+	class CopyOp : public PipelineOp
 	{
 		public:
 		unique_ptr<DataValue> operator ()(

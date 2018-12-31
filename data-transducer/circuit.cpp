@@ -143,49 +143,49 @@ namespace DT {
 			gates[i]->posedge();
 	}
 
-	void Circuit::combine_char(shared_ptr<Circuit> c, CombineType t)
+	void Circuit::combine_char(shared_ptr<Circuit> c, CombineType t, share_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op)
 	{
 		switch(t)
 		{
 			case UNION:
-			return combine_char_union(c);
+			return combine_char_union(c, init_op, commit_op);
 
 			case PARALLEL:
-			return combine_char_parallel(c);
+			return combine_char_parallel(c,init_op, commit_op);
 
 			case STAR:
-			return combine_char_star();
+			return combine_char_star(init_op, commit_op);
 
 			case CONCATENATION:
-			return combine_char_concatenation(c);
+			return combine_char_concatenation(init_op, commit_op);
 
 			default:
 			return -1;
 		}
 	}
 
-	void Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t)
+	void Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t, share_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> op)
 	{
 		switch(t)
 		{
 			case UNION:
-			return combine_epsilon_union(c);
+			return combine_epsilon_union(c, init_op, commit_op);
 
 			case PARALLEL:
-			return combine_epsilon_parallel(c);
+			return combine_epsilon_parallel(c, init_op, commit_op);
 
 			case STAR:
-			return combine_epsilon_star();
+			return combine_epsilon_star(init_op, commit_op);
 
 			case CONCATENATION:
-			return combine_epsilon_concatenation(c);
+			return combine_epsilon_concatenation(c, init_op, commit_op);
 
 			default:
 			return -1;
 		}
 	}
 
-	void Circuit::combine_basic(shared_ptr<Circuit> c) 
+	void Circuit::combine_basic(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op) 
 	{
 		for (int i=0; i<c->statei.size(); i++)
 			statei.push_back(c->statei[i]);
@@ -197,18 +197,18 @@ namespace DT {
 			gates.push_back(c->gates[i]);
 	}
 
-	void Circuit::combine_char_parallel(shared_ptr<Circuit> c)
+	void Circuit::combine_char_parallel(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		combine_char_union(c);
 	}
 
-	void Circuit::combine_epsilon_parallel(shared_ptr<Circuit> c, shared_ptr<MergeParallelOp> op)
+	void Circuit::combine_epsilon_parallel(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		int l = stateof.size();
 		combine_basic(c);
 		for (int i=0; i<l; i++)
 		{
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(op));
+			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(commit_op));
 			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			new_of->wire_in(new_if);
 			new_if->wire_out(new_of);
@@ -225,7 +225,7 @@ namespace DT {
 		}
 	}
 
-	void Circuit::combine_char_union(shared_ptr<Circuit> c)
+	void Circuit::combine_char_union(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		int l = stateof.size();
 		combine_basic(c);
@@ -248,7 +248,7 @@ namespace DT {
 		}
 	}
 
-	void Circuit::combine_epsilon_union(shared_ptr<Circuit> c)
+	void Circuit::combine_epsilon_union(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		int l = stateof.size();
 		combine_basic(c);
@@ -275,7 +275,7 @@ namespace DT {
 		}
 	}
 
-	void Circuit::combine_char_concatenation(shared_ptr<Circuit> c)
+	void Circuit::combine_char_concatenation(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		int l = stateii.size();
 		combine_basic(c);
@@ -293,7 +293,7 @@ namespace DT {
 	}
 
 
-	void Circuit::combine_epsilon_concatenation(shared_ptr<Circuit> c)
+	void Circuit::combine_epsilon_concatenation(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		int l = stateii.size();
 		combine_basic(c);
@@ -315,7 +315,7 @@ namespace DT {
 
 	}
 
-	void Circuit::combine_char_star()
+	void Circuit::combine_char_star(shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		vector< std::shared_ptr<Gate> > new_stateii; /* new input state */
 		vector< std::shared_ptr<Gate> > new_stateif; /* new output state */
@@ -356,7 +356,7 @@ namespace DT {
 		stateof = new_stateof;
 	}
 
-	void Circuit::combine_epsilon_star()
+	void Circuit::combine_epsilon_star(shared_ptr<PipelineOp> init_op, shared_ptr<MergeParallelOp> commit_op)
 	{
 		vector< std::shared_ptr<Gate> > new_stateii; /* new input state */
 		vector< std::shared_ptr<Gate> > new_stateif; /* new output state */
@@ -364,7 +364,7 @@ namespace DT {
 		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
 		for (int i=0; i<stateii.size(); i++)
 		{
-			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(init_op));
 			shared_ptr<Gate> new_oi = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
@@ -373,7 +373,7 @@ namespace DT {
 			shared_ptr<Gate> old_if = stateif[i];
 			shared_ptr<Gate> old_of = stateof[i];
 
-			old_ii->set_op(shared_ptr<UnionOp>(new UnionOp()));
+			old_ii->set_op(commit_op);
 			old_ii->wire_in(old_if);
 			old_if->wire_out(old_ii);
 			old_ii->wire_in(new_ii);

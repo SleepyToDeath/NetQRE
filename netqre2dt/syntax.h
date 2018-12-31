@@ -82,6 +82,8 @@
 
 namespace Netqre {
 
+typedef StreamFieldType int
+
 enum class NetqreExpType {
 	PROGRAM, 		//0
 	FILTER, 		//1
@@ -130,7 +132,7 @@ class NetqreAST
 		NumOpType num_type;
 		BoolOpType bool_type;
 		RegularOpType reg_type;
-		unsigned long long value;
+		StreamFieldType value;
 	};
 
 	NetqreExpType type;

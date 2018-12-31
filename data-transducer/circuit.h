@@ -45,8 +45,8 @@ namespace DT
 		std::unique_ptr<Port> get_state_out();
 
 		/* the original c will be destroyed; this circuit will become the combined one */
-		std::unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t);
-		std::unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t);
+		std::unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
+		std::unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
 
 		private:
 		/* [!] gates of ii, io, oi, of must be of the same number and be aligned */
