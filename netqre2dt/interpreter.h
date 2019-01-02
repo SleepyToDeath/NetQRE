@@ -18,14 +18,17 @@ class Machine {
 	std::unique_ptr<IntValue> process(std::vector<DT::Word> &stream);
 
 	/* constant, won't change after construction */
-	std::vector< shared_ptr<QRELeaf> > qre_list;
+	std::vector< std::shared_ptr<QRELeaf> > qre_list;
 	std::shared_ptr<NumericalTree> num_tree;
 	std::shared_ptr<NetqreAST> filter;
+	std::vector< std::shared_ptr<NetqreAST> > predicates;
 
 	private:
 	/* runtime info, initialize for each execution */
 	std::vector<ValueSpace> value_space;
 	void collect_value_space(std::vector<DT::Word> &stream);
+	std::vector<DT::Word> generate_tags(TokenStream &feature_stream);
+	std::unique_ptr<BoolValue> satisfy(shared_ptr<NetqreAST> predicate, const FeatureVector & fv);
 };
 
 /* top level, QRE_NS */
@@ -45,7 +48,7 @@ class NumericalTree {
 };
 
 /* Each variable of QRE_NS is a QRE_VS, with a stack of aggregators over value space.
-	At the bottom of the stack is a single transducer produced from QRE_PS. */
+	At the top of the stack is a single transducer produced from QRE_PS. */
 class QRELeaf {
 	public:
 	std::unique_ptr<IntValue> output;
@@ -71,7 +74,6 @@ class Interpreter
 {
 	public:
 	std::shared_ptr<Machine> interpret(std::shared_ptr<NetqreAST> ast);
-	std::vector<DT::Word> Interpreter::generate_tags(std::vector<shared_ptr<NetqreAST> > & predicates, TokenStream feature_stream);
 
 	private:
 	void 							real_interpret(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine);
@@ -81,7 +83,6 @@ class Interpreter
 	std::shared_ptr<DT::Transducer> real_interpret_re(std::shared_ptr<NetqreAST> ast)
 
 	void collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates);
-	std::unique_ptr<BoolValue> Interpreter::satisfy(shared_ptr<NetqreAST> predicate, const FeatureVector & fv);
 };
 
 }

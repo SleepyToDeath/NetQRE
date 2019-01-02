@@ -34,7 +34,7 @@ namespace DT
 		Circuit();
 
 		void add_gate(std::shared_ptr<Gate> g, GateType t);
-		void combine(shared_ptr<Circuit> c);
+//		void combine(shared_ptr<Circuit> c);
 
 		/* set_state_in -> set_stream_in -> tick -> get_state_out -> reset */
 		void reset();
@@ -47,6 +47,9 @@ namespace DT
 		/* the original c will be destroyed; this circuit will become the combined one */
 		std::unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
 		std::unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
+
+		/* Only keep all I/O states. Output states copy Input states' value */
+		std::shared_ptr<Circuit> get_plain_circuit();
 
 		private:
 		/* [!] gates of ii, io, oi, of must be of the same number and be aligned */

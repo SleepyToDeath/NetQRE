@@ -4,7 +4,12 @@ using std::move();
 
 namespace DT {
 
-Gate(shared_ptr<Op> op);
+Gate(shared_ptr<Gate> src)
+:Gate(src->op)
+{
+}
+
+Gate(shared_ptr<Op> op)
 {
 	val = DataValue::factory->get_instance(UNDEF);
 	val_old = copy_data(val);

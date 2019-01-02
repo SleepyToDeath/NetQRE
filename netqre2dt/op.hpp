@@ -127,10 +127,15 @@ class IntValue: public DataValue
 		lower = src->lower;
 	}
 
+	IntValue(StreamFieldType val):upper(val),lower(val)
+	{}
+
 	void dummy() {}
 
-	int upper;
-	int lower;
+	StreamFieldType upper;
+	StreamFieldType lower;
+
+	const StreamFieldType MAXIMUM = 1<<31;
 };
 
 /* Each aggregation should push a register to value_stack
@@ -581,7 +586,7 @@ class PopStackOp: public DT::Op
 class PushStackOp: public DT::SourceOp
 {
 	public:
-	PushStackOp(unique_ptr<IntValue> val):init_value(val) { }
+	PushStackOp(const unique_ptr<IntValue> &val):init_value(copy_data(val)) { }
 
 	unique_ptr<DataValue> operator ()(
 		const vector< unique_ptr<DataValue> > &param, 

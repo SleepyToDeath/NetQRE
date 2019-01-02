@@ -4,15 +4,17 @@
 #include <vector>
 #include "../data-transducer/op.h"
 
+typedef StreamFieldType int
+
 class FeatureSlot
 {
 	public:
-	FeatureSlot(size_t _size, bool _iterative, unsigned long long _value):
+	FeatureSlot(size_t _size, bool _iterative, StreamFieldType _value):
 		size(_size),iterative(_iterative),value(_value) { }
 
 	size_t size; /* in bits, aligned to lowest bit */
 	bool iterative; /* iterative: no specific value will appear in the program, only iterate through all values, e.g. src_ip; non-iterative: otherwise, e.g. ethernet type */
-	unsigned long long value;
+	StreamFieldType value;
 };
 
 class CmpFeatureVector: public DT::CmpTagValue

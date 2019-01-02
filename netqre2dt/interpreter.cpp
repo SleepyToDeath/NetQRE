@@ -1,5 +1,8 @@
 #include "interpreter.h"
 #include "op.hpp"
+#include <algorithm>
+#include <map>
+#include <pair>
 
 using std::unique_ptr;
 using std::shared_ptr;
@@ -7,23 +10,145 @@ using std::string;
 using std::vector;
 using std::static_pointer_cast;
 using std::move;
+using std::map;
+using std::for_each;
 
 namespace Netqre {
 
 /* [TODO] modify parser, remove threshold */
+/* [?] what threshold? */
 
-std::unique_ptr<IntValue> Machine::process(std::vector<DT::Word> &stream) {
+std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
+	auto tag_stream = generate_tags(feature_stream);
+	collect_value_space(feature_stream);
 
+	/* [TODO] apply filter */
 
+	/* execute all qre leaves */
+	for (int i=0; i<qre_list.size(); i++)
+	{
+		auto qre = qre_list[i];
+		aggregate(qre, 0, feature_stream, tag_stream);
+	}
+
+	/* compute final result of num tree */
+	return num_tree->eval();
 }
 
-void Machine::collect_value_space(std::vector<DT::Word> &stream) {
-	
+/* lvl = agg stack level */
+unique_ptr<IntValue> aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenStream& feature_stream, vector<DT::Word>& tag_stream)
+{
+	/* stack top, execute transducer */
+	if (lvl == qre->agg_stack.size())
+	{
+		vector< unique_ptr<DT::DataValue> > param;
+		auto start = unique_ptr<StateValue>(new StateValue()); // starting symbol = true, stack size 1 (with dummy value)
+		start->active->unknown = false;
+		start->active->val = true;
+		start->value_stack.push_back( unique_ptr<IntValue>(0) );
+		param.push_back(move(start));
+
+		qre->transducer->reset(param);
+
+		auto ans = qre->transducer->process(tag_stream);
+		return static_pointer_cast<IntValue>(copy_data(static_pointer_cast<StateValue>(ans[0])->value_stack[0]));
+	}
+
+	/* otherwise recursion */
+	/* split stream */
+	map< vector<StreamFieldType>, pair<TokenStream, vector<DT::Word> > > sub_streams;
+	for (int i=0; i<feature_stream.size(); i++)
+	{
+		vector<StreamFieldType> signature;
+		vector<int> & p = qre->agg_stack[lvl].param;
+		for (int j=0; j<p.size(); j++)
+			signature.push_back(feature_stream[i][p[j]].value);
+		sub_streams[signature].first.push_back(feature_stream[i]);
+		sub_streams[signature].second.push_back(tag_stream[i]);
+	}
+
+	unique_ptr<IntValue> ans = nullptr;
+	for_each(sub_streams.begin(), sub_streams.end(), [&](pair< vector<StreamFieldType>, vector<DT::Word> > cur) {
+		auto candidate = aggregate(qre, lvl+1, cur.second.first, cur.second.second);
+		if (ans == nullptr)
+			ans = copy_data(candidate);
+		else
+			ans = qre->agg_stack[lvl].aggop.eval(ans, candidate);
+	});
+
+	return ans;
+}
+
+void Machine::collect_value_space(TokenStream &stream) {
+	int fields = stream[0].size();
+	for (int i=0; i<fields; i++)
+	{
+		value_space.push_back(ValueSpace());
+		for (int j=0; j<stream.size(); j++)
+			value_space[i].range.insert(stream[j][i].value);
+	}
+}
+
+TokenStream<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
+{
+	vector<DT::Word> tag_stream;
+	for (int i=0; i<feature_stream.size(); i++)
+	{
+		DT::Word w;
+		w->val = DataValue::factory->get_instance(DT::UNDEF);
+		for (int j=0; j<predicates.size(); j++)
+		{
+			auto pred_tag = unique_ptr<StateValue>(new StateValue());
+			pred_tag->active = satisfy(predicates[j], feature_stream[i])
+			w->tag_bitmap.push_back(move(pred_tag));
+		}
+		tag_stream.push_back(w);
+	}
+	return tag_stream;
+}
+
+unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, const FeatureVector & fv)
+{
+	switch(predicate->bool_type)
+	{
+		case BoolOpType::OR
+		return OrOp::eval(satisfy(predicate->subtree[0], fv), satisfy(predicate->subtree[1], fv));
+
+		case BoolOpType::AND:
+		return AndOp::eval(satisfy(predicate->subtree[0], fv), satisfy(predicate->subtree[1], fv));
+
+		case BoolOpType::NONE:
+		if (predicate->subtree.size() == 1)
+		{
+			auto unknown = unique_ptr<BoolValue> (new BoolValue());
+			unknown->unknown = true;
+			unknown->val = true;
+			return unknown;
+		}
+		else
+		{
+			auto l = predicate->subtree[0];
+			auto r = predicate->subtree[1];
+			int index = l->value;
+			unsigned long long value = r->value;
+			auto sat = unique_ptr<BoolValue> (new BoolValue());
+			sat->unknown = false;
+			sat->val = (fv[index].value == value);
+			return sat;
+		}
+		
+	}
+}
+
+std::unique_ptr<IntValue> NumericalTree::eval()
+{
+
 }
 
 shared_ptr<Machine> Interpreter::interpret(std::shared_ptr<NetqreAST> ast) 
 {
 	auto machine = shared_ptr<Machine>(new Machine());
+	collect_predicates(machine->predicates);
 	real_interpret(ast, machine);
 	return machine;
 }
@@ -99,7 +224,7 @@ std::shared_ptr<NumericalTree> real_interpret_num(std::shared_ptr<NetqreAST> ast
 	}
 }
 
-std::shared_ptr<QRELeaf> real_interpret_agg(std::shared_ptr<NetqreAST> ast)
+std::shared_ptr<QRELeaf> real_interpret_agg(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
 	shared_ptr<NetqreAST> cur = ast;
 	auto leaf = shared_ptr<QRELeaf>(new QRELeaf());
@@ -141,23 +266,49 @@ std::shared_ptr<QRELeaf> real_interpret_agg(std::shared_ptr<NetqreAST> ast)
 	}
 }
 
-shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast)
+shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast, std::std::shared_ptr<Machine> machine)
 {
-	auto parse_aggop = [](shared_ptr<NetqreAST> ast) -> shared_ptr<MergeIntOp> {
+	auto parse_agg_commit_op = [](shared_ptr<NetqreAST> ast) -> shared_ptr<PopStackOp> {
 		switch(ast->agg_type)
 		{
 			case MAX:
-			return shared_ptr<MaxOp>(new MaxOp());
+			return share_ptr<PopStackOp>(new PopStackOp(shared_ptr<MaxOp>(new MaxOp()))):
 
 			case MIN:
-			return shared_ptr<MinOp>(new MinOp());
+			return share_ptr<PopStackOp>(new PopStackOp(shared_ptr<MinOp>(new MinOp())));
 
 			case SUM:
-			return shared_ptr<AddOp>(new AddOp());
+			return share_ptr<PopStackOp>(new PopStackOp(shared_ptr<AddOp>(new AddOp())));
 
 			case AVG:
 			throw string("Not supported yet!\n");
 		}
+	}
+
+
+	auto parse_agg_init_op = [](shared_ptr<NetqreAST> ast) -> shared_ptr<PushStackOp> {
+		auto val = unique_ptr<IntValue>(new IntValue());
+		switch(ast->agg_type)
+		{
+			case MAX:
+			val->upper = 0;
+			val->lower = 0;
+			break;
+
+			case MIN:
+			val->upper = IntValue::MAXIMUM;
+			val->lower = IntValue::MAXIMUM;
+			break;
+
+			case SUM:
+			val->upper = 0;
+			val->lower = 0;
+			break;
+
+			case AVG:
+			throw string("Not supported yet!\n");
+		}
+		return share_ptr<PushStackOp>(new PushStackOp(val));
 	}
 
 	switch(ast->type)
@@ -166,12 +317,19 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 		switch(ast->reg_type)
 		{
 			case RegularOpType::STAR:
-			auto aggop = parse_aggop(ast->subtree[1]);
-			/* [TODO] */	
-			case RegularOpType::CONCAT:
-			auto aggop = parse_aggop(ast->subtree[2]);
-			/* [TODO] */
+			auto agg_init_op = parse_agg_init_op(ast->subtree[1]);
+			auto agg_commit_op = parse_agg_commit_op(ast->subtree[1]);
+			auto dt_subexp = real_interpret_qre(ast->subtree[0]);
+			dt_subexp->combine(nullptr, DT::STAR, agg_init_op, agg_commit_op);
+			return dt_subexp;
 
+			case RegularOpType::CONCAT:
+			auto agg_init_op = parse_agg_init_op(ast->subtree[2]);
+			auto agg_commit_op = parse_agg_commit_op(ast->subtree[2]);
+			auto dt_left= real_interpret_qre(ast->subtree[0]);
+			auto dt_right = real_interpret_qre(ast->subtree[1]);
+			dt_letf->combine(dt_right, DT::CONCATENATION, agg_init_op, agg_commit_op);
+			return dt_left;
 		}
 
 		case NetqreExpType::QRE_COND:
@@ -182,12 +340,45 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 }
 
 
-shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<NetqreAST> ast)
+shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine)
 {
-	switch(ast->reg_type)
+	switch(ast->type)
+	{
+		case NetqreExpType::RE:
+		switch(ast->reg_type)
+		{
 
 
 
+		}
+
+		case NetqreExpType::WILDCARD:
+		{
+			auto dt = shared_ptr<Transducer>(new Transducer());
+
+			for 
+			auto c = shared_ptr<Circuit>(new Circuit());
+
+			auto op = shared_ptr<CopyOp>(new CopyOp());
+
+			auto gii = shared_ptr<Gate>(new Gate(cp));
+			auto gif = shared_ptr<Gate>(new Gate(cp));
+			auto goi = shared_ptr<Gate>(new Gate(cp));
+			auto gof = shared_ptr<Gate>(new Gate(cp));
+			gii->wire_out(gof);
+			gof->wire_out(gof);
+
+			c->add_gate(gii, STATE_IN_INIT);
+			c->add_gate(gif, STATE_IN_FINAL);
+			c->add_gate(goi, STATE_OUT_INIT);
+			c->add_gate(gof, STATE_OUT_FINAL);
+
+			dt->add_circuit(c, 
+		}
+
+		case NetqreExpType::PREDICATE_SET:
+
+	}
 }
 
 void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)
@@ -201,57 +392,6 @@ void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector
 	{
 		predicates.push_back(ast);
 		return;
-	}
-}
-
-vector<DT::Word> Interpreter::generate_tags(std::vector<shared_ptr<NetqreAST> > & predicates, TokenStream feature_stream)
-{
-	vector<DT::Word> tag_stream;
-	for (int i=0; i<feature_stream.size(); i++)
-	{
-		DT::Word w;
-		w->val = DataValue::factory->get_instance(DT::UNDEF);
-		for (int j=0; j<predicates.size(); j++)
-		{
-			auto pred_tag = unique_ptr<StateValue>(new StateValue());
-			pred_tag->active = satisfy(predicates[j], feature_stream[i])
-			w->tag_bitmap.push_back(move(pred_tag));
-		}
-		tag_stream.push_back(w);
-	}
-	return tag_stream;
-}
-
-unique_ptr<BoolValue> Interpreter::satisfy(shared_ptr<NetqreAST> predicate, const FeatureVector & fv)
-{
-	switch(predicate->bool_type)
-	{
-		case BoolOpType::OR
-		return OrOp::eval(satisfy(predicate->subtree[0], fv), satisfy(predicate->subtree[1], fv));
-
-		case BoolOpType::AND:
-		return AndOp::eval(satisfy(predicate->subtree[0], fv), satisfy(predicate->subtree[1], fv));
-
-		case BoolOpType::NONE:
-		if (predicate->subtree.size() == 1)
-		{
-			auto unknown = unique_ptr<BoolValue> (new BoolValue());
-			unknown->unknown = true;
-			unknown->val = true;
-			return unknown;
-		}
-		else
-		{
-			auto l = predicate->subtree[0];
-			auto r = predicate->subtree[1];
-			int index = l->value;
-			unsigned long long value = r->value;
-			auto sat = unique_ptr<BoolValue> (new BoolValue());
-			sat->unknown = false;
-			sat->val = (fv[index].value == value);
-			return sat;
-		}
-		
 	}
 }
 

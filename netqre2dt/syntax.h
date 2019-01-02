@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include "./network_tokenizer/feature_vector.hpp"
 
 /*
 	<program>::=
@@ -82,7 +83,6 @@
 
 namespace Netqre {
 
-typedef StreamFieldType int
 
 enum class NetqreExpType {
 	PROGRAM, 		//0

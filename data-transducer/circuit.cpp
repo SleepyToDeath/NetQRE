@@ -401,3 +401,57 @@ namespace DT {
 	}
 
 }
+
+std::shared_ptr<Circuit> Circuit::get_plain_circuit()
+{
+	auto ans = shared_ptr<Circuit>(new Circuit());
+
+	if (stateii.size() != stateoi.size())
+		return nullptr;
+	if (stateif.size() != stateof.size())
+		return nullptr;
+	if (statei.size() != stateo.size())
+		return nullptr;
+
+	/* streami is empty */
+
+	for (int i=0; i<statei.size(); i++)
+	{
+		auto tmpi = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+		auto tmpo = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+		tmpi->wire_out(tmpo);
+		tmpo->wire_in(tmpi);
+		ans->statei.push_back(tmpi);
+		ans->stateo.push_back(tmpo);
+		ans->gates.push_back(tmpi);
+		ans->gates.push_back(tmpo);
+	}
+
+
+	for (int i=0; i<stateii.size(); i++)
+	{
+		auto tmpi = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+		auto tmpo = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+		tmpi->wire_out(tmpo);
+		tmpo->wire_in(tmpi);
+		ans->stateii.push_back(tmpi);
+		ans->stateoi.push_back(tmpo);
+		ans->gates.push_back(tmpi);
+		ans->gates.push_back(tmpo);
+	}
+
+
+	for (int i=0; i<stateif.size(); i++)
+	{
+		auto tmpi = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+		auto tmpo = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+		tmpi->wire_out(tmpo);
+		tmpo->wire_in(tmpi);
+		ans->stateif.push_back(tmpi);
+		ans->stateof.push_back(tmpo);
+		ans->gates.push_back(tmpi);
+		ans->gates.push_back(tmpo);
+	}
+
+	return ans;
+}

@@ -54,6 +54,8 @@ namespace DT
 	{
 		public:
 		Gate(shared_ptr<Op> op);
+		/* only copy op, other fields are reset */
+		Gate(shared_ptr<Gate> src);
 		~Gate();
 
 		void wire_in(share_ptr<Gate> src); /* add an input wire */
