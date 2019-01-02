@@ -213,6 +213,7 @@ class PredicateOp: public DT::BasicBinaryOp
 };
 
 /* StateValue X StateValue -> StateValue */
+/* [TODO] arbitrary number of inputs */
 class TransitionOp: public DT::MergeParallelOp
 {
 	public:

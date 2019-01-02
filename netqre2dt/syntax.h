@@ -135,6 +135,8 @@ class NetqreAST
 		StreamFieldType value;
 	};
 
+	TagType tag;
+
 	NetqreExpType type;
 
 	std::vector< std::shared_ptr<NetqreAST> > subtree;

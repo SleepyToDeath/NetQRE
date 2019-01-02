@@ -174,12 +174,6 @@ void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> 
 		case NetqreExpType::QRE_NS:
 		machine->num_tree = real_interpret_num(ast, machine);
 		return;
-
-		case OUTPUT:
-		case CONST:
-		case THRESHOLD:
-		case WILDCARD:
-		case UNKNOWN:
 	}
 
 }
@@ -347,37 +341,78 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 		case NetqreExpType::RE:
 		switch(ast->reg_type)
 		{
+			case RegularOpType::STAR:
+			auto agg_init_op = shared_ptr<CopyOp>(new CopyOp());
+			auto agg_commit_op = shared_ptr<TransitionOp>(new TransitionOp());
+			auto dt_subexp = real_interpret_qre(ast->subtree[0]);
+			dt_subexp->combine(nullptr, DT::STAR, agg_init_op, agg_commit_op);
+			return dt_subexp;
 
-
-
+			case RegularOpType::CONCAT:
+			auto agg_init_op = shared_ptr<CopyOp>(new CopyOp());
+			auto agg_commit_op = shared_ptr<TransitionOp>(new TransitionOp());
+			auto dt_left= real_interpret_qre(ast->subtree[0]);
+			auto dt_right = real_interpret_qre(ast->subtree[1]);
+			dt_letf->combine(dt_right, DT::CONCATENATION, agg_init_op, agg_commit_op);
+			return dt_left;
 		}
 
 		case NetqreExpType::WILDCARD:
 		{
 			auto dt = shared_ptr<Transducer>(new Transducer());
+			shared_ptr<Circuit> bak;
 
-			for 
+			for (int i=0; i<machine->predicates.size(); i++)
+			{
+				auto c = shared_ptr<Circuit>(new Circuit());
+
+				auto op = shared_ptr<CopyOp>(new CopyOp());
+
+				auto gii = shared_ptr<Gate>(new Gate(op));
+				auto gif = shared_ptr<Gate>(new Gate(op));
+				auto goi = shared_ptr<Gate>(new Gate(op));
+				auto gof = shared_ptr<Gate>(new Gate(op));
+				gii->wire_out(gof);
+				gof->wire_in(gii);
+
+				c->add_gate(gii, STATE_IN_INIT);
+				c->add_gate(gif, STATE_IN_FINAL);
+				c->add_gate(goi, STATE_OUT_INIT);
+				c->add_gate(gof, STATE_OUT_FINAL);
+
+				bak = c;
+
+				dt->add_circuit(c, i);
+			}
+			dt->add_epsilon_circuit(bak->get_plain_circuit());
+		}
+
+		case NetqreExpType::PREDICATE_SET:
+		{
+			auto dt = shared_ptr<Transducer>(new Transducer());
 			auto c = shared_ptr<Circuit>(new Circuit());
+			auto in_op = shared_ptr<CopyOp>(new CopyOp());
+			auto out_op = shared_ptr<TransitionOp>(new TransitionOp());
 
-			auto op = shared_ptr<CopyOp>(new CopyOp());
-
-			auto gii = shared_ptr<Gate>(new Gate(cp));
-			auto gif = shared_ptr<Gate>(new Gate(cp));
-			auto goi = shared_ptr<Gate>(new Gate(cp));
-			auto gof = shared_ptr<Gate>(new Gate(cp));
+			auto gs = shared_ptr<Gate>(new Gate(in_op));
+			auto gii = shared_ptr<Gate>(new Gate(in_op));
+			auto gif = shared_ptr<Gate>(new Gate(in_op));
+			auto goi = shared_ptr<Gate>(new Gate(in_op));
+			auto gof = shared_ptr<Gate>(new Gate(out_op));
 			gii->wire_out(gof);
-			gof->wire_out(gof);
+			gs->wire_out(gof);
+			gof->wire_in(gii); // first value
+			gof->wire_in(gs); // second predicate
 
+			c->add_gate(gs, STREAM_IN);
 			c->add_gate(gii, STATE_IN_INIT);
 			c->add_gate(gif, STATE_IN_FINAL);
 			c->add_gate(goi, STATE_OUT_INIT);
 			c->add_gate(gof, STATE_OUT_FINAL);
 
-			dt->add_circuit(c, 
+			dt->add_circuit(c, ast->tag);
+			dt->add_epsilon_circuit(c->get_plain_circuit());
 		}
-
-		case NetqreExpType::PREDICATE_SET:
-
 	}
 }
 
@@ -390,6 +425,7 @@ void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector
 	}
 	else
 	{
+		ast->tag = predicates.size();
 		predicates.push_back(ast);
 		return;
 	}
