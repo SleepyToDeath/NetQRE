@@ -9,7 +9,7 @@ namespace DT
 {
 	enum GateType {
 		GATE=0, PERSISTENT, STREAM_IN, STATE_IN, STATE_IN_INIT, STATE_IN_FINAL, STATE_OUT, STATE_OUT_INIT, STATE_OUT_FINAL, NUM_GATE_TYPE
-	}
+	};
 
 	enum CombineType {
 		UNION, PARALLEL, STAR, CONCATENATION
@@ -20,7 +20,7 @@ namespace DT
 		public:
 		Port();
 		Port(const std::unique_ptr<Port> &src);
-		Port::merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op);
+		void merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op);
 
 		std::vector<std::unique_ptr<DataValue> > init;
 		std::vector<std::unique_ptr<DataValue> > media;

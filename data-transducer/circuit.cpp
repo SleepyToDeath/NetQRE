@@ -20,7 +20,7 @@ namespace DT {
 			fin.push_back(copy_data(src->fin[i]));
 	}
 
-	Port::merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op)
+	void Port::merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op)
 	{
 		to_param [] (const unique_ptr<DataValue> &a, const unique_ptr<DataValue> &b) -> vector<unique_ptr<DataValue> >
 		{

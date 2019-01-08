@@ -58,8 +58,8 @@ namespace DT
 		Gate(shared_ptr<Gate> src);
 		~Gate();
 
-		void wire_in(share_ptr<Gate> src); /* add an input wire */
-		void wire_out(share_ptr<Gate> dst); /* add an output wire */
+		void wire_in(shared_ptr<Gate> src); /* add an input wire */
+		void wire_out(shared_ptr<Gate> dst); /* add an output wire */
 		void wire_ready(); /* a input CMB wire is ready to be read for this cycle */
 		/* literally set value, should only use for input gates of a circuit */
 		void set_value(const unique_ptr<DataValue> &val); 
@@ -71,8 +71,8 @@ namespace DT
 
 		private:
 		shared_ptr<Op> op;
-		std::vector<share_ptr<Gate> > in;
-		std::vector<share_ptr<Gate> > out;
+		std::vector<shared_ptr<Gate> > in;
+		std::vector<shared_ptr<Gate> > out;
 		unique_ptr<DataValue> val, val_old, val_init;
 		int cmb_wires;
 		int ready_wires;

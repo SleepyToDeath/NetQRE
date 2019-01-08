@@ -12,15 +12,16 @@ using std::move;
 /* syntactic sugar */
 #define copy_data(x) unique_ptr<DT::DataValue>(DT::DataValue::factory->get_instance(x))
 
+typedef int TagType;
+
 namespace DT
 {
 
-	typedef TagType int
 
 	/* 	Define values for undefined and conflict. 
 		All valid values must be non-negtive */
 	enum DataType{
-		UNDEF = 1, CONF = 2, VALID = 0;
+		UNDEF = 1, CONF = 2, VALID = 0
 	};
 
 	class DataValueFactory;
@@ -29,6 +30,7 @@ namespace DT
 		public:
 		DataValue(const unique_ptr<DataValue> &src);
 		DataValue(DataType t);
+		DataValue();
 		DataType type;
 		static unique_ptr<DataValueFactory> factory;
 	};
@@ -42,6 +44,7 @@ namespace DT
 
 	class Word
 	{
+		public:
 		/*
 			Each data word may contain multiple tags, e.g., 
 			a packet may satisfy multiple predicates in NetQRE. 
@@ -113,7 +116,7 @@ namespace DT
 		virtual unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current) = 0;
-	}
+	};
 
 	/* 
 		Generalized union.
@@ -128,7 +131,7 @@ namespace DT
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current
 		) = 0;
-	}
+	};
 
 	/*	
 		Do union operation.
@@ -141,7 +144,7 @@ namespace DT
 		virtual unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current);
-	}
+	};
 }
 
 #endif

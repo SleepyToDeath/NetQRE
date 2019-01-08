@@ -13,7 +13,7 @@ namespace Netqre {
 std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 	int cursor = 0;
 	auto program = shared_ptr<NetqreAST>(new NetqreAST());
-	program->type = PROGRAM;
+	program->type = NetqreExpType::PROGRAM;
 	real_parse(code, cursor, program);
 	return program;
 }
@@ -66,18 +66,18 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			
 	auto parse_ns = [&,this]()
 	{
-		parse_it(QRE_NS);
+		parse_it(NetqreExpType::QRE_NS);
 		skip_tail();
-		parse_it(QRE_NS);
+		parse_it(NetqreExpType::QRE_NS);
 		skip_tail();
 	};
 
 	auto parse_vs = [&,this]() 
 	{
 		skip_name();
-		parse_it(QRE_VS);
+		parse_it(NetqreExpType::QRE_VS);
 		skip_tail();
-		parse_it(FEATURE_SET);
+		parse_it(NetqreExpType::FEATURE_SET);
 		skip_tail();
 	};
 
@@ -85,125 +85,125 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 
 	switch(context->type)
 	{
-		case PROGRAM:
+		case NetqreExpType::PROGRAM:
 
-			parse_it(FILTER);
-			parse_it(QRE);
-			parse_it(THRESHOLD);
+			parse_it(NetqreExpType::FILTER);
+			parse_it(NetqreExpType::QRE);
+			parse_it(NetqreExpType::THRESHOLD);
 			break;
 
-		case FILTER:
+		case NetqreExpType::FILTER:
 
 			skip_name();
-			parse_it(PREDICATE_SET);
+			parse_it(NetqreExpType::PREDICATE_SET);
 			skip_tail();
 			break;
 
-		case QRE:
+		case NetqreExpType::QRE:
 
 			skip_name();
-			parse_it(QRE_NS);
+			parse_it(NetqreExpType::QRE_NS);
 			skip_tail();
 			break;
 
-		case THRESHOLD:
+		case NetqreExpType::THRESHOLD:
 
 			skip_name();
-			parse_it(CONST);
+			parse_it(NetqreExpType::CONST);
 			skip_tail();
 			break;
 
-		case CONST:
+		case NetqreExpType::CONST:
 			
 			context->value = parse_num();
 			break;
 
-		case PREDICATE_SET:
+		case NetqreExpType::PREDICATE_SET:
 
 			switch(code[cursor])
 			{
 				case '&':
-				context->bool_type = AND;
+				context->bool_type = BoolOpType::AND;
 				skip_name();
-				parse_it(PREDICATE_SET);
+				parse_it(NetqreExpType::PREDICATE_SET);
 				skip_tail();
-				parse_it(PREDICATE_SET);
+				parse_it(NetqreExpType::PREDICATE_SET);
 				skip_tail();
 				break;
 
 				case '|':
-				context->bool_type = OR;
+				context->bool_type = BoolOpType::OR;
 				skip_name();
-				parse_it(PREDICATE_SET);
+				parse_it(NetqreExpType::PREDICATE_SET);
 				skip_tail();
-				parse_it(PREDICATE_SET);
+				parse_it(NetqreExpType::PREDICATE_SET);
 				skip_tail();
 				break;
 
 				case '[':
-				parse_it(PREDICATE);
+				parse_it(NetqreExpType::PREDICATE);
 				break;
 
 			}
 
 			break;
 
-		case PREDICATE:
+		case NetqreExpType::PREDICATE:
 
 			skip_head();
 			if (code[cursor] == '_')
-				parse_it(UNKNOWN);
+				parse_it(NetqreExpType::UNKNOWN);
 			else
 			{
-				parse_it(FEATURE_NI);
+				parse_it(NetqreExpType::FEATURE_NI);
 				skip_tail();
-				parse_it(VALUE);
+				parse_it(NetqreExpType::VALUE);
 			}
 			skip_tail();
 
 			break;
 
-		case FEATURE_NI:
+		case NetqreExpType::FEATURE_NI:
 
 			context->value = parse_num();
 
 			break;
 		
-		case VALUE:
+		case NetqreExpType::VALUE:
 			
 			context->value = parse_num();
 
 			break;
 
-		case QRE_NS:
+		case NetqreExpType::QRE_NS:
 			switch(code[cursor])
 			{
 				case '+':
-					context->num_type = ADD;
+					context->num_type = NumOpType::ADD;
 					parse_ns();
 					break;
 				case '-':
-					context->num_type = SUB;
+					context->num_type = NumOpType::SUB;
 					parse_ns();
 					break;
 				case '*':
-					context->num_type = MUL;
+					context->num_type = NumOpType::MUL;
 					parse_ns();
 					break;
 				case '/':
-					context->num_type = DIV;
+					context->num_type = NumOpType::DIV;
 					parse_ns();
 					break;
 				default:
 					if (code[cursor] >= 'a' && code[cursor] <= 'z')
-						parse_it(QRE_VS);
+						parse_it(NetqreExpType::QRE_VS);
 					else
-						parse_it(CONST);
+						parse_it(NetqreExpType::CONST);
 			}
 
 			break;
 
-		case QRE_VS:
+		case NetqreExpType::QRE_VS:
 
 		
 			if (code[cursor] >= 'a' && code[cursor] <= 'z')
@@ -212,138 +212,138 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 				{
 					case 'm':
 						if (code[cursor+1] == 'a')
-							context->agg_type = MAX;
+							context->agg_type = AggOpType::MAX;
 						else
-							context->agg_type = MIN;
+							context->agg_type = AggOpType::MIN;
 						parse_vs();
 						break;
 
 					case 's':
 						if (code[cursor+1] == 'u')
 						{
-							context->agg_type = SUM;
+							context->agg_type = AggOpType::SUM;
 							parse_vs();
 						}
 						else
 						{
-							parse_it(QRE_PS);
+							parse_it(NetqreExpType::QRE_PS);
 						}
 						break;
 
 					case 'a':
-						context->agg_type = AVG;
+						context->agg_type = AggOpType::AVG;
 						parse_vs();
 						break;
 
 					case 'i':
-						parse_it(QRE_PS);
+						parse_it(NetqreExpType::QRE_PS);
 						break;
 				}
 			}
 			else if (code[cursor] == '/')
 			{
-				parse_it(QRE_PS);
+				parse_it(NetqreExpType::QRE_PS);
 			}
 			else
 			{
-				parse_it(CONST);
+				parse_it(NetqreExpType::CONST);
 			}
 
 			break;
 
-		case FEATURE_SET:
+		case NetqreExpType::FEATURE_SET:
 			
-			parse_it(FEATURE_I);
+			parse_it(NetqreExpType::FEATURE_I);
 			skip_space();
 			while(code[cursor] == ',')
 			{
 				skip_head();
-				parse_it(FEATURE_I);
+				parse_it(NetqreExpType::FEATURE_I);
 				skip_space();
 			}
 			break;
 
-		case FEATURE_I:
+		case NetqreExpType::FEATURE_I:
 			
 			context->value = parse_num();
 			break;
 
-		case QRE_PS:
+		case NetqreExpType::QRE_PS:
 
 			if (code[cursor] >= 'a' && code[cursor] <= 'z')
 			{
 				switch(code[cursor])
 				{
 					case 's':
-					context->reg_type = CONCAT;
+					context->reg_type = RegularOpType::CONCAT;
 					skip_name();
-					parse_it(QRE_PS);
+					parse_it(NetqreExpType::QRE_PS);
 					skip_tail();
-					parse_it(QRE_PS);
+					parse_it(NetqreExpType::QRE_PS);
 					skip_tail();
-					parse_it(AGG_OP);
+					parse_it(NetqreExpType::AGG_OP);
 					skip_tail();
 					break;
 
 					case 'i':
-					context->reg_type = STAR;
+					context->reg_type = RegularOpType::STAR;
 					skip_name();
-					parse_it(QRE_PS);
+					parse_it(NetqreExpType::QRE_PS);
 					skip_tail();
-					parse_it(AGG_OP);
+					parse_it(NetqreExpType::AGG_OP);
 					skip_tail();
 					break;
 				}
 			}
 			else if (code[cursor] == '/')
 			{
-				parse_it(QRE_COND);
+				parse_it(NetqreExpType::QRE_COND);
 			}
 			else
 			{
-				parse_it(CONST);
+				parse_it(NetqreExpType::CONST);
 			}
 
 			break;
 
-		case AGG_OP:
+		case NetqreExpType::AGG_OP:
 			switch (code[cursor])
 			{
 				case 'm':
 					if (code[cursor+1] == 'a')
-						context->agg_type = MAX;
+						context->agg_type = AggOpType::MAX;
 					else
-						context->agg_type = MIN;
+						context->agg_type = AggOpType::MIN;
 					break;
 
 				case 's':
-					context->agg_type = SUM;
+					context->agg_type = AggOpType::SUM;
 					break;
 
 				case 'a':
-					context->agg_type = AVG;
+					context->agg_type = AggOpType::AVG;
 					break;
 			}
 			while(cursor < code.length() && code[cursor] >= 'a' && code[cursor] <= 'z')
 				cursor++;
 			break;
 
-		case QRE_COND:
+		case NetqreExpType::QRE_COND:
 			if (code[cursor] == '/')
 			{
 				cursor++;
-				parse_it(RE);
+				parse_it(NetqreExpType::RE);
 				skip_tail();
 				skip_tail();
 				parse_num();
 			}
 			else
 			{
-				parse_it(CONST);
+				parse_it(NetqreExpType::CONST);
 			}
 			break;
 
-		case RE:
+		case NetqreExpType::RE:
 			while(!(code[cursor] == '/' || code[cursor] == ')'))
 			{
 				switch (code[cursor])
@@ -351,25 +351,25 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 					case '|':
 					case '&':
 					case '[':
-					parse_it(PREDICATE_SET);
+					parse_it(NetqreExpType::PREDICATE_SET);
 					break;
 
 					case '*':
 					skip_name();
-					parse_it(RE);
+					parse_it(NetqreExpType::RE);
 					skip_tail();
 					break;
 
 					case '_':
-					parse_it(WILDCARD);
+					parse_it(NetqreExpType::WILDCARD);
 					break;
 				}
 				skip_space();
 			}
 			break;
 
-		case WILDCARD:
-		case UNKNOWN:
+		case NetqreExpType::WILDCARD:
+		case NetqreExpType::UNKNOWN:
 			skip_tail();
 			break;
 	}

@@ -10,56 +10,18 @@ using std::string;
 using std::vector;
 using std::static_pointer_cast;
 
+#define copy_typed_data(T, x) unique_ptr<T>(new T((T*)x.get()))
+
 namespace Netqre {
 
-
-class DataValueFactory
-{
-	public:
-	unique_ptr<DataValue> get_instance(DT::DataType t)
-	{
-		if (t == DT::VALID)
-		{
-			throw string("This function shouldn't be called\n");
-			return nullptr;
-		}
-		else
-		{
-			auto data = unique_ptr<StateValue>(new StateValue());
-			data->type = t;
-			return data;
-		}
-	}
-	
-	unique_ptr<DataValue> get_instance(const unique_ptr<DataValue> &src) 
-	{
-		switch(static_pointer_cast<DataValue>(src)->sub_type)
-		{
-			case DataType::INT:
-			auto a = static_pointer_cast<IntValue>(src)
-			auto data = unique_ptr<IntValue>(new IntValue(a));
-			return data;
-			case DataType::BOOL:
-			auto a = static_pointer_cast<BoolValue>(src)
-			auto data = unique_ptr<BoolValue>(new BoolValue(a));
-			return data;
-			case DataType::STATE:
-			auto a = static_pointer_cast<StateValue>(src)
-			auto data = unique_ptr<StateValue>(new StateValue(a));
-			return data;
-		}
-	}
-};
-
-
-
-
+class DataValue;
+class StateValue;
+class BoolValue;
+class IntValue;
+class DataValueFactory;
 
 
 /* ============ Data Type Define ===============*/
-
-
-
 
 enum class DataType { BOOL, INT, STATE };
 
@@ -88,7 +50,9 @@ class BoolValue: public DataValue
 		val = false;
 	}
 
-	BoolValue(const unique_ptr<BoolValue>& src)
+	BoolValue(const unique_ptr<BoolValue>& src):BoolValue(src.get()) {}
+
+	BoolValue(const BoolValue* src)
 	{
 		type = src->type;
 		sub_type = src->sub_type;
@@ -119,7 +83,9 @@ class IntValue: public DataValue
 		lower = 0;
 	}
 
-	IntValue(const unique_ptr<IntValue>& src)
+	IntValue(const unique_ptr<IntValue>& src):IntValue(src.get()) {}
+
+	IntValue(const IntValue* src)
 	{
 		type = src->type;
 		sub_type = src->sub_type;
@@ -135,7 +101,7 @@ class IntValue: public DataValue
 	StreamFieldType upper;
 	StreamFieldType lower;
 
-	const StreamFieldType MAXIMUM = 1<<31;
+	const static StreamFieldType MAXIMUM = 1<<31;
 };
 
 /* Each aggregation should push a register to value_stack
@@ -158,7 +124,9 @@ class StateValue: public DataValue
 //		op_stack.clear();
 	}
 
-	StateValue(const unique_ptr<StateValue>& src) {
+	StateValue(const unique_ptr<StateValue>& src):StateValue(src.get()) { }
+
+	StateValue(const StateValue* src) {
 		type = src->type;
 		sub_type = src->sub_type;
 		active = unique_ptr<BoolValue>(new BoolValue(src->active));
@@ -167,116 +135,99 @@ class StateValue: public DataValue
 //		op_stack = src->op_stack;
 	}
 
+	void dummy() {}
+
 	vector<unique_ptr<IntValue> > value_stack;
 //	vector<shared_ptr<DT::Op> op_stack;
 	unique_ptr<BoolValue> active;
 };
 
 
+class DataValueFactory
+{
+	public:
+	static unique_ptr<DT::DataValue> get_instance(DT::DataType t)
+	{
+		return real_get_instance(t);
+	}
+	
+	static unique_ptr<StateValue> real_get_instance(DT::DataType t)
+	{
+		if (t == DT::VALID)
+		{
+			throw string("This function shouldn't be called\n");
+			return nullptr;
+		}
+		else
+		{
+			auto data = unique_ptr<StateValue>(new StateValue());
+			data->type = t;
+			return data;
+		}
+	}
+	
+	static unique_ptr<DT::DataValue> get_instance(const unique_ptr<DT::DataValue> &src) 
+	{
+		return get_instance(src.get());
+	}
 
-
+	static unique_ptr<DT::DataValue> get_instance(const DT::DataValue* src) 
+	{
+		switch(((DataValue*)src)->sub_type)
+		{
+			case DataType::INT:
+			{
+				auto a = (IntValue*)src;
+				auto data = unique_ptr<IntValue>(new IntValue(a));
+				return data;
+			}
+			case DataType::BOOL:
+			{
+				auto a = (BoolValue*)src;
+				auto data = unique_ptr<BoolValue>(new BoolValue(a));
+				return data;
+			}
+			case DataType::STATE:
+			{
+				auto a = (StateValue*)src;
+				auto data = unique_ptr<StateValue>(new StateValue(a));
+				return data;
+			}
+		}
+	}
+};
 
 
 /* ============ Operator Define ===============*/
 
-
-/* StateValue X StateValue -> StateValue 
-	(state) 	(predicate)    (state)*/
-class PredicateOp: public DT::BasicBinaryOp
-{
-	public:
-
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
-	{
-		unique_ptr<StateValue> & a = static_pointer_cast<StateValue>(param[0]);
-		unique_ptr<StateValue> & b = static_pointer_cast<StateValue>(param[1]);
-		return eval(a, b);
-	}
-
-	static unique_ptr<StateValue> eval(const unique_ptr<StateValue>& a, const unique_ptr<StateValue> & b)
-	{
-		if (!(a->type==DT::VALID && b->type==DT::VALID))
-			return DT::DataValue::factory->get_instance(DT::UNDEF);
-
-		auto c = AndOp::eval(a->active, b->active);
-		if (c->unknown || c->val)
-		{
-			auto ans = unique_ptr<StateValue>(new StateValue(a));
-			ans->active = unique_ptr<BoolValue>(new BoolValue(c));
-			return ans;
-		}
-		else
-			return DT::DataValue::factory->get_instance(DT::UNDEF);
-	}
-};
-
-/* StateValue X StateValue -> StateValue */
-/* [TODO] arbitrary number of inputs */
-class TransitionOp: public DT::MergeParallelOp
-{
-	public:
-
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
-	{
-		unique_ptr<StateValue> & a = static_pointer_cast<StateValue>(param[0]);
-		unique_ptr<StateValue> & b = static_pointer_cast<StateValue>(param[1]);
-		return eval(a, b);
-	}
-
-	static unique_ptr<StateValue> eval(const unique_ptr<StateValue>& a, const unique_ptr<StateValue> & b)
-	{
-		if (!a->type == DT::VALID)
-			return copy_data(b);
-		if (!b->type == DT::VALID)
-			return copy_data(a);
-
-		auto c = OrOp::eval(a->active, b->active);
-		if (c->unknown || c->val)
-		{
-			auto ans = unique_ptr<StateValue>(new StateValue(a));
-			for (int i=0; i<a->value_stack.size(); i++)
-			{
-				ans->value_stack[i] = MergeOp::eval(a->value_stack[i], b->value_stack[i]);
-			}
-			ans->active = unique_ptr<BoolValue>(new BoolValue(c));
-			return ans;
-		}
-		else
-			return DT::DataValue::factory->get_instance(DT::UNDEF);
-};
-
 /* bool X bool -> bool */
 class AndOp: public DT::MergeParallelOp
 {
-	const bool unknown_table[][] = {
+	constexpr static bool unknown_table[4][4] = {
 		{true,	true,	false,	true },
 		{true,	true,	false,	true },
 		{false,	false,	false,	false },
-		{true,	true,	false,	false },
+		{true,	true,	false,	false }
 	};
 
-	const bool truth_table[][] = {
+	constexpr static bool truth_table[4][4] = {
 		{true,	true,	false,	true },
 		{true,	true,	false,	true },
 		{false,	false,	false,	false },
-		{true,	true,	false,	true },
+		{true,	true,	false,	true }
 	};
 
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<BoolValue> & a = static_pointer_cast<BoolValue>(param[0]);
-		unique_ptr<BoolValue> & b = static_pointer_cast<BoolValue>(param[1]);
+		auto a = (BoolValue*)(param[0].get());
+		auto b = (BoolValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<BoolValue> eval(const unique_ptr<BoolValue>& a, const unique_ptr<BoolValue>& b)
+	static unique_ptr<BoolValue> eval(const BoolValue* a, const BoolValue* b)
 	{
 		auto ans = unique_ptr<BoolValue>(new BoolValue());
 		size_t x = (((size_t)a->unknown)<<1) | (size_t)a->val;
@@ -290,31 +241,31 @@ class AndOp: public DT::MergeParallelOp
 /* bool X bool -> bool */
 class OrOp: public DT::MergeParallelOp
 {
-	const bool unknown_table[][] = {
+	constexpr static bool unknown_table[4][4] = {
 		{true,	true,	true,	false },
 		{true,	true,	true,	false },
 		{true,	true,	false,	false },
-		{false,	false,	false,	false },
+		{false,	false,	false,	false }
 	};
 
-	const bool truth_table[][] = {
+	constexpr static bool truth_table[4][4] = {
 		{true,	true,	true,	true },
 		{true,	true,	true,	true },
 		{true,	true,	false,	true },
-		{true,	true,	true,	true },
+		{true,	true,	true,	true }
 	};
 
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<BoolValue> & a = static_pointer_cast<BoolValue>(param[0]);
-		unique_ptr<BoolValue> & b = static_pointer_cast<BoolValue>(param[1]);
+		auto a = (BoolValue*)(param[0].get());
+		auto b = (BoolValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<BoolValue> eval(const unique_ptr<BoolValue>& a, const unique_ptr<BoolValue>& b)
+	static unique_ptr<BoolValue> eval(const BoolValue* a, const BoolValue* b)
 	{
 		auto ans = unique_ptr<BoolValue>(new BoolValue());
 		size_t x = (((size_t)a->unknown)<<1) | (size_t)a->val;
@@ -325,41 +276,11 @@ class OrOp: public DT::MergeParallelOp
 	}
 };
 
-/* bool -> int */
-class CondOp: public DT::Op
-{
-	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
-	{
-		unique_ptr<BoolValue> & cond = static_pointer_cast<BoolValue>(param[0]);
-		return eval(cond);
-	}
-
-	static unique_ptr<IntValue> eval(const unique_ptr<BoolValue>& cond);
-	{
-		auto ans = unique_ptr<IntValue>(new IntValue());
-		if (cond->unknown)
-		{
-			ans->upper = 1;
-			ans->lower = 1;
-		}
-		else
-		{
-			ans->upper = cond->val?1:0;
-			ans->lower = cond->val?1:0;
-		}
-		return ans;
-	}
-
-};
-
 
 class MergeIntOp: public DT::MergeParallelOp
 {
 	public:
-	virtual static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b) = 0;
+	virtual unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b) = 0;
 };
 
 
@@ -367,16 +288,16 @@ class MergeIntOp: public DT::MergeParallelOp
 class AddOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto ans = unique_ptr<IntValue>(new IntValue());
 		ans->lower = a->lower + b->lower;
@@ -391,16 +312,16 @@ class AddOp: public MergeIntOp
 class SubOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValuValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto ans = unique_ptr<IntValue>(new IntValue());
 		ans->lower = a->lower - b->upper;
@@ -417,16 +338,16 @@ class SubOp: public MergeIntOp
 class MulOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<DataValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto ans = unique_ptr<IntValue>(new IntValue());
 		ans->lower = a->lower * b->lower;
@@ -441,16 +362,16 @@ class MulOp: public MergeIntOp
 class DivOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<DataValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto ans = unique_ptr<IntValue>(new IntValue());
 		if (b->lower == 0)
@@ -468,16 +389,16 @@ class DivOp: public MergeIntOp
 class MaxOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto max = [](int a, int b) -> int {
 			if (a>b)
@@ -497,16 +418,16 @@ class MaxOp: public MergeIntOp
 class MinOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto min = [](int a, int b) -> int {
 			if (a<b)
@@ -527,16 +448,16 @@ class MinOp: public MergeIntOp
 class MergeOp: public MergeIntOp
 {
 	public:
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<IntValue> & a = static_pointer_cast<IntValue>(param[0]);
-		unique_ptr<IntValue> & b = static_pointer_cast<IntValue>(param[1]);
+		IntValue* a = (IntValue*)(param[0].get());
+		IntValue* b = (IntValue*)(param[1].get());
 		return eval(a, b);
 	}
 
-	static unique_ptr<IntValue> eval(const unique_ptr<IntValue> &a, const unique_ptr<IntValue>& b)
+	unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b)
 	{
 		auto max = [](int a, int b) -> int {
 			if (a>b)
@@ -563,41 +484,43 @@ class MergeOp: public MergeIntOp
 class PopStackOp: public DT::Op
 {
 	public:
-	PopStackOp(shared_ptr<MergeParallelOp> op):the_op(op) { }
+	PopStackOp(shared_ptr<MergeIntOp> op):the_op(op) { }
 
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
-		unique_ptr<StateValue> & state = copy_data(param[0]);
+		unique_ptr<StateValue> state = copy_typed_data(StateValue, param[0]);
 		auto len = state->value_stack.size();
 		unique_ptr<IntValue>& a = state->value_stack[len-1];
 		unique_ptr<IntValue>& b = state->value_stack[len-2];
-		state->value_state[len-2] = the_op->eval(a, b);
-		state->value_state.pop_back();
+		state->value_stack[len-2] = the_op->eval(a.get(), b.get());
+		state->value_stack.pop_back();
 		return state;
 	}
 
 	private:
-	shared_ptr<BasicBinaryOp> the_op;
+	shared_ptr<MergeIntOp> the_op;
 };
+
 
 /* push a pre-set init value to stack
 	the value should be set on construction of the op */
-class PushStackOp: public DT::SourceOp
+class PushStackOp: public DT::PipelineOp
 {
 	public:
-	PushStackOp(const unique_ptr<IntValue> &val):init_value(copy_data(val)) { }
+	PushStackOp(const unique_ptr<IntValue> &val):init_value(copy_typed_data(IntValue, val)) { }
 
-	unique_ptr<DataValue> operator ()(
-		const vector< unique_ptr<DataValue> > &param, 
-		const unique_ptr<DataValue> &current) 
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
 	{
+		unique_ptr<StateValue> state;
 		if (param.size()>0)
-			unique_ptr<StateValue> & state = static_pointer_cast<StateValue>(copy_data(param[0]));
+			state = copy_typed_data(StateValue, param[0]);
 		else
-			unique_ptr<StateValue> & state = static_pointer_cast<StateValue>(copy_data(current));
-		state->value_stack.push_back(val);
+			state = copy_typed_data(StateValue, current);
+		state->value_stack.push_back(copy_typed_data(IntValue, init_value));
 		return state;
 	}
 
@@ -658,7 +581,111 @@ class PushSumOp: public PushStackOp
 	(iteration count & sum)
 	currently not supported */
 
-}
+/* StateValue X StateValue -> StateValue 
+	(state) 	(predicate)    (state)*/
+class PredicateOp: public DT::BasicBinaryOp
+{
+	public:
+
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
+	{
+		StateValue* a = (StateValue*)(param[0].get());
+		StateValue* b = (StateValue*)(param[1].get());
+		return eval(a, b);
+	}
+
+	static unique_ptr<StateValue> eval(const StateValue* a, const StateValue* b)
+	{
+		if (!(a->type==DT::VALID && b->type==DT::VALID))
+			return DataValueFactory::real_get_instance(DT::UNDEF);
+
+		auto c = AndOp::eval(a->active.get(), b->active.get());
+		if (c->unknown || c->val)
+		{
+			auto ans = unique_ptr<StateValue>(new StateValue(a));
+			ans->active = unique_ptr<BoolValue>(new BoolValue(c));
+			return ans;
+		}
+		else
+			return DataValueFactory::real_get_instance(DT::UNDEF);
+	}
+};
+
+/* StateValue X StateValue -> StateValue */
+/* [TODO] arbitrary number of inputs */
+class TransitionOp: public DT::MergeParallelOp
+{
+	public:
+
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
+	{
+		StateValue* a = (StateValue*)(param[0].get());
+		StateValue* b = (StateValue*)(param[1].get());
+		return eval(a, b);
+	}
+
+	static unique_ptr<StateValue> eval(const StateValue* a, const StateValue* b)
+	{
+		if (!a->type == DT::VALID)
+			return unique_ptr<StateValue>(new StateValue(b));
+		if (!b->type == DT::VALID)
+			return unique_ptr<StateValue>(new StateValue(a));
+
+		auto c = OrOp::eval(a->active.get(), b->active.get());
+		if (c->unknown || c->val)
+		{
+			auto ans = unique_ptr<StateValue>(new StateValue(a));
+			for (int i=0; i<a->value_stack.size(); i++)
+			{
+				MergeOp op;
+				ans->value_stack[i] = op.eval(a->value_stack[i].get(), b->value_stack[i].get());
+			}
+			ans->active = unique_ptr<BoolValue>(new BoolValue(c));
+			return ans;
+		}
+		else
+			return DataValueFactory::real_get_instance(DT::UNDEF);
+	}
+};
+
+/* bool -> int */
+class CondOp: public DT::Op
+{
+	public:
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
+	{
+		BoolValue* cond = (BoolValue*)(param[0].get());
+		return eval(cond);
+	}
+
+	static unique_ptr<IntValue> eval(const BoolValue* cond)
+	{
+		auto ans = unique_ptr<IntValue>(new IntValue());
+		if (cond->unknown)
+		{
+			ans->upper = 1;
+			ans->lower = 1;
+		}
+		else
+		{
+			ans->upper = cond->val?1:0;
+			ans->lower = cond->val?1:0;
+		}
+		return ans;
+	}
+
+};
+
+};
+
+/* =================================================================== */
+
 
 
 

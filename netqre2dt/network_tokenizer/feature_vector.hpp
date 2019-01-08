@@ -2,9 +2,9 @@
 #define FEATURE_VECTOR_HPP
 
 #include <vector>
-#include "../data-transducer/op.h"
+//#include "../data-transducer/op.h"
 
-typedef StreamFieldType int
+typedef int StreamFieldType;
 
 class FeatureSlot
 {
@@ -17,6 +17,7 @@ class FeatureSlot
 	StreamFieldType value;
 };
 
+/*
 class CmpFeatureVector: public DT::CmpTagValue
 {
 	bool operator()(const std::shared_ptr<DT::TagValue> a, const std::shared_ptr<DT::TagValue> b) const {
@@ -37,11 +38,12 @@ class CmpFeatureVector: public DT::CmpTagValue
 		return false;
 	}
 };
+*/
 
 class FeatureVector
 {
 	public:
-	FeatureVector(std::share_ptr<DT::TagValue> src);
+//	FeatureVector(std::shared_ptr<DT::TagValue> src);
 	FeatureVector();
 
 	size_t size() {
