@@ -481,7 +481,7 @@ class MergeOp: public MergeIntOp
 };
 
 /* StateValue -> StateValue */
-class PopStackOp: public DT::Op
+class PopStackOp: public DT::PipelineOp
 {
 	public:
 	PopStackOp(shared_ptr<MergeIntOp> op):the_op(op) { }
@@ -583,7 +583,7 @@ class PushSumOp: public PushStackOp
 
 /* StateValue X StateValue -> StateValue 
 	(state) 	(predicate)    (state)*/
-class PredicateOp: public DT::BasicBinaryOp
+class PredicateOp: public DT::MergeParallelOp
 {
 	public:
 
@@ -653,7 +653,7 @@ class TransitionOp: public DT::MergeParallelOp
 };
 
 /* bool -> int */
-class CondOp: public DT::Op
+class CondOp: public DT::PipelineOp
 {
 	public:
 	unique_ptr<DT::DataValue> operator ()(

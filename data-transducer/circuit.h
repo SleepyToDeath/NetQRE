@@ -7,12 +7,12 @@
 
 namespace DT
 {
-	enum GateType {
+	enum class GateType {
 		GATE=0, PERSISTENT, STREAM_IN, STATE_IN, STATE_IN_INIT, STATE_IN_FINAL, STATE_OUT, STATE_OUT_INIT, STATE_OUT_FINAL, NUM_GATE_TYPE
 	};
 
-	enum CombineType {
-		UNION, PARALLEL, STAR, CONCATENATION
+	enum class CombineType {
+		UNION, PARALLEL, STAR, CONCATENATION, CONDITIONAL
 	};
 
 	class Port
@@ -45,14 +45,19 @@ namespace DT
 		std::unique_ptr<Port> get_state_out();
 
 		/* the original c will be destroyed; this circuit will become the combined one */
-		std::unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
-		std::unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
+		/* for conditional, init_op should be null, commit_op should be the conditional op */
+		/* for others, both op should be non-null */
+		/* for conditional and star c should be null */
+		/* for others, c is non-null */
+		std::unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<MergeParallelOp> merge_op, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op);
+		std::unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t);
 
 		/* Only keep all I/O states. Output states copy Input states' value */
 		std::shared_ptr<Circuit> get_plain_circuit();
 
 		private:
-		/* [!] gates of ii, io, oi, of must be of the same number and be aligned */
+		/* i/o = input/output; i/f = init/finish; i/o first, i/f second; if there's only one suffix, it's i/o */
+		/* [!] gates of ii, io, oi, of, must be of the same number and be aligned */
 		vector< std::shared_ptr<Gate> > statei; /* input main state */
 		vector< std::shared_ptr<Gate> > stateii; /* input init state */
 		vector< std::shared_ptr<Gate> > stateif; /* input fin state */
@@ -84,10 +89,12 @@ namespace DT
 		void combine_char_parallel(std::shared_ptr<Circuit> c);
 		void combine_char_concatenation(std::shared_ptr<Circuit> c);
 		void combine_char_star();
-		void combine_epsilon_union(std::shared_ptr<Circuit> c);
-		void combine_epsilon_parallel(std::shared_ptr<Circuit> c);
-		void combine_epsilon_concatenation(std::shared_ptr<Circuit> c);
-		void combine_epsilon_star();
+		void combine_char_conditional();
+		void combine_epsilon_union(std::shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);
+		void combine_epsilon_parallel(std::shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);
+		void combine_epsilon_concatenation(std::shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);
+		void combine_epsilon_star(shared_ptr<MergeParallelOp> merge_op, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);
+		void combine_epsilon_conditional(shared_ptr<PipelineOp> commit_op);
 	};
 }
 

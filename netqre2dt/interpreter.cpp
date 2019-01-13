@@ -319,7 +319,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 				auto agg_init_op = parse_agg_init_op(ast->subtree[1]);
 				auto agg_commit_op = parse_agg_commit_op(ast->subtree[1]);
 				auto dt_subexp = real_interpret_qre(ast->subtree[0],machine);
-				dt_subexp->combine(nullptr, DT::STAR, agg_init_op, agg_commit_op);
+				dt_subexp->combine(nullptr, DT::CombineType::STAR, agg_init_op, agg_commit_op);
 				return dt_subexp; 
 			}
 
@@ -329,7 +329,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 				auto agg_commit_op = parse_agg_commit_op(ast->subtree[2]);
 				auto dt_left= real_interpret_qre(ast->subtree[0], machine);
 				auto dt_right = real_interpret_qre(ast->subtree[1], machine);
-				dt_letf->combine(dt_right, DT::CONCATENATION, agg_init_op, agg_commit_op);
+				dt_left->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
 				return dt_left;
 			}
 		}
@@ -337,8 +337,9 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 		case NetqreExpType::QRE_COND:
 		{
 			auto dt_re = real_interpret_re(ast->subtree[0], machine);
-			/* [TODO] */
-			return nullptr;
+			auto cond_op = shared_ptr<CondOp>(new CondOp());
+			dt_re->combine(nullptr, DT::CombineType::CONDITIONAL, nullptr, cond_op);
+			return dt_re;
 		}
 	}
 	
@@ -353,31 +354,31 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 		switch(ast->reg_type)
 		{
 			case RegularOpType::STAR:
-			auto agg_init_op = shared_ptr<CopyOp>(new CopyOp());
+			auto agg_init_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 			auto agg_commit_op = shared_ptr<TransitionOp>(new TransitionOp());
-			auto dt_subexp = real_interpret_qre(ast->subtree[0]);
-			dt_subexp->combine(nullptr, DT::STAR, agg_init_op, agg_commit_op);
+			auto dt_subexp = real_interpret_qre(ast->subtree[0], machine);
+			dt_subexp->combine(nullptr, DT::CombineType::STAR, agg_init_op, agg_commit_op);
 			return dt_subexp;
 
 			case RegularOpType::CONCAT:
-			auto agg_init_op = shared_ptr<CopyOp>(new CopyOp());
+			auto agg_init_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 			auto agg_commit_op = shared_ptr<TransitionOp>(new TransitionOp());
-			auto dt_left= real_interpret_qre(ast->subtree[0]);
-			auto dt_right = real_interpret_qre(ast->subtree[1]);
-			dt_letf->combine(dt_right, DT::CONCATENATION, agg_init_op, agg_commit_op);
+			auto dt_left= real_interpret_qre(ast->subtree[0], machine);
+			auto dt_right = real_interpret_qre(ast->subtree[1], machine);
+			dt_letf->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
 			return dt_left;
 		}
 
 		case NetqreExpType::WILDCARD:
 		{
-			auto dt = shared_ptr<Transducer>(new Transducer());
+			auto dt = shared_ptr<Transducer>(new Transducer(machine->predicates.size()));
 			shared_ptr<Circuit> bak;
 
 			for (int i=0; i<machine->predicates.size(); i++)
 			{
 				auto c = shared_ptr<Circuit>(new Circuit());
 
-				auto op = shared_ptr<CopyOp>(new CopyOp());
+				auto op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 
 				auto gii = shared_ptr<Gate>(new Gate(op));
 				auto gif = shared_ptr<Gate>(new Gate(op));
@@ -400,9 +401,9 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 
 		case NetqreExpType::PREDICATE_SET:
 		{
-			auto dt = shared_ptr<Transducer>(new Transducer());
+			auto dt = shared_ptr<Transducer>(new Transducer(machine->predicates.size()));
 			auto c = shared_ptr<Circuit>(new Circuit());
-			auto in_op = shared_ptr<CopyOp>(new CopyOp());
+			auto in_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 			auto out_op = shared_ptr<TransitionOp>(new TransitionOp());
 
 			auto gs = shared_ptr<Gate>(new Gate(in_op));

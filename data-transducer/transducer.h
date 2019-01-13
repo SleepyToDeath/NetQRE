@@ -15,12 +15,12 @@ namespace DT
 		/* ================= building ================= */
 
 			/* assume in and out have same width */
-			Transducer(int param_number, int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger);
+			Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger);
 			~Transducer();
 
 			void add_circuit(std::shared_ptr<Circuit> c, TagType tag);
 			void add_epsilon_circuit(std::shared_ptr<Circuit> c);
-			void combine(std::shared_ptr<Transducer> dt, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op);
+			void combine(std::shared_ptr<Transducer> dt, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op);
 
 			std::vector<int> get_signature();
 			shared_ptr<Circuit> get_default_circuit();

@@ -26,14 +26,14 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 	{
 		if (t!=STAR)
 			throw string("Combining with empty!\n");
-		epsilon_circuit->combine_epsilon(nullptr, t, init_op, commit_op);
+		epsilon_circuit->combine_epsilon(nullptr, t, state_merger, init_op, commit_op);
 		for (int i=0; i<circuits.size(); i++)
 			if (circuits[i] != nullptr)
-				circuits->combine_char(nullptr,t,init_op,commit_op);
+				circuits->combine_char(nullptr,t);
 	}
 	else
 	{
-		epsilon_circuit->combine_epsilon(dt->epsilon_circuit,t, init_op, commit_op);
+		epsilon_circuit->combine_epsilon(dt->epsilon_circuit,t, state_merger, init_op, commit_op);
 		for (int i=0; i<circuits.size(); i++)
 		{
 			if (circuits[i]!=nullptr || dt->circuits[i]!=nullptr)
@@ -42,7 +42,7 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 					circuits[i] = epsilon_circuit->get_plain_circuit();
 				if (dt->circuits[i]==nullptr)
 					dt->circuits[i] = dt->epsilon_circuit->get_plain_circuit();
-				circuits->combine_char(dt->circuits[i],t,init_op,commit_op);
+				circuits->combine_char(dt->circuits[i],t);
 			}
 		}
 	}
