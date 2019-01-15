@@ -10,7 +10,7 @@ using std::vector;
 using std::move;
 
 /* syntactic sugar */
-#define copy_data(x) unique_ptr<DT::DataValue>(DT::DataValue::factory->get_instance(x))
+#define copy_data(x) (DT::DataValue::factory->get_instance(x))
 
 typedef int TagType;
 
@@ -24,7 +24,14 @@ namespace DT
 		UNDEF = 1, CONF = 2, VALID = 0
 	};
 
-	class DataValueFactory;
+	class DataValue;
+	class DataValueFactory
+	{
+		public:
+		virtual unique_ptr<DataValue> get_instance(DataType t) = 0;
+		virtual unique_ptr<DataValue> get_instance(const unique_ptr<DataValue>& src) = 0;
+	};
+
 	class DataValue 
 	{
 		public:
@@ -32,14 +39,7 @@ namespace DT
 		DataValue(DataType t);
 		DataValue();
 		DataType type;
-		static unique_ptr<DataValueFactory> factory;
-	};
-
-	class DataValueFactory
-	{
-		public:
-		virtual unique_ptr<DataValue> get_instance(DataType t) = 0;
-		virtual unique_ptr<DataValue> get_instance(unique_ptr<DataValue> src) = 0;
+		static std::unique_ptr<DataValueFactory> factory;
 	};
 
 	class Word
@@ -62,6 +62,10 @@ namespace DT
 			corresponding values.
 		*/
 		std::vector<unique_ptr<DataValue> > tag_bitmap;
+
+		Word();
+		Word(const Word &src);
+		Word operator=(const Word &src);
 	};
 
 	/*
@@ -86,7 +90,7 @@ namespace DT
 	};
 
 	/* can accept 0 or 1 input */
-	class PipelineOp
+	class PipelineOp : public Op
 	{
 		public:
 		virtual unique_ptr<DataValue> operator ()(

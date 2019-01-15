@@ -1,9 +1,13 @@
 #include "transducer.h"
 
+using std::string;
+using std::shared_ptr;
+using std::unique_ptr;
+
 namespace DT
 {
 
-Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger);
+Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger)
 {
 	this->tag_alphabet_size = tag_alphabet_size;
 	this->state_merger = state_merger;
@@ -11,25 +15,26 @@ Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> s
 	epsilon_circuit = nullptr;
 }
 
-Transducer::~Transducer()
-{
-}
-
 void Transducer::add_circuit(shared_ptr<Circuit> c, TagType tag)
 {
 	circuits[tag] = c;
 }
 
-void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<MergeParallelOp> commit_op)
+void Transducer::add_epsilon_circuit(std::shared_ptr<Circuit> c)
+{
+	epsilon_circuit = c;
+}
+
+void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op)
 {
 	if (dt==nullptr)
 	{
-		if (t!=STAR)
+		if (t!=CombineType::STAR && t!=CombineType::CONDITIONAL)
 			throw string("Combining with empty!\n");
 		epsilon_circuit->combine_epsilon(nullptr, t, state_merger, init_op, commit_op);
 		for (int i=0; i<circuits.size(); i++)
 			if (circuits[i] != nullptr)
-				circuits->combine_char(nullptr,t);
+				circuits[i]->combine_char(nullptr,t);
 	}
 	else
 	{
@@ -42,13 +47,13 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 					circuits[i] = epsilon_circuit->get_plain_circuit();
 				if (dt->circuits[i]==nullptr)
 					dt->circuits[i] = dt->epsilon_circuit->get_plain_circuit();
-				circuits->combine_char(dt->circuits[i],t);
+				circuits[i]->combine_char(dt->circuits[i],t);
 			}
 		}
 	}
 }
 
-int Transducer::reset(std::vector<unique_ptr<DataValue> > parameters)
+void Transducer::reset(const std::vector<unique_ptr<DataValue> > &parameters)
 {
 	NullPort = copy_port(states);
 	for (int i=0; i<NullPort->init.size(); i++)
@@ -57,10 +62,10 @@ int Transducer::reset(std::vector<unique_ptr<DataValue> > parameters)
 		NullPort->media[i]->type = UNDEF;
 	for (int i=0; i<NullPort->fin.size(); i++)
 		NullPort->fin[i]->type = UNDEF;
-	states.init = parameters;
+	for (int i=0; i<parameters.size(); i++)
+		states->init[i] = copy_data(parameters[i]);
 }
 
-/* [TODO] save I/O states too */
 std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stream)
 {
 	for (int i=0; i<stream.size(); i++)
@@ -68,7 +73,7 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 		{
 			shared_ptr<Circuit> c = epsilon_circuit;
 			c->reset();
-			c->set_stream_in(stream[i].val);
+			c->set_stream_in(DataValue::factory->get_instance(UNDEF));
 			c->set_state_in(states);
 			c->tick();
 			states = c->get_state_out();
@@ -84,7 +89,7 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 					c->set_stream_in(stream[i].tag_bitmap[j]);
 					c->set_state_in(backup);
 					c->tick();
-					states.merge(c->get_state_out(), state_merger);
+					states->merge(c->get_state_out(), state_merger);
 				}
 		}
 	}
@@ -92,13 +97,18 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 	{
 		shared_ptr<Circuit> c = epsilon_circuit;
 		c->reset();
-		c->set_stream_in(stream[i].val);
+		c->set_stream_in(DataValue::factory->get_instance(UNDEF));
 		c->set_state_in(states);
 		c->tick();
 		states = c->get_state_out();
 	}
 
-	return states.fin;
+	vector<unique_ptr<DataValue> > ans;
+	for (int i=0; i<states->fin.size(); i++)
+	{
+		ans.push_back(copy_data(states->fin[i]));
+	}
+	return std::move(ans);
 }
 
 std::vector<int> Transducer::get_signature()

@@ -10,15 +10,17 @@ using std::string;
 using std::vector;
 using std::static_pointer_cast;
 
-#define copy_typed_data(T, x) unique_ptr<T>(new T((T*)x.get()))
+#define copy_typed_data(T, x) std::unique_ptr<T>(new T((T*)(x.get())))
 
 namespace Netqre {
 
+/*
 class DataValue;
 class StateValue;
 class BoolValue;
 class IntValue;
 class DataValueFactory;
+*/
 
 
 /* ============ Data Type Define ===============*/
@@ -143,10 +145,13 @@ class StateValue: public DataValue
 };
 
 
-class DataValueFactory
+//		virtual unique_ptr<DataValue> get_instance(DataType t) = 0;
+//		virtual unique_ptr<DataValue> get_instance(const unique_ptr<DataValue>& src) = 0;
+
+class DataValueFactory: public DT::DataValueFactory
 {
 	public:
-	static unique_ptr<DT::DataValue> get_instance(DT::DataType t)
+	unique_ptr<DT::DataValue> get_instance(DT::DataType t)
 	{
 		return real_get_instance(t);
 	}
@@ -166,7 +171,7 @@ class DataValueFactory
 		}
 	}
 	
-	static unique_ptr<DT::DataValue> get_instance(const unique_ptr<DT::DataValue> &src) 
+	unique_ptr<DT::DataValue> get_instance(const unique_ptr<DT::DataValue> &src) 
 	{
 		return get_instance(src.get());
 	}
@@ -193,9 +198,13 @@ class DataValueFactory
 				auto data = unique_ptr<StateValue>(new StateValue(a));
 				return data;
 			}
+
+			default:
+			throw string("Impossible data type!");
 		}
 	}
 };
+
 
 
 /* ============ Operator Define ===============*/
@@ -203,21 +212,11 @@ class DataValueFactory
 /* bool X bool -> bool */
 class AndOp: public DT::MergeParallelOp
 {
-	constexpr static bool unknown_table[4][4] = {
-		{true,	true,	false,	true },
-		{true,	true,	false,	true },
-		{false,	false,	false,	false },
-		{true,	true,	false,	false }
-	};
-
-	constexpr static bool truth_table[4][4] = {
-		{true,	true,	false,	true },
-		{true,	true,	false,	true },
-		{false,	false,	false,	false },
-		{true,	true,	false,	true }
-	};
-
 	public:
+	const static bool unknown_table[4][4];
+
+	const static bool truth_table[4][4];
+
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
@@ -241,21 +240,11 @@ class AndOp: public DT::MergeParallelOp
 /* bool X bool -> bool */
 class OrOp: public DT::MergeParallelOp
 {
-	constexpr static bool unknown_table[4][4] = {
-		{true,	true,	true,	false },
-		{true,	true,	true,	false },
-		{true,	true,	false,	false },
-		{false,	false,	false,	false }
-	};
-
-	constexpr static bool truth_table[4][4] = {
-		{true,	true,	true,	true },
-		{true,	true,	true,	true },
-		{true,	true,	false,	true },
-		{true,	true,	true,	true }
-	};
-
 	public:
+	const static bool unknown_table[4][4];
+
+	const static bool truth_table[4][4];
+
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
@@ -280,6 +269,9 @@ class OrOp: public DT::MergeParallelOp
 class MergeIntOp: public DT::MergeParallelOp
 {
 	public:
+	virtual unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current ) = 0;
 	virtual unique_ptr<IntValue> eval(const IntValue* a, const IntValue* b) = 0;
 };
 
@@ -448,6 +440,7 @@ class MinOp: public MergeIntOp
 class MergeOp: public MergeIntOp
 {
 	public:
+
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
@@ -490,6 +483,10 @@ class PopStackOp: public DT::PipelineOp
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
 	{
+		if (param.size() == 0)
+			return copy_data(current);
+		if (param[0]->type == DT::UNDEF)
+			return DataValueFactory::real_get_instance(DT::UNDEF);
 		unique_ptr<StateValue> state = copy_typed_data(StateValue, param[0]);
 		auto len = state->value_stack.size();
 		unique_ptr<IntValue>& a = state->value_stack[len-1];
@@ -515,6 +512,10 @@ class PushStackOp: public DT::PipelineOp
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
 	{
+		if (param.size() == 0)
+			return copy_data(current);
+		if (param[0]->type == DT::UNDEF)
+			return DataValueFactory::real_get_instance(DT::UNDEF);
 		unique_ptr<StateValue> state;
 		if (param.size()>0)
 			state = copy_typed_data(StateValue, param[0]);
@@ -660,27 +661,60 @@ class CondOp: public DT::PipelineOp
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
 	{
-		BoolValue* cond = (BoolValue*)(param[0].get());
+		if (param.size() == 0)
+			return copy_data(current);
+		if (param[0]->type == DT::UNDEF)
+			return DataValueFactory::real_get_instance(DT::UNDEF);
+		StateValue* cond = (StateValue*)(param[0].get());
 		return eval(cond);
 	}
 
-	static unique_ptr<IntValue> eval(const BoolValue* cond)
+	static unique_ptr<StateValue> eval(const StateValue* cond)
 	{
-		auto ans = unique_ptr<IntValue>(new IntValue());
-		if (cond->unknown)
+		auto val = unique_ptr<IntValue>(new IntValue());
+		if (cond->active->unknown)
 		{
-			ans->upper = 1;
-			ans->lower = 1;
+			val->upper = 1;
+			val->lower = 1;
+		}
+		else if (cond->active->val)
+		{
+			val->upper = 1;
+			val->lower = 1;
 		}
 		else
 		{
-			ans->upper = cond->val?1:0;
-			ans->lower = cond->val?1:0;
+			return DataValueFactory::real_get_instance(DT::UNDEF);
 		}
+		auto ans = unique_ptr<StateValue>(new StateValue(cond));
+		ans->value_stack.push_back(move(val));
 		return ans;
 	}
 
 };
+
+/*
+class InitBoolOp: public DT::PipelineOp
+{
+	public:
+	unique_ptr<DT::DataValue> operator ()(
+		const vector< unique_ptr<DT::DataValue> > &param, 
+		const unique_ptr<DT::DataValue> &current) 
+	{
+		if (param.size() == 0)
+			return DataValueFactory::real_get_instance(DT::UNDEF);
+		StateValue* input = (StateValue*)(param[0].get());
+		return eval(input);
+	}
+
+	static unique_ptr<StateValue> eval(const StateValue* input)
+	{
+		auto ans = unique_ptr<StateValue>(new StateValue(input));
+	}
+
+
+};
+*/
 
 };
 

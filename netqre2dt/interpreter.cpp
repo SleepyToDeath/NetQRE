@@ -4,6 +4,10 @@
 #include <map>
 #include <utility>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 using std::unique_ptr;
 using std::shared_ptr;
 using std::string;
@@ -52,7 +56,7 @@ unique_ptr<IntValue> Machine::aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenS
 		qre->transducer->reset(param);
 
 		auto ans = qre->transducer->process(tag_stream);
-		return copy_typed_data(IntValue, ((StateValue*)ans[0].get())->value_stack[0]);
+		return copy_typed_data(IntValue, ((StateValue*)(ans[0].get()))->value_stack[0]);
 	}
 
 	/* otherwise recursion */
@@ -80,6 +84,7 @@ unique_ptr<IntValue> Machine::aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenS
 	return ans;
 }
 
+
 void Machine::collect_value_space(TokenStream &stream) {
 	int fields = stream[0].size();
 	for (int i=0; i<fields; i++)
@@ -89,6 +94,7 @@ void Machine::collect_value_space(TokenStream &stream) {
 			value_space[i].range.insert(stream[j][i].value);
 	}
 }
+
 
 vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 {
@@ -107,6 +113,7 @@ vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 	}
 	return tag_stream;
 }
+
 
 unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureVector & fv)
 {
@@ -138,13 +145,17 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 			return sat;
 		}
 		
+		default:
+		throw string("Impossible predicate type!\n");
 	}
 }
 
 std::unique_ptr<IntValue> NumericalTree::eval()
 {
-	/*TODO*/
-	return nullptr;
+	if (is_leaf)
+		return copy_typed_data(IntValue, leaf->output);
+	else
+		return op->eval(left->eval().get(), right->eval().get());
 }
 
 shared_ptr<Machine> Interpreter::interpret(std::shared_ptr<NetqreAST> ast) 
@@ -186,6 +197,8 @@ std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<N
 	switch(ast->type)
 	{
 		case NetqreExpType::QRE_NS:
+		if (ast->subtree.size() == 1)
+			return real_interpret_num(ast->subtree[0], machine);
 		tree->is_leaf = false;
 		tree->left = real_interpret_num(ast->subtree[0], machine);
 		tree->right = real_interpret_num(ast->subtree[1], machine);
@@ -216,7 +229,7 @@ std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<N
 		return tree;
 
 		default:
-		throw string("[real_interpret_num] Shouldn't reach here.");
+		throw string("[real_interpret_num] Shouldn't reach here.\n");
 	}
 }
 
@@ -231,6 +244,7 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 			case NetqreExpType::QRE_VS:
 			{
 				Aggregator agg;
+				bool flag = true;
 				switch(cur->agg_type)
 				{
 					case AggOpType::MAX:
@@ -247,11 +261,19 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 
 					case AggOpType::AVG:
 					throw string("Not supported yet!\n");
+
+					case AggOpType::NONE:
+					flag = false;
+					break;
 				}
-				auto feat = cur->subtree[1];
-				for (int i = 0; i < feat->subtree.size(); i++)
-				agg.param.push_back(feat->subtree[i]->value);
-				leaf->agg_stack.push_back(agg);
+				if (flag)
+				{
+					cout<<cur->subtree.size()<<endl;
+					auto feat = cur->subtree[1];
+					for (int i = 0; i < feat->subtree.size(); i++)
+					agg.param.push_back(feat->subtree[i]->value);
+					leaf->agg_stack.push_back(agg);
+				}
 
 				cur = cur->subtree[0];
 				break;
@@ -263,6 +285,7 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 		}
 	}
 }
+
 
 shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
@@ -280,6 +303,9 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 
 			case AggOpType::AVG:
 			throw string("Not supported yet!\n");
+
+			default:
+			throw string("Impossible agg type!\n");
 		}
 	};
 
@@ -312,25 +338,33 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 	switch(ast->type)
 	{
 		case NetqreExpType::QRE_PS:
-		switch(ast->reg_type)
 		{
-			case RegularOpType::STAR:
+			switch(ast->reg_type)
 			{
-				auto agg_init_op = parse_agg_init_op(ast->subtree[1]);
-				auto agg_commit_op = parse_agg_commit_op(ast->subtree[1]);
-				auto dt_subexp = real_interpret_qre(ast->subtree[0],machine);
-				dt_subexp->combine(nullptr, DT::CombineType::STAR, agg_init_op, agg_commit_op);
-				return dt_subexp; 
-			}
+				case RegularOpType::STAR:
+				{
+					auto agg_init_op = parse_agg_init_op(ast->subtree[1]);
+					auto agg_commit_op = parse_agg_commit_op(ast->subtree[1]);
+					auto dt_subexp = real_interpret_qre(ast->subtree[0],machine);
+					dt_subexp->combine(nullptr, DT::CombineType::STAR, agg_init_op, agg_commit_op);
+					return dt_subexp; 
+				}
 
-			case RegularOpType::CONCAT:
-			{
-				auto agg_init_op = parse_agg_init_op(ast->subtree[2]);
-				auto agg_commit_op = parse_agg_commit_op(ast->subtree[2]);
-				auto dt_left= real_interpret_qre(ast->subtree[0], machine);
-				auto dt_right = real_interpret_qre(ast->subtree[1], machine);
-				dt_left->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
-				return dt_left;
+				case RegularOpType::CONCAT:
+				{
+					auto agg_init_op = parse_agg_init_op(ast->subtree[2]);
+					auto agg_commit_op = parse_agg_commit_op(ast->subtree[2]);
+					auto dt_left= real_interpret_qre(ast->subtree[0], machine);
+					auto dt_right = real_interpret_qre(ast->subtree[1], machine);
+					dt_left->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
+					return dt_left;
+				}
+
+				case RegularOpType::NONE:
+				return real_interpret_qre(ast->subtree[0], machine);
+
+				default:
+				throw string("Impossible qre type!\n");
 			}
 		}
 
@@ -341,6 +375,9 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 			dt_re->combine(nullptr, DT::CombineType::CONDITIONAL, nullptr, cond_op);
 			return dt_re;
 		}
+
+		default:
+		throw string("Impossible qre type!\n");
 	}
 	
 }
@@ -354,85 +391,96 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 		switch(ast->reg_type)
 		{
 			case RegularOpType::STAR:
-			auto agg_init_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
-			auto agg_commit_op = shared_ptr<TransitionOp>(new TransitionOp());
-			auto dt_subexp = real_interpret_qre(ast->subtree[0], machine);
-			dt_subexp->combine(nullptr, DT::CombineType::STAR, agg_init_op, agg_commit_op);
-			return dt_subexp;
+			{
+				auto agg_init_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
+				auto agg_commit_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
+				auto dt_subexp = real_interpret_re(ast->subtree[0], machine);
+				dt_subexp->combine(nullptr, DT::CombineType::STAR, agg_init_op, agg_commit_op);
+				return dt_subexp;
+			}
 
 			case RegularOpType::CONCAT:
-			auto agg_init_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
-			auto agg_commit_op = shared_ptr<TransitionOp>(new TransitionOp());
-			auto dt_left= real_interpret_qre(ast->subtree[0], machine);
-			auto dt_right = real_interpret_qre(ast->subtree[1], machine);
-			dt_letf->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
-			return dt_left;
+			{
+				auto agg_init_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
+				auto agg_commit_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
+				auto dt_left= real_interpret_re(ast->subtree[0], machine);
+				auto dt_right = real_interpret_re(ast->subtree[1], machine);
+				dt_left->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
+				return dt_left;
+			}
 		}
 
 		case NetqreExpType::WILDCARD:
 		{
-			auto dt = shared_ptr<Transducer>(new Transducer(machine->predicates.size()));
-			shared_ptr<Circuit> bak;
+			auto trans_op = shared_ptr<TransitionOp>(new TransitionOp());
+			auto dt = shared_ptr<DT::Transducer>(new DT::Transducer(machine->predicates.size(), trans_op));
+			shared_ptr<DT::Circuit> bak;
 
 			for (int i=0; i<machine->predicates.size(); i++)
 			{
-				auto c = shared_ptr<Circuit>(new Circuit());
+				auto c = shared_ptr<DT::Circuit>(new DT::Circuit());
 
 				auto op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 
-				auto gii = shared_ptr<Gate>(new Gate(op));
-				auto gif = shared_ptr<Gate>(new Gate(op));
-				auto goi = shared_ptr<Gate>(new Gate(op));
-				auto gof = shared_ptr<Gate>(new Gate(op));
+				auto gii = shared_ptr<DT::Gate>(new DT::Gate(op));
+				auto gif = shared_ptr<DT::Gate>(new DT::Gate(op));
+				auto goi = shared_ptr<DT::Gate>(new DT::Gate(op));
+				auto gof = shared_ptr<DT::Gate>(new DT::Gate(op));
 				gii->wire_out(gof);
 				gof->wire_in(gii);
 
-				c->add_gate(gii, STATE_IN_INIT);
-				c->add_gate(gif, STATE_IN_FINAL);
-				c->add_gate(goi, STATE_OUT_INIT);
-				c->add_gate(gof, STATE_OUT_FINAL);
+				c->add_gate(gii, DT::GateType::STATE_IN_INIT);
+				c->add_gate(gif, DT::GateType::STATE_IN_FINAL);
+				c->add_gate(goi, DT::GateType::STATE_OUT_INIT);
+				c->add_gate(gof, DT::GateType::STATE_OUT_FINAL);
 
 				bak = c;
 
 				dt->add_circuit(c, i);
 			}
 			dt->add_epsilon_circuit(bak->get_plain_circuit());
+			return dt;
 		}
 
 		case NetqreExpType::PREDICATE_SET:
 		{
-			auto dt = shared_ptr<Transducer>(new Transducer(machine->predicates.size()));
-			auto c = shared_ptr<Circuit>(new Circuit());
+			auto trans_op = shared_ptr<TransitionOp>(new TransitionOp());
+			auto dt = shared_ptr<DT::Transducer>(new DT::Transducer(machine->predicates.size(), trans_op));
+			auto c = shared_ptr<DT::Circuit>(new DT::Circuit());
 			auto in_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 			auto out_op = shared_ptr<TransitionOp>(new TransitionOp());
 
-			auto gs = shared_ptr<Gate>(new Gate(in_op));
-			auto gii = shared_ptr<Gate>(new Gate(in_op));
-			auto gif = shared_ptr<Gate>(new Gate(in_op));
-			auto goi = shared_ptr<Gate>(new Gate(in_op));
-			auto gof = shared_ptr<Gate>(new Gate(out_op));
+			auto gs = shared_ptr<DT::Gate>(new DT::Gate(in_op));
+			auto gii = shared_ptr<DT::Gate>(new DT::Gate(in_op));
+			auto gif = shared_ptr<DT::Gate>(new DT::Gate(in_op));
+			auto goi = shared_ptr<DT::Gate>(new DT::Gate(in_op));
+			auto gof = shared_ptr<DT::Gate>(new DT::Gate(out_op));
 			gii->wire_out(gof);
 			gs->wire_out(gof);
 			gof->wire_in(gii); // first value
 			gof->wire_in(gs); // second predicate
 
-			c->add_gate(gs, STREAM_IN);
-			c->add_gate(gii, STATE_IN_INIT);
-			c->add_gate(gif, STATE_IN_FINAL);
-			c->add_gate(goi, STATE_OUT_INIT);
-			c->add_gate(gof, STATE_OUT_FINAL);
+			c->add_gate(gs, DT::GateType::STREAM_IN);
+			c->add_gate(gii, DT::GateType::STATE_IN_INIT);
+			c->add_gate(gif, DT::GateType::STATE_IN_FINAL);
+			c->add_gate(goi, DT::GateType::STATE_OUT_INIT);
+			c->add_gate(gof, DT::GateType::STATE_OUT_FINAL);
 
 			dt->add_circuit(c, ast->tag);
 			dt->add_epsilon_circuit(c->get_plain_circuit());
+			return dt;
 		}
+
+		default:
+		throw string("Impossible re type!\n");
 	}
 }
 
 void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)
 {
-	if (ast->type != PREDICATE_SET)
+	if (ast->type != NetqreExpType::PREDICATE_SET)
 	{
-		for (int i=0; i<ast->subtree.size() i++)
+		for (int i=0; i<ast->subtree.size(); i++)
 			collect_predicates(ast->subtree[i], predicates);
 	}
 	else
@@ -442,5 +490,6 @@ void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector
 		return;
 	}
 }
+
 
 }

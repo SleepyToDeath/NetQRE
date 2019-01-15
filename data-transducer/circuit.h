@@ -49,8 +49,8 @@ namespace DT
 		/* for others, both op should be non-null */
 		/* for conditional and star c should be null */
 		/* for others, c is non-null */
-		std::unique_ptr<DataValue> combine_epsilon(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<MergeParallelOp> merge_op, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op);
-		std::unique_ptr<DataValue> combine_char(shared_ptr<Circuit> c, CombineType t);
+		void combine_epsilon(shared_ptr<Circuit> c, CombineType t, std::shared_ptr<MergeParallelOp> merge_op, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op);
+		void combine_char(shared_ptr<Circuit> c, CombineType t);
 
 		/* Only keep all I/O states. Output states copy Input states' value */
 		std::shared_ptr<Circuit> get_plain_circuit();
@@ -76,7 +76,7 @@ namespace DT
 //		vector< std::shared_ptr<Gate> > gates; /* internal gates */
 		vector< std::shared_ptr<Gate> > gates; /* all gates */
 
-		void combine_basic(std::shared_ptr<Circuit> c);
+		void combine_basic(shared_ptr<Circuit> c);
 
 		/* [!]  Parallel in this version is actually not
 				the intended parallel. It's a generalized
@@ -90,6 +90,7 @@ namespace DT
 		void combine_char_concatenation(std::shared_ptr<Circuit> c);
 		void combine_char_star();
 		void combine_char_conditional();
+
 		void combine_epsilon_union(std::shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);
 		void combine_epsilon_parallel(std::shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);
 		void combine_epsilon_concatenation(std::shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op);

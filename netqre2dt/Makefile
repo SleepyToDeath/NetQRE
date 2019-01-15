@@ -3,7 +3,7 @@ all: parser
 g: parser-g
 
 SRC = parser.h syntax.h parser.cpp test_main.cpp 
-SRC += interpreter.cpp interpreter.h op.hpp
+SRC += interpreter.cpp interpreter.h op.hpp op.cpp
 SRC += ../data-transducer/*.h ../data-transducer/*.cpp
 
 parser: $(SRC)
@@ -14,3 +14,6 @@ parser-g: $(SRC)
 
 test:
 	cat ./testbed/basic.netqre | ./parser
+
+clean:
+	rm parser

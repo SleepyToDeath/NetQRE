@@ -110,7 +110,7 @@ enum class NetqreExpType {
 };
 
 enum class AggOpType {
-	MAX, MIN, SUM, AVG
+	MAX, MIN, SUM, AVG, NONE
 };
 
 enum class NumOpType {

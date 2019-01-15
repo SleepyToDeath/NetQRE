@@ -3,6 +3,8 @@
 using std::shared_ptr;
 using std::unique_ptr;
 using std::vector;
+using std::string;
+using std::move;
 
 namespace DT {
 
@@ -20,22 +22,22 @@ namespace DT {
 			fin.push_back(copy_data(src->fin[i]));
 	}
 
-	void Port::merge(const unique_ptr<Port> &src, shared_ptr<PipelineOp> op)
+	void Port::merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op)
 	{
-		to_param [] (const unique_ptr<DataValue> &a, const unique_ptr<DataValue> &b) -> vector<unique_ptr<DataValue> >
+		auto to_param = [] (const unique_ptr<DataValue> &a, const unique_ptr<DataValue> &b) -> vector<unique_ptr<DataValue> >
 		{
 			vector<unique_ptr<DataValue> > param;
-			param.push_back(a);
-			param.push_back(b);
-			return param;
-		}
+			param.push_back(copy_data(a));
+			param.push_back(copy_data(b));
+			return move(param);
+		};
 
 		for (int i=0; i<src->init.size(); i++)
-			init[i] = op(to_param(init[i],src->init[i]), nullptr);
+			init[i] = (*op)(to_param(init[i],src->init[i]), nullptr);
 		for (int i=0; i<src->media.size(); i++)
-			media[i] = op(to_param(media[i],src->media[i]), nullptr);
+			media[i] = (*op)(to_param(media[i],src->media[i]), nullptr);
 		for (int i=0; i<src->fin.size(); i++)
-			fin[i] = op(to_param(fin[i],src->fin[i]), nullptr);
+			fin[i] = (*op)(to_param(fin[i],src->fin[i]), nullptr);
 	}
 
 	Circuit::Circuit()
@@ -48,38 +50,38 @@ namespace DT {
 		gates.push_back(g);
 		switch (t)
 		{
-			case GATE:
+			case GateType::GATE:
 				break;
 
-			case STREAM_IN:
+			case GateType::STREAM_IN:
 				streami.push_back(g);
 				break;
 
-			case STATE_IN:
+			case GateType::STATE_IN:
 				statei.push_back(g);
 				break;
 
-			case STATE_IN_INIT:
+			case GateType::STATE_IN_INIT:
 				stateii.push_back(g);
 				break;
 
-			case STATE_IN_FINAL:
+			case GateType::STATE_IN_FINAL:
 				stateif.push_back(g);
 				break;
 
-			case STATE_OUT:
+			case GateType::STATE_OUT:
 				stateo.push_back(g);
 				break;
 
-			case STATE_OUT_INIT:
+			case GateType::STATE_OUT_INIT:
 				stateoi.push_back(g);
 				break;
 
-			case STATE_OUT_FINAL:
+			case GateType::STATE_OUT_FINAL:
 				stateof.push_back(g);
 				break;
 
-			default
+			default:
 				break;
 		}
 	}
@@ -108,19 +110,19 @@ namespace DT {
 
 	void Circuit::set_state_in(const unique_ptr<Port> &states)
 	{
-		for (int i=0; i<states.init.size(); i++)
+		for (int i=0; i<states->init.size(); i++)
 		{
-			stateii[i]->set_value(states.init[i]);
+			stateii[i]->set_value(states->init[i]);
 		}
 
-		for (int i=0; i<states.media.size(); i++)
+		for (int i=0; i<states->media.size(); i++)
 		{
-			statei[i]->set_value(states.media[i]);
+			statei[i]->set_value(states->media[i]);
 		}
 
-		for (int i=0; i<states.fin.size(); i++)
+		for (int i=0; i<states->fin.size(); i++)
 		{
-			stateif[i]->set_value(states.fin[i]);
+			stateif[i]->set_value(states->fin[i]);
 		}
 	}
 
@@ -140,6 +142,7 @@ namespace DT {
 
 	void Circuit::tick()
 	{
+		for (int i=0; i<gates.size(); i++)
 			gates[i]->posedge();
 	}
 
@@ -163,15 +166,15 @@ namespace DT {
 			return;
 
 			case CombineType::CONDITIONAL:
-			combine_char_conditional(c);
-			
+			combine_char_conditional();
+			return;
 
 			default:
 			throw string("Unknown combine type!\n");
 		}
 	}
 
-	void Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t, shared_ptr<MergeParallelOp> merge_op, share_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> op)
+	void Circuit::combine_epsilon(shared_ptr<Circuit> c, CombineType t, shared_ptr<MergeParallelOp> merge_op, shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op)
 	{
 		switch(t)
 		{
@@ -193,14 +196,14 @@ namespace DT {
 
 			case CombineType::CONDITIONAL:
 			combine_epsilon_conditional(commit_op);
-
+			return;
 
 			default:
 			throw string("Unknown combine type!\n");
 		}
 	}
 
-	void Circuit::combine_basic(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op) 
+	void Circuit::combine_basic(shared_ptr<Circuit> c)
 	{
 		for (int i=0; i<c->statei.size(); i++)
 			statei.push_back(c->statei[i]);
@@ -214,17 +217,20 @@ namespace DT {
 
 	void Circuit::combine_char_parallel(shared_ptr<Circuit> c)
 	{
-		combine_char_union(c);
+		combine_basic(c);
+		/* [TODO] not used now */
 	}
 
 	void Circuit::combine_epsilon_parallel(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op)
 	{
 		int l = stateof.size();
 		combine_basic(c);
+		/* [TODO] not used now */
+		/*
 		for (int i=0; i<l; i++)
 		{
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(commit_op));
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			auto new_of = shared_ptr<Gate>(new Gate(commit_op));
+			auto new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			new_of->wire_in(new_if);
 			new_if->wire_out(new_of);
 
@@ -238,16 +244,19 @@ namespace DT {
 			stateof[i] = new_of;
 			stateif[i] = new_if;
 		}
+		*/
 	}
 
 	void Circuit::combine_char_union(shared_ptr<Circuit> c)
 	{
 		int l = stateof.size();
 		combine_basic(c);
+		/* [TODO] not used now */
+		/*
 		for (int i=0; i<l; i++)
 		{
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<UnionOp>(new CopyOp())));
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			auto new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+			auto new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			new_of->wire_in(new_if);
 			new_if->wire_out(new_of);
 
@@ -257,20 +266,25 @@ namespace DT {
 			stateo.push_back(stateof[i]);
 			stateo.push_back(c->stateoi[i]);
 			stateo.push_back(c->stateof[i]);
+			gates.push_back(new_of);
+			gates.push_back(new_if);
 
 			stateof[i] = new_of;
 			stateif[i] = new_if;
 		}
+		*/
 	}
 
 	void Circuit::combine_epsilon_union(shared_ptr<Circuit> c, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op)
 	{
 		int l = stateof.size();
 		combine_basic(c);
+		/* [TODO] not used now */
+		/*
 		for (int i=0; i<l; i++)
 		{
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<UnionOp>(new UnionOp())));
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			auto new_of = shared_ptr<Gate>(new Gate(shared_ptr<UnionOp>(new UnionOp())));
+			auto new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			new_of->wire_in(stateof[i]);
 			new_of->wire_in(c->stateof[i]);
 			stateof[i]->wire_out(new_of);
@@ -288,6 +302,7 @@ namespace DT {
 			stateof[i] = new_of;
 			stateif[i] = new_if;
 		}
+		*/
 	}
 
 	void Circuit::combine_char_concatenation(shared_ptr<Circuit> c)
@@ -295,16 +310,47 @@ namespace DT {
 		int l = stateii.size();
 		combine_basic(c);
 
+		vector< std::shared_ptr<Gate> > new_stateii; /* new input state */
+		vector< std::shared_ptr<Gate> > new_stateif; /* new output state */
+		vector< std::shared_ptr<Gate> > new_stateoi; /* new input state */
+		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
+
 		for (int i=0; i<l; i++)
 		{
-			statei.push_back(stateif[i]);
-			statei.push_back(c->stateii[i]);
-			stateo.push_back(stateof[i]);
-			stateo.push_back(c->stateoi[i]);
+			auto const_op = shared_ptr<ConstOp>(new ConstOp());
+			auto copy_op = shared_ptr<CopyOp>(new CopyOp());
+			auto init_i = shared_ptr<Gate>(new Gate(const_op));
+			auto init_o = shared_ptr<Gate>(new Gate(copy_op));
+			auto commit_li = shared_ptr<Gate>(new Gate(const_op));
+			auto commit_lo = shared_ptr<Gate>(new Gate(copy_op));
+			auto commit_ri = shared_ptr<Gate>(new Gate(const_op));
+			auto commit_ro = shared_ptr<Gate>(new Gate(copy_op));
 
-			stateif[i] = c->stateif[i];
-			stateof[i] = c->stateof[i];
+			init_i->wire_out(init_o);
+			commit_li->wire_out(commit_lo);
+			commit_ri->wire_out(commit_ro);
+
+			init_o->wire_in(init_i);
+			commit_lo->wire_in(commit_li);
+			commit_ro->wire_in(commit_ri);
+
+			new_stateii.push_back(init_i);
+			new_stateoi.push_back(init_o);
+			new_stateif.push_back(commit_ri);
+			new_stateof.push_back(commit_ro);
+
+			gates.push_back(init_i);
+			gates.push_back(init_o);
+			gates.push_back(commit_li);
+			gates.push_back(commit_lo);
+			gates.push_back(commit_ri);
+			gates.push_back(commit_ro);
 		}
+
+		stateii = new_stateii;
+		stateif = new_stateif;
+		stateoi = new_stateoi;
+		stateof = new_stateof;
 	}
 
 
@@ -313,20 +359,57 @@ namespace DT {
 		int l = stateii.size();
 		combine_basic(c);
 
+		vector< std::shared_ptr<Gate> > new_stateii; /* new input state */
+		vector< std::shared_ptr<Gate> > new_stateif; /* new output state */
+		vector< std::shared_ptr<Gate> > new_stateoi; /* new input state */
+		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
+	
 		for (int i=0; i<l; i++)
 		{
-			c->stateii[i]->wire_in(stateof[i]);
-			stateof[i]->wire_out(c->stateii[i]);
-			c->stateii[i]->set_op(shared_ptr<CopyOp>(new CopyOp));
+			auto const_op = shared_ptr<ConstOp>(new ConstOp());
+			auto init_i = shared_ptr<Gate>(new Gate(init_op));
+			auto init_o = shared_ptr<Gate>(new Gate(const_op));
+			auto commit_li = shared_ptr<Gate>(new Gate(const_op));
+			auto commit_lo = shared_ptr<Gate>(new Gate(commit_op));
+			auto commit_ri = shared_ptr<Gate>(new Gate(const_op));
+			auto commit_ro = shared_ptr<Gate>(new Gate(commit_op));
 
-			statei.push_back(stateif[i]);
-			statei.push_back(c->stateii[i]);
-			stateo.push_back(stateof[i]);
-			stateo.push_back(c->stateoi[i]);
+			auto rii = c->stateii[i];
+			auto roi = c->stateoi[i];
+			auto rif = c->stateif[i];
+			auto rof = c->stateof[i];
+			auto lii = stateii[i];
+			auto loi = stateoi[i];
+			auto lif = stateif[i];
+			auto lof = stateof[i];
 
-			stateif[i] = c->stateif[i];
-			stateof[i] = c->stateof[i];
+			init_i->wire_out(lii);
+			lof->wire_out(commit_lo);
+			commit_lo->wire_out(rii);
+			rof->wire_out(commit_ro);
+
+			lii->wire_in(init_i);
+			commit_lo->wire_in(rof);
+			rii->wire_in(commit_lo);
+			commit_ro->wire_in(rof);
+
+			new_stateii.push_back(init_i);
+			new_stateoi.push_back(init_o);
+			new_stateif.push_back(commit_ri);
+			new_stateof.push_back(commit_ro);
+
+			gates.push_back(init_i);
+			gates.push_back(init_o);
+			gates.push_back(commit_li);
+			gates.push_back(commit_lo);
+			gates.push_back(commit_ri);
+			gates.push_back(commit_ro);
 		}
+
+		stateii = new_stateii;
+		stateif = new_stateif;
+		stateoi = new_stateoi;
+		stateof = new_stateof;
 
 	}
 
@@ -338,18 +421,20 @@ namespace DT {
 		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
 		for (int i=0; i<stateii.size(); i++)
 		{
-			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
-			shared_ptr<Gate> new_oi = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
-			shared_ptr<Gate> commit_i = shared_ptr<Gate>(new Gate(ConstOp));
-			shared_ptr<Gate> commit_o = shared_ptr<Gate>(new Gate(CopyOp));
-			shared_ptr<Gate> merge_i = shared_ptr<Gate>(new Gate(ConstOp));
-			shared_ptr<Gate> merge_o = shared_ptr<Gate>(new Gate(CopyOp));
-			shared_ptr<Gate> old_ii = stateii[i];
-			shared_ptr<Gate> old_oi = stateoi[i];
-			shared_ptr<Gate> old_if = stateif[i];
-			shared_ptr<Gate> old_of = stateof[i];
+			auto const_op = shared_ptr<ConstOp>(new ConstOp());
+			auto copy_op = shared_ptr<CopyOp>(new CopyOp());
+			auto new_ii = shared_ptr<Gate>(new Gate(const_op));
+			auto new_oi = shared_ptr<Gate>(new Gate(copy_op));
+			auto new_if = shared_ptr<Gate>(new Gate(const_op));
+			auto new_of = shared_ptr<Gate>(new Gate(copy_op));
+			auto commit_i = shared_ptr<Gate>(new Gate(const_op));
+			auto commit_o = shared_ptr<Gate>(new Gate(copy_op));
+			auto merge_i = shared_ptr<Gate>(new Gate(const_op));
+			auto merge_o = shared_ptr<Gate>(new Gate(copy_op));
+			auto old_ii = stateii[i];
+			auto old_oi = stateoi[i];
+			auto old_if = stateif[i];
+			auto old_of = stateof[i];
 
 			new_ii->wire_out(new_oi);
 			new_oi->wire_in(new_ii);
@@ -391,19 +476,21 @@ namespace DT {
 		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
 		for (int i=0; i<stateii.size(); i++)
 		{
-			shared_ptr<Gate> new_ii = shared_ptr<Gate>(new Gate(init_op));
-			shared_ptr<Gate> new_oi = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+			auto const_op = shared_ptr<ConstOp>(new ConstOp());
+			auto copy_op = shared_ptr<CopyOp>(new CopyOp());
+			auto new_ii = shared_ptr<Gate>(new Gate(init_op));
+			auto new_oi = shared_ptr<Gate>(new Gate(const_op));
+			auto new_if = shared_ptr<Gate>(new Gate(const_op));
+			auto new_of = shared_ptr<Gate>(new Gate(copy_op));
 			
-			shared_ptr<Gate> old_ii = stateii[i];
-			shared_ptr<Gate> old_oi = stateoi[i];
-			shared_ptr<Gate> old_if = stateif[i];
-			shared_ptr<Gate> old_of = stateof[i];
-			shared_ptr<Gate> commit_i = shared_ptr<Gate>(new Gate(commit_op));
-			shared_ptr<Gate> commit_o = shared_ptr<Gate>(new Gate(ConstOp));
-			shared_ptr<Gate> merge_i = shared_ptr<Gate>(new Gate(merge_op));
-			shared_ptr<Gate> merge_o = shared_ptr<Gate>(new Gate(ConstOp));
+			auto old_ii = stateii[i];
+			auto old_oi = stateoi[i];
+			auto old_if = stateif[i];
+			auto old_of = stateof[i];
+			auto commit_i = shared_ptr<Gate>(new Gate(commit_op));
+			auto commit_o = shared_ptr<Gate>(new Gate(const_op));
+			auto merge_i = shared_ptr<Gate>(new Gate(merge_op));
+			auto merge_o = shared_ptr<Gate>(new Gate(const_op));
 
 			commit_i->wire_in(old_of);
 			old_of->wire_out(merge_i);
@@ -439,14 +526,14 @@ namespace DT {
 		stateof = new_stateof;
 	}
 
-	void combine_char_conditional() 
+	void Circuit::combine_char_conditional() 
 	{
 		vector< std::shared_ptr<Gate> > new_stateif; /* new output state */
 		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
 		for (int i=0; i<stateii.size(); i++)
 		{
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+			auto new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			auto new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
 			new_if->wire_out(new_of);
 			new_of->wire_in(new_if);
 			new_stateif.push_back(new_if);
@@ -458,16 +545,16 @@ namespace DT {
 		stateof = new_stateof;
 	}
 
-	void combine_epsilon_conditional(shared_ptr<PipelineOp> commit_op)
+	void Circuit::combine_epsilon_conditional(shared_ptr<PipelineOp> commit_op)
 	{
 		vector< std::shared_ptr<Gate> > new_stateif; /* new output state */
 		vector< std::shared_ptr<Gate> > new_stateof; /* new output state */
 		for (int i=0; i<stateii.size(); i++)
 		{
-			shared_ptr<Gate> new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
-			shared_ptr<Gate> new_of = shared_ptr<Gate>(new Gate(commit_op));
-			old_if = state_if[i];
-			old_of = state_of[i];
+			auto new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
+			auto new_of = shared_ptr<Gate>(new Gate(commit_op));
+			auto old_if = stateif[i];
+			auto old_of = stateof[i];
 			new_of->wire_in(old_of);
 			old_of->wire_out(new_of);
 			new_stateif.push_back(new_if);

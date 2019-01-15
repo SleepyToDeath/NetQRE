@@ -226,6 +226,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 						}
 						else
 						{
+							context->agg_type = AggOpType::NONE;
 							parse_it(NetqreExpType::QRE_PS);
 						}
 						break;
@@ -242,10 +243,12 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			}
 			else if (code[cursor] == '/')
 			{
+				context->agg_type = AggOpType::NONE;
 				parse_it(NetqreExpType::QRE_PS);
 			}
 			else
 			{
+				context->agg_type = AggOpType::NONE;
 				parse_it(NetqreExpType::CONST);
 			}
 
@@ -297,6 +300,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			}
 			else if (code[cursor] == '/')
 			{
+				context->reg_type = RegularOpType::NONE;
 				parse_it(NetqreExpType::QRE_COND);
 			}
 			else

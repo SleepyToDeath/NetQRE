@@ -56,7 +56,6 @@ namespace DT
 		Gate(shared_ptr<Op> op);
 		/* only copy op, other fields are reset */
 		Gate(shared_ptr<Gate> src);
-		~Gate();
 
 		void wire_in(shared_ptr<Gate> src); /* add an input wire */
 		void wire_out(shared_ptr<Gate> dst); /* add an output wire */

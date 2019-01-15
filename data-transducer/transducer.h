@@ -16,7 +16,6 @@ namespace DT
 
 			/* assume in and out have same width */
 			Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger);
-			~Transducer();
 
 			void add_circuit(std::shared_ptr<Circuit> c, TagType tag);
 			void add_epsilon_circuit(std::shared_ptr<Circuit> c);
@@ -33,7 +32,7 @@ namespace DT
 
 			/* 	Input the initial values for init states. 
 				other states are assumed to be 0(or undef?) */
-			void reset(std::vector< unique_ptr<DataValue> > parameters); 
+			void reset(const std::vector< unique_ptr<DataValue> > &parameters); 
 
 			/* start/continue to process stream, return result so far */
 			std::vector< unique_ptr<DataValue> > process(std::vector<Word> &stream ); 

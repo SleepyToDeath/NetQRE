@@ -1,15 +1,16 @@
 #include "gate.h"
 
-using std::move();
+using std::move;
+using std::shared_ptr;
 
 namespace DT {
 
-Gate(shared_ptr<Gate> src)
+Gate::Gate(shared_ptr<Gate> src)
 :Gate(src->op)
 {
 }
 
-Gate(shared_ptr<Op> op)
+Gate::Gate(shared_ptr<Op> op)
 {
 	val = DataValue::factory->get_instance(UNDEF);
 	val_old = copy_data(val);
@@ -19,17 +20,13 @@ Gate(shared_ptr<Op> op)
 	this->op = op;
 }
 
-Gate::~Gate()
-{
-}
-
-void Gate::wire_in(share_ptr<Gate> src)
+void Gate::wire_in(shared_ptr<Gate> src)
 {
 	in.push_back(src);
 	cmb_wires ++;
 }
 
-void Gate::wire_out(share_ptr<Gate> dst)
+void Gate::wire_out(shared_ptr<Gate> dst)
 {
 	out.push_back(dst);
 }
@@ -47,9 +44,9 @@ void Gate::posedge()
 			std::vector<unique_ptr<DataValue> > param;
 			for (int i=0; i<in.size(); i++)
 			{
-				param.push_back( in[i].g->output( in[i].t ) );
+				param.push_back( in[i]->output() );
 			}
-			val = (*shared_ptr<op>)(param, val);
+			val = (*op)(param, val);
 		}
 		
 		for (int i=0; i<out.size(); i++)
@@ -65,10 +62,10 @@ void Gate::posedge()
 void Gate::negedge()
 {
 	ready_wires = 0;
-	val_old = val;
+	val_old = copy_data(val);
 }
 
-void reset()
+void Gate::reset()
 {
 	ready_wires = 0;
 	val = copy_data(val_init);
@@ -80,7 +77,7 @@ unique_ptr<DataValue> Gate::output()
 	return copy_data(val);
 }
 
-void Gate::set_value(unique_ptr<DataValue> val)
+void Gate::set_value(const unique_ptr<DataValue> &val)
 {
 	this->val = copy_data(val);
 }
