@@ -35,6 +35,7 @@ class GeneralInterpreter {
 	public:
 	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
+	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
 };
 
 class GeneralExample: public IEExample {
@@ -101,11 +102,12 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 };
 
 class GeneralConfigParser {
-	public:
+	private:
 
 	class State {
 		public:
 		map<std::string, shared_ptr<GeneralSyntaxLeftHandSide> > name_list;
+		vector<shared_ptr<GeneralSyntaxLeftHandSide> > dep_list; /* input dependent LHS list */
 	};
 
 	class Token {
@@ -116,8 +118,6 @@ class GeneralConfigParser {
 	};
 
 	shared_ptr<State> state;
-	shared_ptr<GeneralSyntaxLeftHandSide> root;
-	shared_ptr<RedundancyPlan> rp;
 
 	bool is_id(char c) {
 		return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || (c=='_');
@@ -200,12 +200,23 @@ class GeneralConfigParser {
 					std::string real_name2 = name2;
 					if (name2[0] == '$')
 						real_name2 = name2.substr(1, name2.length()-1);
+					/* add new LHS to list */
 					if (state->name_list.count(real_name2) == 0)
 					{
 						cout<<"new name: "<<real_name2<<endl;
 						state->name_list[real_name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 						state->name_list[real_name2]->name = real_name2;
+						/* check input dependency */
+						if (name2[0] == '\\' && name2[1] == 'r')
+						{
+							state->name_list[real_name2]->is_term = false;
+							int handle = stoi(name2.substr(0, name2.size()-2));
+							if (state->dep_list.size() <= handle)
+								state->dep_list.resize(handle+1, nullptr);
+							state->dep_list[handle] = (state->name_list[real_name2]);
+						}
 					}
+					/* set functional */
 					if (name2[0] == '$')
 					{
 						state->name_list[real_name2]->functional = false;
@@ -403,6 +414,34 @@ class GeneralConfigParser {
 		/* scan names */
 		string name = SYNTAX_ROOT_NAME;
 		state->name_list[name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+	}
+
+	public:
+
+	shared_ptr<GeneralSyntaxLeftHandSide> root;
+	shared_ptr<RedundancyPlan> rp;
+
+	void generate_input_dependent_syntax(shared_ptr<GeneralExample> example) {
+		vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
+		for (int i=0; i<state->dep_list.size(); i++)
+		{
+			auto lhs = state->dep_list[i];
+			if (lhs != nullptr)
+			{
+				auto range = GeneralProgram->interpreter->get_range(i, example);
+				auto new_rhs = shared_ptr<GeneralSyntaxRightHandSide>(new GeneralSyntaxRightHandSide());
+				lhs->option.push_back(new_rhs);
+				for (int j=0; j<range.size(); j++)
+				{
+					auto new_lhs = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+					new_lhs->is_term = true;
+					new_lhs->functional = true;
+					new_lhs->name = range[i];
+					new_rhs->subexp.push_back(new_lhs);
+					new_rhs->subexp_full.push_back(new_lhs);
+				}
+			}
+		}
 	}
 
 	void parse_config(shared_ptr<GJson> json) {

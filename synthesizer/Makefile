@@ -13,7 +13,7 @@ test-pwd:
 	./testbed/regex lang/regex.json example/pwd.input example/config
 
 test:
-	./testbed/regex lang/regex.json example/pwd.input example/config
+	./testbed/regex lang/regex_range_test.json example/pwd.input example/config
 
 test-c:
 	./testbed/regex lang/common_string.json example/xlarge2.input example/config
@@ -27,7 +27,7 @@ regex6-g: lang/regex6.cpp lang/nfa.hpp lang/nfa_skip.hpp incomplete_execution.h 
 	g++ -o regex lang/regex6.cpp incomplete_execution.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -g -std=c++11
 
 SRC = core/*pp
-SRC += lang/network_tokenizer/*pp
+#SRC += lang/network_tokenizer/*pp
 SRC += core/*h
 SRC += lang/general/*pp 
 SRC += lang/general/*h

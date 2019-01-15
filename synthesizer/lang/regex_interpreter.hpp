@@ -237,6 +237,21 @@ class RegexInterpreter : public GeneralInterpreter
 {
 	public:
 
+	vector<string> digit_range;
+
+	RegexInterpreter() {
+		digit_range.push_back("0");
+		digit_range.push_back("1");
+		digit_range.push_back("2");
+		digit_range.push_back("3");
+		digit_range.push_back("4");
+		digit_range.push_back("5");
+		digit_range.push_back("6");
+		digit_range.push_back("7");
+		digit_range.push_back("8");
+		digit_range.push_back("9");
+	}
+
 	virtual double extra_complexity(AbstractCode code) {
 		auto cursor = shared_ptr<int>(new int);
 		(*cursor) = 0;
@@ -244,6 +259,9 @@ class RegexInterpreter : public GeneralInterpreter
 		return ast->get_complexity();
 	}
 
+	vector<string> get_range(int handle) { 
+		return digit_range;
+	}
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete, shared_ptr<GeneralExample> input, IEConfig cfg) {
 

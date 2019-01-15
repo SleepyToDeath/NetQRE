@@ -1,6 +1,6 @@
 #include "general.hpp"
 #include "../../core/search_graph.h"
-#include "../network_tokenizer/tcp_ip.hpp"
+//#include "../network_tokenizer/tcp_ip.hpp"
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -25,8 +25,8 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<Gen
 */
 int main(int argc, char *argv[]) {
 
-	test_tcp_ip_parser(argv[1]);
-	return 0;
+//	test_tcp_ip_parser(argv[1]);
+//	return 0;
 
 //	test_interpretor();
 //	return 0;
@@ -87,6 +87,9 @@ int main(int argc, char *argv[]) {
 	fin_c>>explore_rate;
 	fin_c>>answer_count;
 	fin_c>>threads;
+
+	/* prepare */
+	parser->generate_input_dependent_syntax(examples);
 
 	/* do searching */
 	vector<shared_ptr<IESyntaxTree> > answer;
