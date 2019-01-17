@@ -105,9 +105,15 @@ vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 //		w.val = DataValue::factory->get_instance(DT::UNDEF);
 		for (int j=0; j<predicates.size(); j++)
 		{
-			auto pred_tag = unique_ptr<StateValue>(new StateValue());
+			StateValue* pred_tag = new StateValue();
 			pred_tag->active = satisfy(predicates[j], feature_stream[i]);
-			w.tag_bitmap.push_back(move(pred_tag));
+			DT::DataValue* tmp = nullptr;
+			/* [TODO] Not sure if it's compiler's bug or some bufferoverflow
+				or I didn't make a thorough clean.
+				Sometimes the value of tmp will be off by 8 from pred_tag */
+			tmp = pred_tag;
+//			*(unsigned long long*)(&tmp) = (unsigned long long) pred_tag;
+			w.tag_bitmap.push_back(unique_ptr<DT::DataValue>(tmp));
 		}
 		tag_stream.push_back(w);
 	}
@@ -117,6 +123,14 @@ vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 
 unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureVector & fv)
 {
+	if (predicate->type == NetqreExpType::WILDCARD)
+	{
+		auto true_ans = unique_ptr<BoolValue> (new BoolValue());
+		true_ans->unknown = false;
+		true_ans->val = true;
+		return true_ans;
+	}
+
 	switch(predicate->bool_type)
 	{
 		case BoolOpType::OR:
@@ -168,6 +182,7 @@ shared_ptr<Machine> Interpreter::interpret(std::shared_ptr<NetqreAST> ast)
 
 void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine)
 {
+	cout<< "Top "<<(int)ast->type <<endl;
 	switch(ast->type)
 	{
 		case NetqreExpType::PROGRAM:
@@ -187,12 +202,20 @@ void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> 
 		case NetqreExpType::QRE_NS:
 		machine->num_tree = real_interpret_num(ast, machine);
 		return;
+
+		case NetqreExpType::THRESHOLD:
+		machine->threshold = ast->value;
+		return;
+
+		default:
+		throw string("Impossible exp type!\n");
 	}
 
 }
 
 std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
+	cout<< "Num "<<(int)ast->type <<endl;
 	auto tree = shared_ptr<NumericalTree>(new NumericalTree());
 	switch(ast->type)
 	{
@@ -219,6 +242,9 @@ std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<N
 			case NumOpType::DIV:
 			tree->op = shared_ptr<DivOp>(new DivOp());
 			break;
+
+			default:
+			throw string("Impossible num op type!\n");
 		}
 		return tree;
 
@@ -235,6 +261,7 @@ std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<N
 
 std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
+	cout<< "Agg "<<(int)ast->type <<endl;
 	shared_ptr<NetqreAST> cur = ast;
 	auto leaf = shared_ptr<QRELeaf>(new QRELeaf());
 	while(true)
@@ -268,7 +295,6 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 				}
 				if (flag)
 				{
-					cout<<cur->subtree.size()<<endl;
 					auto feat = cur->subtree[1];
 					for (int i = 0; i < feat->subtree.size(); i++)
 					agg.param.push_back(feat->subtree[i]->value);
@@ -280,8 +306,11 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 			}
 
 			case NetqreExpType::QRE_PS:
-			leaf->transducer = real_interpret_qre(cur->subtree[0], machine);
+			leaf->transducer = real_interpret_qre(cur, machine);
 			return leaf;
+
+			default:
+			throw "Impossible agg exp type!\n";
 		}
 	}
 }
@@ -289,6 +318,7 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 
 shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
+	cout<< "QRE "<<(int)ast->type <<endl;
 	auto parse_agg_commit_op = [](shared_ptr<NetqreAST> ast) -> shared_ptr<PopStackOp> {
 		switch(ast->agg_type)
 		{
@@ -339,6 +369,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 	{
 		case NetqreExpType::QRE_PS:
 		{
+			cout<< "QRE type"<<(int)ast->reg_type <<endl;
 			switch(ast->reg_type)
 			{
 				case RegularOpType::STAR:
@@ -385,6 +416,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 
 shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine)
 {
+	cout<< "RE "<<(int)ast->type <<endl;
 	switch(ast->type)
 	{
 		case NetqreExpType::RE:
@@ -408,8 +440,12 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 				dt_left->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
 				return dt_left;
 			}
+
+			default:
+			throw string("Impossible reg op type!\n");
 		}
 
+		/*
 		case NetqreExpType::WILDCARD:
 		{
 			auto trans_op = shared_ptr<TransitionOp>(new TransitionOp());
@@ -441,14 +477,17 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 			dt->add_epsilon_circuit(bak->get_plain_circuit());
 			return dt;
 		}
+		*/
 
+		/* see wildcard as a predicate */
+		case NetqreExpType::WILDCARD:
 		case NetqreExpType::PREDICATE_SET:
 		{
 			auto trans_op = shared_ptr<TransitionOp>(new TransitionOp());
 			auto dt = shared_ptr<DT::Transducer>(new DT::Transducer(machine->predicates.size(), trans_op));
 			auto c = shared_ptr<DT::Circuit>(new DT::Circuit());
 			auto in_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
-			auto out_op = shared_ptr<TransitionOp>(new TransitionOp());
+			auto out_op = shared_ptr<PredicateOp>(new PredicateOp());
 
 			auto gs = shared_ptr<DT::Gate>(new DT::Gate(in_op));
 			auto gii = shared_ptr<DT::Gate>(new DT::Gate(in_op));
@@ -466,8 +505,13 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 			c->add_gate(goi, DT::GateType::STATE_OUT_INIT);
 			c->add_gate(gof, DT::GateType::STATE_OUT_FINAL);
 
+			auto e = c->get_plain_circuit();
+
+			if (c->size() != e->size())
+				throw string("Incorrect circuit construction!\n");
+
 			dt->add_circuit(c, ast->tag);
-			dt->add_epsilon_circuit(c->get_plain_circuit());
+			dt->add_epsilon_circuit(e);
 			return dt;
 		}
 
@@ -478,7 +522,10 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 
 void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)
 {
-	if (ast->type != NetqreExpType::PREDICATE_SET)
+	/* [TODO] remove when filter is supported */
+	if (ast->type == NetqreExpType::FILTER)
+		return;
+	if (ast->type != NetqreExpType::PREDICATE_SET && ast->type != NetqreExpType::WILDCARD)
 	{
 		for (int i=0; i<ast->subtree.size(); i++)
 			collect_predicates(ast->subtree[i], predicates);

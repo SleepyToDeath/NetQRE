@@ -1,10 +1,14 @@
 #include "circuit.h"
+#include <iostream>
 
 using std::shared_ptr;
 using std::unique_ptr;
 using std::vector;
 using std::string;
 using std::move;
+
+using std::cout;
+using std::endl;
 
 namespace DT {
 
@@ -326,6 +330,15 @@ namespace DT {
 			auto commit_ri = shared_ptr<Gate>(new Gate(const_op));
 			auto commit_ro = shared_ptr<Gate>(new Gate(copy_op));
 
+			auto lii = stateii[i];
+			auto loi = stateoi[i];
+			auto lif = stateif[i];
+			auto lof = stateof[i];
+			auto rii = c->stateii[i];
+			auto roi = c->stateoi[i];
+			auto rif = c->stateif[i];
+			auto rof = c->stateof[i];
+
 			init_i->wire_out(init_o);
 			commit_li->wire_out(commit_lo);
 			commit_ri->wire_out(commit_ro);
@@ -339,6 +352,17 @@ namespace DT {
 			new_stateif.push_back(commit_ri);
 			new_stateof.push_back(commit_ro);
 
+			statei.push_back(lii);
+			statei.push_back(lif);
+			stateo.push_back(loi);
+			stateo.push_back(lof);
+			statei.push_back(rii);
+			statei.push_back(rif);
+			stateo.push_back(roi);
+			stateo.push_back(rof);
+			statei.push_back(commit_li);
+			stateo.push_back(commit_lo);
+
 			gates.push_back(init_i);
 			gates.push_back(init_o);
 			gates.push_back(commit_li);
@@ -351,6 +375,9 @@ namespace DT {
 		stateif = new_stateif;
 		stateoi = new_stateoi;
 		stateof = new_stateof;
+
+		if (!check())
+			throw string("Incorrect combine cc!\n");
 	}
 
 
@@ -374,14 +401,14 @@ namespace DT {
 			auto commit_ri = shared_ptr<Gate>(new Gate(const_op));
 			auto commit_ro = shared_ptr<Gate>(new Gate(commit_op));
 
-			auto rii = c->stateii[i];
-			auto roi = c->stateoi[i];
-			auto rif = c->stateif[i];
-			auto rof = c->stateof[i];
 			auto lii = stateii[i];
 			auto loi = stateoi[i];
 			auto lif = stateif[i];
 			auto lof = stateof[i];
+			auto rii = c->stateii[i];
+			auto roi = c->stateoi[i];
+			auto rif = c->stateif[i];
+			auto rof = c->stateof[i];
 
 			init_i->wire_out(lii);
 			lof->wire_out(commit_lo);
@@ -398,6 +425,17 @@ namespace DT {
 			new_stateif.push_back(commit_ri);
 			new_stateof.push_back(commit_ro);
 
+			statei.push_back(lii);
+			statei.push_back(lif);
+			stateo.push_back(loi);
+			stateo.push_back(lof);
+			statei.push_back(rii);
+			statei.push_back(rif);
+			stateo.push_back(roi);
+			stateo.push_back(rof);
+			statei.push_back(commit_li);
+			stateo.push_back(commit_lo);
+
 			gates.push_back(init_i);
 			gates.push_back(init_o);
 			gates.push_back(commit_li);
@@ -411,6 +449,8 @@ namespace DT {
 		stateoi = new_stateoi;
 		stateof = new_stateof;
 
+		if (!check())
+			throw string("Incorrect combine ec!\n");
 	}
 
 	void Circuit::combine_char_star()
@@ -449,6 +489,10 @@ namespace DT {
 			statei.push_back(old_if);
 			stateo.push_back(old_oi);
 			stateo.push_back(old_of);
+			statei.push_back(commit_i);
+			statei.push_back(merge_i);
+			stateo.push_back(commit_o);
+			stateo.push_back(merge_o);
 			new_stateii.push_back(new_ii);
 			new_stateif.push_back(new_if);
 			new_stateoi.push_back(new_oi);
@@ -466,6 +510,9 @@ namespace DT {
 		stateif = new_stateif;
 		stateoi = new_stateoi;
 		stateof = new_stateof;
+
+		if (!check())
+			throw string("Incorrect combine cs!\n");
 	}
 
 	void Circuit::combine_epsilon_star(shared_ptr<MergeParallelOp> merge_op, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op)
@@ -507,6 +554,10 @@ namespace DT {
 			statei.push_back(old_if);
 			stateo.push_back(old_oi);
 			stateo.push_back(old_of);
+			statei.push_back(commit_i);
+			statei.push_back(merge_i);
+			stateo.push_back(commit_o);
+			stateo.push_back(merge_o);
 			new_stateii.push_back(new_ii);
 			new_stateif.push_back(new_if);
 			new_stateoi.push_back(new_oi);
@@ -524,6 +575,9 @@ namespace DT {
 		stateif = new_stateif;
 		stateoi = new_stateoi;
 		stateof = new_stateof;
+
+		if (!check())
+			throw string("Incorrect combine es!\n");
 	}
 
 	void Circuit::combine_char_conditional() 
@@ -534,15 +588,22 @@ namespace DT {
 		{
 			auto new_if = shared_ptr<Gate>(new Gate(shared_ptr<ConstOp>(new ConstOp())));
 			auto new_of = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+			auto old_if = stateif[i];
+			auto old_of = stateof[i];
 			new_if->wire_out(new_of);
 			new_of->wire_in(new_if);
 			new_stateif.push_back(new_if);
 			new_stateof.push_back(new_of);
+			statei.push_back(old_if);
+			stateo.push_back(old_of);
 			gates.push_back(new_if);
 			gates.push_back(new_of);
 		}
 		stateif = new_stateif;
 		stateof = new_stateof;
+
+		if (!check())
+			throw string("Incorrect combine ccc!\n");
 	}
 
 	void Circuit::combine_epsilon_conditional(shared_ptr<PipelineOp> commit_op)
@@ -559,11 +620,16 @@ namespace DT {
 			old_of->wire_out(new_of);
 			new_stateif.push_back(new_if);
 			new_stateof.push_back(new_of);
+			statei.push_back(old_if);
+			stateo.push_back(old_of);
 			gates.push_back(new_if);
 			gates.push_back(new_of);
 		}
 		stateif = new_stateif;
 		stateof = new_stateof;
+
+		if (!check())
+			throw string("Incorrect combine ecc!\n");
 	}
 
 
@@ -578,7 +644,12 @@ namespace DT {
 		if (statei.size() != stateo.size())
 			return nullptr;
 
-		/* streami is empty */
+		for (int i=0; i<streami.size(); i++)
+		{
+			auto tmp = shared_ptr<Gate>(new Gate(shared_ptr<CopyOp>(new CopyOp())));
+			ans->streami.push_back(tmp);
+			ans->gates.push_back(tmp);
+		}
 
 		for (int i=0; i<statei.size(); i++)
 		{
@@ -618,7 +689,22 @@ namespace DT {
 			ans->gates.push_back(tmpo);
 		}
 
+		if (ans->size() != size())
+		{
+			cout<<ans->size()<<" : "<<size()<<endl;
+			throw string("Incorrect circuit copy!\n");
+		}
+
 		return ans;
 	}
 
+	int Circuit::size()
+	{
+		return gates.size();
+	}
+
+	bool Circuit::check()
+	{
+		return statei.size() + stateo.size() + stateii.size() + stateif.size() + stateoi.size() + stateof.size() + streami.size() == gates.size();
+	}
 }

@@ -12,6 +12,8 @@ class FeatureSlot
 	FeatureSlot(size_t _size, bool _iterative, StreamFieldType _value):
 		size(_size),iterative(_iterative),value(_value) { }
 
+//	FeatureSlot(const FeatureSlot& src):FeatureSlot(src.size, src.iterative, src.value) { }
+
 	size_t size; /* in bits, aligned to lowest bit */
 	bool iterative; /* iterative: no specific value will appear in the program, only iterate through all values, e.g. src_ip; non-iterative: otherwise, e.g. ethernet type */
 	StreamFieldType value;
@@ -43,8 +45,8 @@ class CmpFeatureVector: public DT::CmpTagValue
 class FeatureVector
 {
 	public:
-//	FeatureVector(std::shared_ptr<DT::TagValue> src);
-	FeatureVector();
+	FeatureVector() {};
+//	FeatureVector(const FeatureVector& src):features(src.features) { }
 
 	size_t size() {
 		return features.size();

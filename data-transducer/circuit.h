@@ -55,6 +55,9 @@ namespace DT
 		/* Only keep all I/O states. Output states copy Input states' value */
 		std::shared_ptr<Circuit> get_plain_circuit();
 
+		int size();
+		bool check();
+
 		private:
 		/* i/o = input/output; i/f = init/finish; i/o first, i/f second; if there's only one suffix, it's i/o */
 		/* [!] gates of ii, io, oi, of, must be of the same number and be aligned */

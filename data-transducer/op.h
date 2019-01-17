@@ -28,6 +28,7 @@ namespace DT
 	class DataValueFactory
 	{
 		public:
+		virtual ~DataValueFactory();
 		virtual unique_ptr<DataValue> get_instance(DataType t) = 0;
 		virtual unique_ptr<DataValue> get_instance(const unique_ptr<DataValue>& src) = 0;
 	};
@@ -35,9 +36,10 @@ namespace DT
 	class DataValue 
 	{
 		public:
-		DataValue(const unique_ptr<DataValue> &src);
-		DataValue(DataType t);
-		DataValue();
+//		DataValue(const unique_ptr<DataValue> &src);
+//		DataValue(DataType t);
+//		DataValue();
+		virtual ~DataValue();
 		DataType type;
 		static std::unique_ptr<DataValueFactory> factory;
 	};
@@ -65,7 +67,7 @@ namespace DT
 
 		Word();
 		Word(const Word &src);
-		Word operator=(const Word &src);
+		Word& operator=(const Word &src);
 	};
 
 	/*

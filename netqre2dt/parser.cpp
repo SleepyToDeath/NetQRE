@@ -2,6 +2,8 @@
 #include <string>
 #include <iostream>
 
+using std::cout;
+using std::endl;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::string;
@@ -21,7 +23,8 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 
 void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
 
-//	cout<<context->type<<endl;
+	cout<< (int)context->type <<endl;
+	cout<< code.substr(cursor, code.length()-cursor) <<endl;
 
 	auto skip_name = [&]()
 	{
@@ -141,6 +144,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 				break;
 
 				case '[':
+				context->bool_type = BoolOpType::NONE;
 				parse_it(NetqreExpType::PREDICATE);
 				break;
 
@@ -305,8 +309,11 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			}
 			else
 			{
+				context->reg_type = RegularOpType::NONE;
 				parse_it(NetqreExpType::CONST);
 			}
+
+			cout<<"QRE type "<< (int)context->reg_type<<endl;;
 
 			break;
 

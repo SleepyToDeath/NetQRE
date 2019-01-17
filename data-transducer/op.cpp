@@ -1,8 +1,11 @@
 #include "op.h"
+#include <iostream>
+using std::cout;
 
 namespace DT
 {
 
+/*
 DataValue::DataValue(const unique_ptr<DataValue> &src)
 {
 	type = src->type;
@@ -17,6 +20,10 @@ DataValue::DataValue()
 {
 	type = UNDEF;
 }
+*/
+DataValueFactory::~DataValueFactory() {}
+
+DataValue::~DataValue() {}
 
 unique_ptr<DataValue> ConstOp::operator ()(
 	const vector< unique_ptr<DataValue> > &param, 
@@ -50,14 +57,19 @@ Word::Word() {
 }
 
 Word::Word(const Word &src) {
+	tag_bitmap.clear();
 	for (int i=0; i<src.tag_bitmap.size(); i++)
 		tag_bitmap.push_back(copy_data(src.tag_bitmap[i]));
+//	tag_bitmap = move(src.tag_bitmap);
 }
 
-Word Word::operator=(const Word &src) {
-	for (int i=0; i<src.tag_bitmap.size(); i++)
-		tag_bitmap.push_back(copy_data(src.tag_bitmap[i]));
-	return Word(src);
+Word& Word::operator=(const Word &src) {
+	if (this != &src)
+	{
+		for (int i=0; i<src.tag_bitmap.size(); i++)
+			tag_bitmap.push_back(copy_data(src.tag_bitmap[i]));
+	}
+	return *this;
 }
 
 }

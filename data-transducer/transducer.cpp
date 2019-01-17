@@ -1,14 +1,18 @@
 #include "transducer.h"
+#include <iostream>
 
 using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
+using std::cout;
+using std::endl;
 
 namespace DT
 {
 
 Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger)
 {
+	cout<<"Alphabet size: "<<tag_alphabet_size<<endl;
 	this->tag_alphabet_size = tag_alphabet_size;
 	this->state_merger = state_merger;
 	circuits = vector< shared_ptr<Circuit> >(tag_alphabet_size, nullptr); //[!] assuming circuits is a vector
@@ -17,6 +21,7 @@ Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> s
 
 void Transducer::add_circuit(shared_ptr<Circuit> c, TagType tag)
 {
+	cout<<"Adding circuit #"<<tag<<endl;
 	circuits[tag] = c;
 }
 
@@ -34,20 +39,33 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 		epsilon_circuit->combine_epsilon(nullptr, t, state_merger, init_op, commit_op);
 		for (int i=0; i<circuits.size(); i++)
 			if (circuits[i] != nullptr)
+			{
 				circuits[i]->combine_char(nullptr,t);
+				if (epsilon_circuit->size() != circuits[i]->size())
+					throw string("Incorrect combine!\n");
+			}
 	}
 	else
 	{
+		auto plain1 = epsilon_circuit->get_plain_circuit();
+		auto plain2 = dt->epsilon_circuit->get_plain_circuit();
+		cout<<plain1->size()<<" : "<<plain2->size()<<endl;
 		epsilon_circuit->combine_epsilon(dt->epsilon_circuit,t, state_merger, init_op, commit_op);
 		for (int i=0; i<circuits.size(); i++)
 		{
 			if (circuits[i]!=nullptr || dt->circuits[i]!=nullptr)
 			{
 				if (circuits[i]==nullptr)
-					circuits[i] = epsilon_circuit->get_plain_circuit();
+					circuits[i] = plain1->get_plain_circuit();
 				if (dt->circuits[i]==nullptr)
-					dt->circuits[i] = dt->epsilon_circuit->get_plain_circuit();
+					dt->circuits[i] = plain2->get_plain_circuit();
+				cout<<circuits[i]->size()<<" : "<<dt->circuits[i]->size()<<endl;
 				circuits[i]->combine_char(dt->circuits[i],t);
+				cout<<epsilon_circuit->size()<<" : "<<circuits[i]->size()<<endl<<endl;
+				if (epsilon_circuit->size() != circuits[i]->size())
+				{
+					throw string("Incorrect combine!\n");
+				}
 			}
 		}
 	}
@@ -55,13 +73,19 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 
 void Transducer::reset(const std::vector<unique_ptr<DataValue> > &parameters)
 {
-	NullPort = copy_port(states);
+	NullPort = epsilon_circuit->get_state_out();
+
+	if (parameters.size() != NullPort->init.size())
+		throw string("Parameter size mismatch!\n");
+
 	for (int i=0; i<NullPort->init.size(); i++)
 		NullPort->init[i]->type = UNDEF;
 	for (int i=0; i<NullPort->media.size(); i++)
 		NullPort->media[i]->type = UNDEF;
 	for (int i=0; i<NullPort->fin.size(); i++)
 		NullPort->fin[i]->type = UNDEF;
+
+	states = copy_port(NullPort);
 	for (int i=0; i<parameters.size(); i++)
 		states->init[i] = copy_data(parameters[i]);
 }
@@ -70,6 +94,7 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 {
 	for (int i=0; i<stream.size(); i++)
 	{
+		cout<<"Word #"<<i<<endl;
 		{
 			shared_ptr<Circuit> c = epsilon_circuit;
 			c->reset();
@@ -85,6 +110,8 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 				if (stream[i].tag_bitmap[j])
 				{
 					shared_ptr<Circuit> c = circuits[j];
+					if (c == nullptr)
+						throw string("Impossible!!!!!!!\n");
 					c->reset();
 					c->set_stream_in(stream[i].tag_bitmap[j]);
 					c->set_state_in(backup);
@@ -108,7 +135,7 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 	{
 		ans.push_back(copy_data(states->fin[i]));
 	}
-	return std::move(ans);
+	return ans;
 }
 
 std::vector<int> Transducer::get_signature()

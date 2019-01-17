@@ -32,6 +32,7 @@ class DataValue: public DT::DataValue
 {
 	public:
 	DataType sub_type;
+	virtual ~DataValue() {};
 	virtual void dummy() = 0;
 };
 
@@ -127,6 +128,8 @@ class StateValue: public DataValue
 	}
 
 	StateValue(const unique_ptr<StateValue>& src):StateValue(src.get()) { }
+
+	StateValue(const StateValue& src):StateValue(&src) { }
 
 	StateValue(const StateValue* src) {
 		type = src->type;
@@ -631,9 +634,9 @@ class TransitionOp: public DT::MergeParallelOp
 
 	static unique_ptr<StateValue> eval(const StateValue* a, const StateValue* b)
 	{
-		if (!a->type == DT::VALID)
+		if (!(a->type == DT::VALID))
 			return unique_ptr<StateValue>(new StateValue(b));
-		if (!b->type == DT::VALID)
+		if (!(b->type == DT::VALID))
 			return unique_ptr<StateValue>(new StateValue(a));
 
 		auto c = OrOp::eval(a->active.get(), b->active.get());

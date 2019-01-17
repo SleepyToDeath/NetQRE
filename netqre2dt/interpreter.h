@@ -22,6 +22,7 @@ class Machine {
 	std::shared_ptr<NumericalTree> num_tree;
 	std::shared_ptr<NetqreAST> filter;
 	std::vector< std::shared_ptr<NetqreAST> > predicates;
+	StreamFieldType threshold;
 
 	private:
 	/* runtime info, initialize for each execution */
@@ -30,6 +31,7 @@ class Machine {
 	unique_ptr<IntValue> aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenStream& feature_stream, vector<DT::Word>& tag_stream);
 	std::vector<DT::Word> generate_tags(TokenStream &feature_stream);
 	std::unique_ptr<BoolValue> satisfy(shared_ptr<NetqreAST> predicate, FeatureVector & fv);
+
 };
 
 /* top level, QRE_NS */
