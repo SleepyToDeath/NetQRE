@@ -48,6 +48,7 @@ unique_ptr<IntValue> Machine::aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenS
 	{
 		vector< unique_ptr<DT::DataValue> > param;
 		auto start = unique_ptr<StateValue>(new StateValue()); // starting symbol = true, stack size 1 (with dummy value)
+		start->type = DT::VALID;
 		start->active->unknown = false;
 		start->active->val = true;
 		start->value_stack.push_back( unique_ptr<IntValue>(new IntValue(0)) );
@@ -107,6 +108,7 @@ vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 		{
 			StateValue* pred_tag = new StateValue();
 			pred_tag->active = satisfy(predicates[j], feature_stream[i]);
+			cout<<"Satisfy:"<<pred_tag->to_string()<<endl;
 			DT::DataValue* tmp = nullptr;
 			/* [TODO] Not sure if it's compiler's bug or some bufferoverflow
 				or I didn't make a thorough clean.
@@ -140,23 +142,35 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 		return AndOp::eval(satisfy(predicate->subtree[0], fv).get(), satisfy(predicate->subtree[1], fv).get());
 
 		case BoolOpType::NONE:
-		if (predicate->subtree.size() == 1)
+		switch(predicate->type)
 		{
-			auto unknown = unique_ptr<BoolValue> (new BoolValue());
-			unknown->unknown = true;
-			unknown->val = true;
-			return unknown;
-		}
-		else
-		{
-			auto l = predicate->subtree[0];
-			auto r = predicate->subtree[1];
-			int index = l->value;
-			unsigned long long value = r->value;
-			auto sat = unique_ptr<BoolValue> (new BoolValue());
-			sat->unknown = false;
-			sat->val = (fv[index].value == value);
-			return sat;
+			case NetqreExpType::PREDICATE_SET:
+			return satisfy(predicate->subtree[0], fv);
+
+			case NetqreExpType::UNKNOWN:
+			{
+				auto unknown = unique_ptr<BoolValue> (new BoolValue());
+				unknown->unknown = true;
+				unknown->val = true;
+				return unknown;
+			}
+
+			case NetqreExpType::PREDICATE:
+			{
+				if (predicate->subtree.size() == 1)
+					return satisfy(predicate->subtree[0], fv);
+				auto l = predicate->subtree[0];
+				auto r = predicate->subtree[1];
+				int index = l->value;
+				unsigned long long value = r->value;
+				auto sat = unique_ptr<BoolValue> (new BoolValue());
+				sat->unknown = false;
+				sat->val = (fv[index].value == value);
+				return sat;
+			}
+
+			default:
+			throw string("Impossible predicate type!\n");
 		}
 		
 		default:
@@ -489,11 +503,11 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 			auto in_op = shared_ptr<DT::CopyOp>(new DT::CopyOp());
 			auto out_op = shared_ptr<PredicateOp>(new PredicateOp());
 
-			auto gs = shared_ptr<DT::Gate>(new DT::Gate(in_op));
-			auto gii = shared_ptr<DT::Gate>(new DT::Gate(in_op));
-			auto gif = shared_ptr<DT::Gate>(new DT::Gate(in_op));
-			auto goi = shared_ptr<DT::Gate>(new DT::Gate(in_op));
-			auto gof = shared_ptr<DT::Gate>(new DT::Gate(out_op));
+			auto gs = shared_ptr<DT::Gate>(new DT::Gate(in_op, "ps"));
+			auto gii = shared_ptr<DT::Gate>(new DT::Gate(in_op, "pii"));
+			auto gif = shared_ptr<DT::Gate>(new DT::Gate(in_op, "pif"));
+			auto goi = shared_ptr<DT::Gate>(new DT::Gate(in_op, "poi"));
+			auto gof = shared_ptr<DT::Gate>(new DT::Gate(out_op, "pof"));
 			gii->wire_out(gof);
 			gs->wire_out(gof);
 			gof->wire_in(gii); // first value

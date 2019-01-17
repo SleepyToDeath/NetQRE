@@ -53,7 +53,7 @@ namespace DT
 	class Gate
 	{
 		public:
-		Gate(shared_ptr<Op> op);
+		Gate(shared_ptr<Op> op, std::string name);
 		/* only copy op, other fields are reset */
 		Gate(shared_ptr<Gate> src);
 
@@ -67,6 +67,8 @@ namespace DT
 		void negedge(); /* see above */
 		unique_ptr<DataValue> output(); /* get the output value */
 		void reset(); /* set val to init, set ready_wires to 0 */
+
+		std::string name;
 
 		private:
 		shared_ptr<Op> op;

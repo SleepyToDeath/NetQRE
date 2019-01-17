@@ -3,7 +3,11 @@
 
 #include "../data-transducer/op.h"
 #include "syntax.h"
+#include <sstream>
+#include <string>
 
+using std::getline;
+using std::stringstream;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::string;
@@ -97,7 +101,10 @@ class IntValue: public DataValue
 	}
 
 	IntValue(StreamFieldType val):upper(val),lower(val)
-	{}
+	{
+		type = DT::VALID;
+		sub_type = DataType::INT;
+	}
 
 	void dummy() {}
 
@@ -125,6 +132,37 @@ class StateValue: public DataValue
 		active = unique_ptr<BoolValue>(new BoolValue());
 		value_stack.clear();
 //		op_stack.clear();
+	}
+
+	std::string to_string() {
+		switch (type)
+		{
+			case DT::UNDEF:
+			return string("Undefined");
+
+			case DT::CONF:
+			return string("Conflict");
+
+			case DT::VALID:
+			{
+				stringstream ss;
+				ss<< "Stack: size:"<<value_stack.size();
+				for (int i=0; i<value_stack.size(); i++)
+					ss<<" | "<<value_stack[i]->lower<<"~"<<value_stack[i]->upper;
+				if (active->unknown)
+					ss<<" | unknown";
+				else if (active->val)
+					ss<<" | true";
+				else
+					ss<<" | false";
+				string ans;
+				getline(ss, ans);
+				return ans;
+			}
+
+			default:
+			return string("Unknown type");
+		}
 	}
 
 	StateValue(const unique_ptr<StateValue>& src):StateValue(src.get()) { }
@@ -480,7 +518,7 @@ class MergeOp: public MergeIntOp
 class PopStackOp: public DT::PipelineOp
 {
 	public:
-	PopStackOp(shared_ptr<MergeIntOp> op):the_op(op) { }
+	PopStackOp(shared_ptr<MergeIntOp> op):the_op(op) { name = "PopStackOp"; }
 
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
@@ -509,7 +547,7 @@ class PopStackOp: public DT::PipelineOp
 class PushStackOp: public DT::PipelineOp
 {
 	public:
-	PushStackOp(const unique_ptr<IntValue> &val):init_value(copy_typed_data(IntValue, val)) { }
+	PushStackOp(const unique_ptr<IntValue> &val):init_value(copy_typed_data(IntValue, val)) { name = "PushStackOp"; }
 
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
@@ -521,10 +559,15 @@ class PushStackOp: public DT::PipelineOp
 			return DataValueFactory::real_get_instance(DT::UNDEF);
 		unique_ptr<StateValue> state;
 		if (param.size()>0)
+		{
 			state = copy_typed_data(StateValue, param[0]);
+			state->value_stack.push_back(copy_typed_data(IntValue, init_value));
+		}
 		else
-			state = copy_typed_data(StateValue, current);
-		state->value_stack.push_back(copy_typed_data(IntValue, init_value));
+		{
+			return DataValueFactory::real_get_instance(DT::UNDEF);
+//			state = copy_typed_data(StateValue, current);
+		}
 		return state;
 	}
 
@@ -590,6 +633,7 @@ class PushSumOp: public PushStackOp
 class PredicateOp: public DT::MergeParallelOp
 {
 	public:
+	PredicateOp() {name = "PredicateOp"; }
 
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
@@ -622,6 +666,7 @@ class PredicateOp: public DT::MergeParallelOp
 class TransitionOp: public DT::MergeParallelOp
 {
 	public:
+	TransitionOp() { name = "TransitionOp"; }
 
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
@@ -660,6 +705,8 @@ class TransitionOp: public DT::MergeParallelOp
 class CondOp: public DT::PipelineOp
 {
 	public:
+	CondOp(){ name = "CondOp"; }
+
 	unique_ptr<DT::DataValue> operator ()(
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 

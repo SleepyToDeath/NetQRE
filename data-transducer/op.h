@@ -39,8 +39,10 @@ namespace DT
 //		DataValue(const unique_ptr<DataValue> &src);
 //		DataValue(DataType t);
 //		DataValue();
-		virtual ~DataValue();
 		DataType type;
+
+		virtual ~DataValue();
+		virtual std::string to_string();
 		static std::unique_ptr<DataValueFactory> factory;
 	};
 
@@ -80,12 +82,15 @@ namespace DT
 		virtual unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current) = 0;
+
+		std::string name;
 	};
 
 	/* always keep current value, ignore all input */
 	class ConstOp : public Op
 	{
 		public:
+		ConstOp() { name = "ConstOp"; }
 		unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current);
@@ -105,6 +110,7 @@ namespace DT
 	class CopyOp : public PipelineOp
 	{
 		public:
+		CopyOp(){ name = "CopyOp"; }
 		unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current);
@@ -147,6 +153,7 @@ namespace DT
 	class UnionOp : public MergeParallelOp
 	{
 		public:
+		UnionOp() { name = "UnionOp"; }
 		virtual unique_ptr<DataValue> operator ()(
 			const vector< unique_ptr<DataValue> > &param, 
 			const unique_ptr<DataValue> &current);

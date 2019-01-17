@@ -154,6 +154,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 
 		case NetqreExpType::PREDICATE:
 
+			context->bool_type = BoolOpType::NONE;
 			skip_head();
 			if (code[cursor] == '_')
 				parse_it(NetqreExpType::UNKNOWN);
@@ -381,6 +382,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 
 		case NetqreExpType::WILDCARD:
 		case NetqreExpType::UNKNOWN:
+			context->bool_type = BoolOpType::NONE;
 			skip_tail();
 			break;
 	}

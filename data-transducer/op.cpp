@@ -23,6 +23,8 @@ DataValue::DataValue()
 */
 DataValueFactory::~DataValueFactory() {}
 
+std::string DataValue::to_string() { return std::string("[]"); }
+
 DataValue::~DataValue() {}
 
 unique_ptr<DataValue> ConstOp::operator ()(

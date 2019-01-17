@@ -1,16 +1,19 @@
 #include "gate.h"
+#include <iostream>
 
+using std::cout;
+using std::endl;
 using std::move;
 using std::shared_ptr;
 
 namespace DT {
 
 Gate::Gate(shared_ptr<Gate> src)
-:Gate(src->op)
+:Gate(src->op, src->name)
 {
 }
 
-Gate::Gate(shared_ptr<Op> op)
+Gate::Gate(shared_ptr<Op> op, std::string name)
 {
 	val = DataValue::factory->get_instance(UNDEF);
 	val_old = copy_data(val);
@@ -18,6 +21,7 @@ Gate::Gate(shared_ptr<Op> op)
 	cmb_wires = 0;
 	ready_wires = 0;
 	this->op = op;
+	this->name = name;
 }
 
 void Gate::wire_in(shared_ptr<Gate> src)
@@ -40,11 +44,14 @@ void Gate::posedge()
 {
 	if (ready_wires == cmb_wires)
 	{
+		std::vector<unique_ptr<DataValue> > param;
+		bool flag = false;
 		{
-			std::vector<unique_ptr<DataValue> > param;
 			for (int i=0; i<in.size(); i++)
 			{
 				param.push_back( in[i]->output() );
+				if (param.back()->type == VALID)
+					flag = true;
 			}
 			val = (*op)(param, val);
 		}
@@ -56,6 +63,14 @@ void Gate::posedge()
 		}
 
 		ready_wires ++; /* only posedge once */
+		if (flag)
+		{
+			cout<<op->name<<endl
+			<<"Out: \n"<<val->to_string()<<endl<<"In: \n";
+			for (int i=0; i<param.size(); i++)
+				cout<<param[i]->to_string()<<endl;
+		}
+	
 	}
 }
 
@@ -67,6 +82,12 @@ void Gate::negedge()
 
 void Gate::reset()
 {
+	if (ready_wires<cmb_wires)
+	{
+		cout<<name<< " " <<op->name + " " + val->to_string() + " "<<ready_wires<<":"<<cmb_wires<<"\n";
+		cout<<"Possible cycle!\n";
+//		throw std::string("Possible cycle!\n");
+	}
 	ready_wires = 0;
 	val = copy_data(val_init);
 	val_old = copy_data(val_init);
