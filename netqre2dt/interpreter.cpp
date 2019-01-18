@@ -33,7 +33,7 @@ std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
 	for (int i=0; i<qre_list.size(); i++)
 	{
 		auto qre = qre_list[i];
-		aggregate(qre, 0, feature_stream, tag_stream);
+		qre->output = aggregate(qre, 0, feature_stream, tag_stream);
 	}
 
 	/* compute final result of num tree */
@@ -51,13 +51,16 @@ unique_ptr<IntValue> Machine::aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenS
 		start->type = DT::VALID;
 		start->active->unknown = false;
 		start->active->val = true;
-		start->value_stack.push_back( unique_ptr<IntValue>(new IntValue(0)) );
+//		start->value_stack.push_back( unique_ptr<IntValue>(new IntValue(0)) );
 		param.push_back(move(start));
 
 		qre->transducer->reset(param);
 
 		auto ans = qre->transducer->process(tag_stream);
-		return copy_typed_data(IntValue, ((StateValue*)(ans[0].get()))->value_stack[0]);
+		if (ans[0]->type == DT::VALID)
+			return copy_typed_data(IntValue, ((StateValue*)(ans[0].get()))->value_stack[0]);
+		else
+			return unique_ptr<IntValue>(new IntValue(-1));
 	}
 
 	/* otherwise recursion */
@@ -433,6 +436,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 	cout<< "RE "<<(int)ast->type <<endl;
 	switch(ast->type)
 	{
+		case NetqreExpType::RE_STAR:
 		case NetqreExpType::RE:
 		switch(ast->reg_type)
 		{
@@ -453,6 +457,11 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 				auto dt_right = real_interpret_re(ast->subtree[1], machine);
 				dt_left->combine(dt_right, DT::CombineType::CONCATENATION, agg_init_op, agg_commit_op);
 				return dt_left;
+			}
+
+			case RegularOpType::NONE:
+			{
+				return real_interpret_re(ast->subtree[0], machine);
 			}
 
 			default:
@@ -519,6 +528,19 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 			c->add_gate(goi, DT::GateType::STATE_OUT_INIT);
 			c->add_gate(gof, DT::GateType::STATE_OUT_FINAL);
 
+/*
+			auto e = shared_ptr<DT::Circuit>(new DT::Circuit());
+			auto _gs = shared_ptr<DT::Gate>(new DT::Gate(in_op, "ps"));
+			auto _gii = shared_ptr<DT::Gate>(new DT::Gate(in_op, "pii"));
+			auto _gif = shared_ptr<DT::Gate>(new DT::Gate(in_op, "pif"));
+			auto _goi = shared_ptr<DT::Gate>(new DT::Gate(in_op, "poi"));
+			auto _gof = shared_ptr<DT::Gate>(new DT::Gate(in_op, "pof"));
+			e->add_gate(_gs, DT::GateType::STREAM_IN);
+			e->add_gate(_gii, DT::GateType::STATE_IN_INIT);
+			e->add_gate(_gif, DT::GateType::STATE_IN_FINAL);
+			e->add_gate(_goi, DT::GateType::STATE_OUT_INIT);
+			e->add_gate(_gof, DT::GateType::STATE_OUT_FINAL);
+			*/
 			auto e = c->get_plain_circuit();
 
 			if (c->size() != e->size())

@@ -39,25 +39,28 @@ namespace DT {
 		cout<<"Merging ports:\n";
 		for (int i=0; i<src->init.size(); i++)
 		{
-			cout<<init[i]->to_string()<<" -> ";
+			if (init[i]->type == VALID)
+				cout<<"init"<<i<<" "<<init[i]->to_string()<<" -> ";
 			init[i] = (*op)(to_param(init[i],src->init[i]), nullptr);
-			cout<<init[i]->to_string()<<endl;
+			if (init[i]->type == VALID)
+				cout<<init[i]->to_string()<<endl;
 		}
-		cout<<endl;
 		for (int i=0; i<src->media.size(); i++)
 		{
-			cout<<media[i]->to_string()<<" -> ";
+			if (media[i]->type == VALID)
+				cout<<"med"<<i<<" "<<media[i]->to_string()<<" -> ";
 			media[i] = (*op)(to_param(media[i],src->media[i]), nullptr);
-			cout<<media[i]->to_string()<<endl;
+			if (media[i]->type == VALID)
+				cout<<media[i]->to_string()<<endl;
 		}
-		cout<<endl;
 		for (int i=0; i<src->fin.size(); i++)
 		{
-			cout<<fin[i]->to_string()<<" -> ";
+			if (fin[i]->type == VALID)
+				cout<<"fin"<<i<<" "<<fin[i]->to_string()<<" -> ";
 			fin[i] = (*op)(to_param(fin[i],src->fin[i]), nullptr);
-			cout<<fin[i]->to_string()<<endl;
+			if (fin[i]->type == VALID)
+				cout<<fin[i]->to_string()<<endl;
 		}
-		cout<<endl;
 	}
 
 	Circuit::Circuit()
@@ -138,11 +141,12 @@ namespace DT {
 		for (int i=0; i<states->media.size(); i++)
 		{
 			statei[i]->set_value(states->media[i]);
+			stateo[i]->set_value(states->media[i]);
 		}
 
 		for (int i=0; i<states->fin.size(); i++)
 		{
-			stateif[i]->set_value(states->fin[i]);
+			stateof[i]->set_value(states->fin[i]);
 		}
 	}
 
@@ -163,6 +167,23 @@ namespace DT {
 
 	void Circuit::tick()
 	{
+		/* debug */
+		for (int i=0; i<statei.size(); i++)
+			statei[i]->id = i;
+		for (int i=0; i<stateo.size(); i++)
+			stateo[i]->id = i;
+		for (int i=0; i<stateii.size(); i++)
+			stateii[i]->id = i;
+		for (int i=0; i<stateif.size(); i++)
+			stateif[i]->id = i;
+		for (int i=0; i<stateoi.size(); i++)
+			stateoi[i]->id = i;
+		for (int i=0; i<stateof.size(); i++)
+			stateof[i]->id = i;
+		for (int i=0; i<streami.size(); i++)
+			streami[i]->id = i;
+
+
 		for (int i=0; i<gates.size(); i++)
 			gates[i]->posedge();
 	}
@@ -200,22 +221,27 @@ namespace DT {
 		switch(t)
 		{
 			case CombineType::UNION:
+			cout<<"Combine Type: Union\n";
 			combine_epsilon_union(c, init_op, commit_op);
 			return;
 
 			case CombineType::PARALLEL:
+			cout<<"Combine Type: Parallel\n";
 			combine_epsilon_parallel(c, init_op, commit_op);
 			return;
 
 			case CombineType::STAR:
+			cout<<"Combine Type: Star\n";
 			combine_epsilon_star(merge_op, init_op, commit_op);
 			return;
 
 			case CombineType::CONCATENATION:
+			cout<<"Combine Type: Concatenation\n";
 			combine_epsilon_concatenation(c, init_op, commit_op);
 			return;
 
 			case CombineType::CONDITIONAL:
+			cout<<"Combine Type: Conditional\n";
 			combine_epsilon_conditional(commit_op);
 			return;
 
@@ -435,7 +461,7 @@ namespace DT {
 			rof->wire_out(commit_ro);
 
 			lii->wire_in(init_i);
-			commit_lo->wire_in(rof);
+			commit_lo->wire_in(lof);
 			rii->wire_in(commit_lo);
 			commit_ro->wire_in(rof);
 
@@ -562,8 +588,8 @@ namespace DT {
 			auto merge_i = shared_ptr<Gate>(new Gate(merge_op, "esmerge_i"));
 			auto merge_o = shared_ptr<Gate>(new Gate(const_op, "esmerge_o"));
 
-			commit_i->wire_in(old_of);
-			old_of->wire_out(commit_i);
+			commit_i->wire_in_seq(old_of);
+			old_of->wire_out_seq(commit_i);
 			merge_i->wire_in(commit_i);
 			commit_i->wire_out(merge_i);
 			merge_i->wire_in(new_ii);

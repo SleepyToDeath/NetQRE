@@ -22,12 +22,25 @@ Gate::Gate(shared_ptr<Op> op, std::string name)
 	ready_wires = 0;
 	this->op = op;
 	this->name = name;
+
+	id = 0;
+}
+
+void Gate::wire_in_seq(shared_ptr<Gate> src)
+{
+	in_seq.push_back(src);
 }
 
 void Gate::wire_in(shared_ptr<Gate> src)
 {
 	in.push_back(src);
 	cmb_wires ++;
+}
+
+void Gate::wire_out_seq(shared_ptr<Gate> dst)
+{
+	/* nothing need to do */
+	return;
 }
 
 void Gate::wire_out(shared_ptr<Gate> dst)
@@ -53,7 +66,15 @@ void Gate::posedge()
 				if (param.back()->type == VALID)
 					flag = true;
 			}
+			for (int i=0; i<in_seq.size(); i++)
+			{
+				param.push_back( in_seq[i]->output_seq() );
+				if (param.back()->type == VALID)
+					flag = true;
+			}
 			val = (*op)(param, val);
+			if (val->type == VALID)
+				flag = true;
 		}
 		
 		for (int i=0; i<out.size(); i++)
@@ -63,9 +84,10 @@ void Gate::posedge()
 		}
 
 		ready_wires ++; /* only posedge once */
+
 		if (flag)
 		{
-			cout<<op->name<<endl
+			cout<<name<<id<< " " <<op->name<<endl
 			<<"Out: \n"<<val->to_string()<<endl<<"In: \n";
 			for (int i=0; i<param.size(); i++)
 				cout<<param[i]->to_string()<<endl;
@@ -82,15 +104,22 @@ void Gate::negedge()
 
 void Gate::reset()
 {
+	/*
 	if (ready_wires<cmb_wires)
 	{
 		cout<<name<< " " <<op->name + " " + val->to_string() + " "<<ready_wires<<":"<<cmb_wires<<"\n";
 		cout<<"Possible cycle!\n";
 //		throw std::string("Possible cycle!\n");
 	}
+	*/
 	ready_wires = 0;
 	val = copy_data(val_init);
 	val_old = copy_data(val_init);
+}
+
+unique_ptr<DataValue> Gate::output_seq()
+{
+	return copy_data(val_old);
 }
 
 unique_ptr<DataValue> Gate::output()
@@ -100,7 +129,9 @@ unique_ptr<DataValue> Gate::output()
 
 void Gate::set_value(const unique_ptr<DataValue> &val)
 {
+	this->val_init = copy_data(val);
 	this->val = copy_data(val);
+	this->val_old = copy_data(val);
 }
 
 void Gate::set_op(shared_ptr<Op> op)

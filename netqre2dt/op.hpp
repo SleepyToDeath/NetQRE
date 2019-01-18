@@ -270,8 +270,8 @@ class AndOp: public DT::MergeParallelOp
 	static unique_ptr<BoolValue> eval(const BoolValue* a, const BoolValue* b)
 	{
 		auto ans = unique_ptr<BoolValue>(new BoolValue());
-		size_t x = (((size_t)a->unknown)<<1) | (size_t)a->val;
-		size_t y = (((size_t)b->unknown)<<1) | (size_t)b->val;
+		size_t x = (((size_t)!(a->unknown))<<1) | (size_t)a->val;
+		size_t y = (((size_t)!(b->unknown))<<1) | (size_t)b->val;
 		ans->unknown = unknown_table[x][y];
 		ans->val = truth_table[x][y];
 		return ans;
@@ -298,8 +298,8 @@ class OrOp: public DT::MergeParallelOp
 	static unique_ptr<BoolValue> eval(const BoolValue* a, const BoolValue* b)
 	{
 		auto ans = unique_ptr<BoolValue>(new BoolValue());
-		size_t x = (((size_t)a->unknown)<<1) | (size_t)a->val;
-		size_t y = (((size_t)b->unknown)<<1) | (size_t)b->val;
+		size_t x = (((size_t)!(a->unknown))<<1) | (size_t)a->val;
+		size_t y = (((size_t)!(b->unknown))<<1) | (size_t)b->val;
 		ans->unknown = unknown_table[x][y];
 		ans->val = truth_table[x][y];
 		return ans;
@@ -544,6 +544,8 @@ class PopStackOp: public DT::PipelineOp
 
 /* push a pre-set init value to stack
 	the value should be set on construction of the op */
+/* can be used as operator for input gate, in which case
+	value will be pushed to the input */
 class PushStackOp: public DT::PipelineOp
 {
 	public:
@@ -553,21 +555,17 @@ class PushStackOp: public DT::PipelineOp
 		const vector< unique_ptr<DT::DataValue> > &param, 
 		const unique_ptr<DT::DataValue> &current) 
 	{
-		if (param.size() == 0)
-			return copy_data(current);
-		if (param[0]->type == DT::UNDEF)
-			return DataValueFactory::real_get_instance(DT::UNDEF);
 		unique_ptr<StateValue> state;
-		if (param.size()>0)
-		{
-			state = copy_typed_data(StateValue, param[0]);
-			state->value_stack.push_back(copy_typed_data(IntValue, init_value));
-		}
+
+		if (param.size() == 0)
+			state = copy_typed_data(StateValue, current);
 		else
-		{
+			state = copy_typed_data(StateValue, param[0]);
+
+		if (state->type == DT::UNDEF)
 			return DataValueFactory::real_get_instance(DT::UNDEF);
-//			state = copy_typed_data(StateValue, current);
-		}
+
+		state->value_stack.push_back(copy_typed_data(IntValue, init_value));
 		return state;
 	}
 

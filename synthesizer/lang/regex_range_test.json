@@ -1,0 +1,99 @@
+
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "*(?)", "_re", "*(?)" ]
+		] },
+		{ "_re" : [
+				[ "_concat" ],
+				[ "_star" ],
+				[ "_union" ],
+				[ "_char" ]
+		] },
+		{ "_union" : [
+			[ "$||", "$(", "$(", "_re", "$)", "$," , "$(", "_re", "$)", "$)" ]
+		] },
+		{ "_concat" : [
+				[ "_re", "_re" ]
+		] },
+		{ "_star" : [
+			[ "$*", "$(", "_re", "$)" ]
+		] },
+		{ "_char" : [
+			[ "_decimal" ],
+			[ "\\c" ],
+			[ "\\C" ],
+			["?"],
+			["\\#"]
+		] },
+		{ "_decimal" : [
+			[ "\\r0" ],
+			[ "\\d" ]
+		] },
+		{ "_lowercase" : [
+			[ "\\c" ]
+		] },
+		{ "_uppercase" : [
+			[ "\\C" ]
+		] }
+	] },
+
+	{ "positive_abstract" : [
+		{ "program" : "*( ? )" },
+		{ "_re" : "*( ? )" },
+		{ "_concat" : "*( ? )" },
+		{ "_union" : "*( ? )"},
+		{ "_star" : "*( ? )" },
+		{ "_char" : "?" },
+		{ "_decimal" : "\\d" },
+		{ "_lowercase" : "\\c" },
+		{ "_uppercase" : "\\C" }
+	] },
+
+	{ "negative_abstract" : [
+		{ "program" : "\\#" },
+		{ "_re" : "\\#" },
+		{ "_concat" : "\\#" },
+		{ "_union" : "\\#"},
+		{ "_star" : "\\#" },
+		{ "_char" : "\\#" },
+		{ "_decimal" : "\\#" },
+		{ "_lowercase" : "\\#" },
+		{ "_uppercase" : "\\#" }
+	] },
+
+	{ "conditional_redundancy" : [
+		[ { "00" : "_star *( _re@1 )" },
+		{ "--" : ["_concat _re@1 _re _concat _re@1 _re _star *( _re@1 )"] },
+		{ "==" : "AAR" } ],
+		
+		[ { "00" : "_union || ( ( _re@1 ) , ( _re@2 ) ) " },
+		{ "--" : ["_re@1", "_re@2"] },
+		{ "==" : "EAR" } 
+		],
+
+		[ { "00" : "_concat _re@1 _re@2" },
+		  { "--" : ["_concat _re _char \\# _re@2", "_concat _re@1 _re _char \\#"] },
+		  { "==" : "EAA" } ]
+	] },
+	
+	{ "unconditional_redundancy" : [
+		{ "_star *( _re _star *( _re@1 ) )" : "_star *( _re@1 )" },
+		{ "_concat _re _concat _re@1 _re@2 _re@3" : "_concat _re@1 _re _concat _re@2 _re@3" },
+		{ "_union ||( (_re _union ||(( _re@1), (_re@2)) ),( _re@3) )" : "_union ||( (_re@1),( _re _union ||((_re@2),(_re@3))))" },
+		{ "_concat _re _char ? _re _star *( _re _char ? )" : "_star *( _re _char ? )" },
+		{ "_concat _re _star *( _re _char ? ) _re _char ?" : "_star *( _re _char ? )" },
+		{ "_concat _re _char ? _re _concat _re _star *( _re _char ? ) _re@1" : "_concat _re _star *( _re _char ? ) _re@1" },
+		{ "_concat _re _star *( _re _char ? ) _re _concat _re _char ? _re@1" : "_concat _re _star *( _re _char ? ) _re@1" },
+		{ "_concat _re _char ? _re _concat _re _char ? _re@1" : "_concat _re _star *( _re _char ? ) _re@1" },
+		{ "_concat _re _char ? _re _char ?" : "_star *( _re _char ? )" },
+		{ "_concat _re _star *( _re _char ? ) _re _concat _re _star *( _re _char ? ) _re@1" : "_concat _re _star *( _re _char ? ) _re@1" }
+		,{ "_concat _re _char@1 _re _concat _re _char@2 _re _concat _re _char@3 _re@4" : "\\#" }
+		,{ "_union ||( ( _re _char ? ), (_re@1))" : "\\#" }
+		,{ "_union ||( (_re@1), ( _re _char ? ) )" : "\\#" }
+		,{ "_union ||( ( _re _star *( _re _char ? )), (_re@1))" : "\\#" }
+		,{ "_union ||( (_re@1), ( _re _star *( _re _char ? )) )" : "\\#" }
+	] }
+]
+
+

@@ -242,6 +242,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 						break;
 
 					case 'i':
+						context->agg_type = AggOpType::NONE;
 						parse_it(NetqreExpType::QRE_PS);
 						break;
 				}
@@ -301,6 +302,9 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 					parse_it(NetqreExpType::AGG_OP);
 					skip_tail();
 					break;
+					
+					default:
+					throw string("Syntax error!\n");
 				}
 			}
 			else if (code[cursor] == '/')
@@ -356,7 +360,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			break;
 
 		case NetqreExpType::RE:
-			while(!(code[cursor] == '/' || code[cursor] == ')'))
+			if(!(code[cursor] == '/' || code[cursor] == ')'))
 			{
 				switch (code[cursor])
 				{
@@ -367,18 +371,38 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 					break;
 
 					case '*':
-					skip_name();
-					parse_it(NetqreExpType::RE);
-					skip_tail();
+					parse_it(NetqreExpType::RE_STAR);
 					break;
 
 					case '_':
 					parse_it(NetqreExpType::WILDCARD);
 					break;
+
+					default:
+					throw string("Syntax error!\n");
 				}
 				skip_space();
 			}
+
+			if(!(code[cursor] == '/' || code[cursor] == ')'))
+			{
+				context->reg_type = RegularOpType::CONCAT;
+				parse_it(NetqreExpType::RE);
+			}
+			else
+			{
+				context->reg_type = RegularOpType::NONE;
+			}
+
 			break;
+
+		case NetqreExpType::RE_STAR:
+			context->reg_type = RegularOpType::STAR;
+			skip_name();
+			parse_it(NetqreExpType::RE);
+			skip_tail();
+			break;
+		
 
 		case NetqreExpType::WILDCARD:
 		case NetqreExpType::UNKNOWN:

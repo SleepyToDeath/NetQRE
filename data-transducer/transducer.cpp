@@ -92,9 +92,16 @@ void Transducer::reset(const std::vector<unique_ptr<DataValue> > &parameters)
 
 std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stream)
 {
+	int count_max = 3;
 	for (int i=0; i<stream.size(); i++)
 	{
-		cout<<"Word #"<<i<<endl;
+		cout<<endl<<"Word # epsilon "<<i<<endl;
+		int count;
+		if (i==0)
+			count = 1;
+		else
+			count = count_max;
+		for (int j=0; j<count; j++)
 		{
 			shared_ptr<Circuit> c = epsilon_circuit;
 			c->reset();
@@ -104,8 +111,10 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 			states = c->get_state_out();
 		}
 
+		cout<<endl<<"Word # char "<<i<<endl;
 		{
-			auto backup = copy_port(states);
+//			auto backup = copy_port(states);
+//			states = copy_port(NullPort);
 			for (int j=0; j<tag_alphabet_size; j++)
 				if (stream[i].tag_bitmap[j])
 				{
@@ -114,14 +123,17 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 						throw string("Impossible!!!!!!!\n");
 					c->reset();
 					c->set_stream_in(stream[i].tag_bitmap[j]);
-					c->set_state_in(backup);
+					c->set_state_in(states);
 					c->tick();
-					states->merge(c->get_state_out(), state_merger);
+//					states->merge(c->get_state_out(), state_merger);
+					states = c->get_state_out();
 				}
 		}
 	}
 
+	for (int j=0; j<count_max; j++)
 	{
+		cout<<endl<<"Final epsilon "<<endl;
 		shared_ptr<Circuit> c = epsilon_circuit;
 		c->reset();
 		c->set_stream_in(DataValue::factory->get_instance(UNDEF));

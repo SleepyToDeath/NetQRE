@@ -1,0 +1,1 @@
+filter([_]) qre( iter(/__*(__)/?1, sum) ) threshold(3)

@@ -57,8 +57,10 @@ namespace DT
 		/* only copy op, other fields are reset */
 		Gate(shared_ptr<Gate> src);
 
-		void wire_in(shared_ptr<Gate> src); /* add an input wire */
-		void wire_out(shared_ptr<Gate> dst); /* add an output wire */
+		void wire_in_seq(shared_ptr<Gate> src); /* add an sequential input wire */
+		void wire_out_seq(shared_ptr<Gate> dst); /* add an sequential output wire */
+		void wire_in(shared_ptr<Gate> src); /* add an combinational input wire */
+		void wire_out(shared_ptr<Gate> dst); /* add an combinational output wire */
 		void wire_ready(); /* a input CMB wire is ready to be read for this cycle */
 		/* literally set value, should only use for input gates of a circuit */
 		void set_value(const unique_ptr<DataValue> &val); 
@@ -66,13 +68,16 @@ namespace DT
 		void posedge(); /* see above */
 		void negedge(); /* see above */
 		unique_ptr<DataValue> output(); /* get the output value */
+		unique_ptr<DataValue> output_seq(); /* get the output value of last cycle*/
 		void reset(); /* set val to init, set ready_wires to 0 */
 
 		std::string name;
+		int id;
 
 		private:
 		shared_ptr<Op> op;
 		std::vector<shared_ptr<Gate> > in;
+		std::vector<shared_ptr<Gate> > in_seq;
 		std::vector<shared_ptr<Gate> > out;
 		unique_ptr<DataValue> val, val_old, val_init;
 		int cmb_wires;

@@ -102,11 +102,12 @@ enum class NetqreExpType {
 	QRE_PS,			//13
 	QRE_COND,		//14
 	RE,				//15
-	OUTPUT,			//16
-	WILDCARD,		//17
-	CONST,			//18
-	THRESHOLD,		//19
-	UNKNOWN			//20
+	RE_STAR,		//16
+	OUTPUT,			//17
+	WILDCARD,		//18
+	CONST,			//19
+	THRESHOLD,		//20
+	UNKNOWN			//21
 };
 
 enum class AggOpType {
