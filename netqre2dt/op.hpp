@@ -171,11 +171,13 @@ class StateValue: public DataValue
 
 	StateValue(const StateValue* src) {
 		type = src->type;
-		sub_type = src->sub_type;
-		active = unique_ptr<BoolValue>(new BoolValue(src->active));
-		for (int i=0; i<src->value_stack.size(); i++)
-			value_stack.push_back(unique_ptr<IntValue>(new IntValue(src->value_stack[i])));
-//		op_stack = src->op_stack;
+		if (type == DT::VALID)
+		{
+			sub_type = src->sub_type;
+			active = unique_ptr<BoolValue>(new BoolValue(src->active));
+			for (int i=0; i<src->value_stack.size(); i++)
+				value_stack.push_back(unique_ptr<IntValue>(new IntValue(src->value_stack[i])));
+		}
 	}
 
 	void dummy() {}
@@ -219,6 +221,9 @@ class DataValueFactory: public DT::DataValueFactory
 
 	static unique_ptr<DT::DataValue> get_instance(const DT::DataValue* src) 
 	{
+		if (src->type != DT::VALID)
+			return real_get_instance(src->type);
+
 		switch(((DataValue*)src)->sub_type)
 		{
 			case DataType::INT:

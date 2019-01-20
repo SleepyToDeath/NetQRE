@@ -1,1 +1,1 @@
-filter([_]) qre( sum( iter(split(/[1=0]*([1=0])/?1, /[1=1]*([1=1])/?1, max), sum), 0) ) threshold(3)
+filter([_]) qre( sum( iter(split(/[1=0]*([1=0])/?1, /[1=1]*([1=1])/?1, max), sum), 1) ) threshold(3)

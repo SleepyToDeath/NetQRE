@@ -36,30 +36,44 @@ namespace DT {
 			return move(param);
 		};
 
+#ifdef DT_DEBUG
 		cout<<"Merging ports:\n";
+#endif
 		for (int i=0; i<src->init.size(); i++)
 		{
+#ifdef DT_DEBUG
 			if (init[i]->type == VALID)
 				cout<<"init"<<i<<" "<<init[i]->to_string()<<" -> ";
+#endif
 			init[i] = (*op)(to_param(init[i],src->init[i]), nullptr);
+#ifdef DT_DEBUG
 			if (init[i]->type == VALID)
 				cout<<init[i]->to_string()<<endl;
+#endif
 		}
 		for (int i=0; i<src->media.size(); i++)
 		{
+#ifdef DT_DEBUG
 			if (media[i]->type == VALID)
 				cout<<"med"<<i<<" "<<media[i]->to_string()<<" -> ";
+#endif
 			media[i] = (*op)(to_param(media[i],src->media[i]), nullptr);
+#ifdef DT_DEBUG
 			if (media[i]->type == VALID)
 				cout<<media[i]->to_string()<<endl;
+#endif
 		}
 		for (int i=0; i<src->fin.size(); i++)
 		{
+#ifdef DT_DEBUG
 			if (fin[i]->type == VALID)
 				cout<<"fin"<<i<<" "<<fin[i]->to_string()<<" -> ";
+#endif
 			fin[i] = (*op)(to_param(fin[i],src->fin[i]), nullptr);
+#ifdef DT_DEBUG
 			if (fin[i]->type == VALID)
 				cout<<fin[i]->to_string()<<endl;
+#endif
 		}
 	}
 
@@ -162,7 +176,6 @@ namespace DT {
 	{
 		for (int i=0; i<gates.size(); i++)
 			gates[i]->reset();
-		cout<<endl;
 	}
 
 	void Circuit::tick()
@@ -221,27 +234,37 @@ namespace DT {
 		switch(t)
 		{
 			case CombineType::UNION:
+#ifdef DT_DEBUG
 			cout<<"Combine Type: Union\n";
+#endif
 			combine_epsilon_union(c, init_op, commit_op);
 			return;
 
 			case CombineType::PARALLEL:
+#ifdef DT_DEBUG
 			cout<<"Combine Type: Parallel\n";
+#endif
 			combine_epsilon_parallel(c, init_op, commit_op);
 			return;
 
 			case CombineType::STAR:
+#ifdef DT_DEBUG
 			cout<<"Combine Type: Star\n";
+#endif
 			combine_epsilon_star(merge_op, init_op, commit_op);
 			return;
 
 			case CombineType::CONCATENATION:
+#ifdef DT_DEBUG
 			cout<<"Combine Type: Concatenation\n";
+#endif
 			combine_epsilon_concatenation(c, init_op, commit_op);
 			return;
 
 			case CombineType::CONDITIONAL:
+#ifdef DT_DEBUG
 			cout<<"Combine Type: Conditional\n";
+#endif
 			combine_epsilon_conditional(commit_op);
 			return;
 
@@ -419,10 +442,12 @@ namespace DT {
 		stateoi = new_stateoi;
 		stateof = new_stateof;
 
+#ifdef DT_DEBUG
 		if (!check())
 			throw string("Incorrect combine cc!\n");
 		tick();
 		reset();
+#endif
 	}
 
 
@@ -494,10 +519,12 @@ namespace DT {
 		stateoi = new_stateoi;
 		stateof = new_stateof;
 
+#ifdef DT_DEBUG
 		if (!check())
 			throw string("Incorrect combine ec!\n");
 		tick();
 		reset();
+#endif
 	}
 
 	void Circuit::combine_char_star()
@@ -558,10 +585,12 @@ namespace DT {
 		stateoi = new_stateoi;
 		stateof = new_stateof;
 
+#ifdef DT_DEBUG
 		if (!check())
 			throw string("Incorrect combine cs!\n");
 		tick();
 		reset();
+#endif
 	}
 
 	void Circuit::combine_epsilon_star(shared_ptr<MergeParallelOp> merge_op, shared_ptr<PipelineOp> init_op, shared_ptr<PipelineOp> commit_op)
@@ -588,8 +617,8 @@ namespace DT {
 			auto merge_i = shared_ptr<Gate>(new Gate(merge_op, "esmerge_i"));
 			auto merge_o = shared_ptr<Gate>(new Gate(const_op, "esmerge_o"));
 
-			commit_i->wire_in_seq(old_of);
-			old_of->wire_out_seq(commit_i);
+			commit_i->wire_in(old_of);
+			old_of->wire_out(commit_i);
 			merge_i->wire_in(commit_i);
 			commit_i->wire_out(merge_i);
 			merge_i->wire_in(new_ii);
@@ -625,10 +654,12 @@ namespace DT {
 		stateoi = new_stateoi;
 		stateof = new_stateof;
 
+#ifdef DT_DEBUG
 		if (!check())
 			throw string("Incorrect combine es!\n");
 		tick();
 		reset();
+#endif
 	}
 
 	void Circuit::combine_char_conditional() 
@@ -653,10 +684,12 @@ namespace DT {
 		stateif = new_stateif;
 		stateof = new_stateof;
 
+#ifdef DT_DEBUG
 		if (!check())
 			throw string("Incorrect combine ccc!\n");
 		tick();
 		reset();
+#endif
 	}
 
 	void Circuit::combine_epsilon_conditional(shared_ptr<PipelineOp> commit_op)
@@ -681,10 +714,12 @@ namespace DT {
 		stateif = new_stateif;
 		stateof = new_stateof;
 
+#ifdef DT_DEBUG
 		if (!check())
 			throw string("Incorrect combine ecc!\n");
 		tick();
 		reset();
+#endif
 	}
 
 
@@ -744,6 +779,7 @@ namespace DT {
 			ans->gates.push_back(tmpo);
 		}
 
+#ifdef DT_DEBUG
 		if (ans->size() != size())
 		{
 			cout<<ans->size()<<" : "<<size()<<endl;
@@ -752,6 +788,7 @@ namespace DT {
 
 		ans->tick();
 		ans->reset();
+#endif
 
 		return ans;
 	}

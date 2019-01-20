@@ -62,29 +62,30 @@ void Gate::posedge()
 		{
 			for (int i=0; i<in.size(); i++)
 			{
-				param.push_back( in[i]->output() );
-				if (param.back()->type == VALID)
-					flag = true;
+				param.push_back( in[i].lock()->output() );
+//				if (param.back()->type == VALID)
+//					flag = true;
 			}
 			for (int i=0; i<in_seq.size(); i++)
 			{
-				param.push_back( in_seq[i]->output_seq() );
-				if (param.back()->type == VALID)
-					flag = true;
+				param.push_back( in_seq[i].lock()->output_seq() );
+//				if (param.back()->type == VALID)
+//					flag = true;
 			}
 			val = (*op)(param, val);
-			if (val->type == VALID)
-				flag = true;
+//			if (val->type == VALID)
+//				flag = true;
 		}
 		
 		for (int i=0; i<out.size(); i++)
 		{
-			out[i]->wire_ready();
-			out[i]->posedge();
+			out[i].lock()->wire_ready();
+			out[i].lock()->posedge();
 		}
 
 		ready_wires ++; /* only posedge once */
 
+#ifdef DT_DEBUG
 		if (flag)
 		{
 			cout<<name<<id<< " " <<op->name<<endl
@@ -92,6 +93,7 @@ void Gate::posedge()
 			for (int i=0; i<param.size(); i++)
 				cout<<param[i]->to_string()<<endl;
 		}
+#endif
 	
 	}
 }
@@ -104,17 +106,24 @@ void Gate::negedge()
 
 void Gate::reset()
 {
-	/*
+#ifdef DT_DEBUG
 	if (ready_wires<cmb_wires)
 	{
 		cout<<name<< " " <<op->name + " " + val->to_string() + " "<<ready_wires<<":"<<cmb_wires<<"\n";
 		cout<<"Possible cycle!\n";
-//		throw std::string("Possible cycle!\n");
 	}
-	*/
+#endif
 	ready_wires = 0;
-	val = copy_data(val_init);
-	val_old = copy_data(val_init);
+	if (val_init->type != VALID)
+	{
+		val->type = val_init->type;
+		val_old->type = val_init->type;
+	}
+	else
+	{
+		val = copy_data(val_init);
+		val_old = copy_data(val_init);
+	}
 }
 
 unique_ptr<DataValue> Gate::output_seq()
@@ -129,9 +138,18 @@ unique_ptr<DataValue> Gate::output()
 
 void Gate::set_value(const unique_ptr<DataValue> &val)
 {
-	this->val_init = copy_data(val);
-	this->val = copy_data(val);
-	this->val_old = copy_data(val);
+	if (val->type != VALID)
+	{
+		this->val_init->type = val->type;
+		this->val->type = val->type;
+		this->val_old->type = val->type;
+	}
+	else
+	{
+		this->val_init = copy_data(val);
+		this->val = copy_data(val);
+		this->val_old = copy_data(val);
+	}
 }
 
 void Gate::set_op(shared_ptr<Op> op)

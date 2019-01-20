@@ -12,7 +12,9 @@ namespace DT
 
 Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> state_merger)
 {
+#ifdef DT_DEBUG
 	cout<<"Alphabet size: "<<tag_alphabet_size<<endl;
+#endif
 	this->tag_alphabet_size = tag_alphabet_size;
 	this->state_merger = state_merger;
 	circuits = vector< shared_ptr<Circuit> >(tag_alphabet_size, nullptr); //[!] assuming circuits is a vector
@@ -21,7 +23,9 @@ Transducer::Transducer(int tag_alphabet_size, std::shared_ptr<MergeParallelOp> s
 
 void Transducer::add_circuit(shared_ptr<Circuit> c, TagType tag)
 {
+#ifdef DT_DEBUG
 	cout<<"Adding circuit #"<<tag<<endl;
+#endif
 	circuits[tag] = c;
 }
 
@@ -41,15 +45,19 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 			if (circuits[i] != nullptr)
 			{
 				circuits[i]->combine_char(nullptr,t);
+#ifdef DT_DEBUG
 				if (epsilon_circuit->size() != circuits[i]->size())
 					throw string("Incorrect combine!\n");
+#endif
 			}
 	}
 	else
 	{
 		auto plain1 = epsilon_circuit->get_plain_circuit();
 		auto plain2 = dt->epsilon_circuit->get_plain_circuit();
+#ifdef DT_DEBUG
 		cout<<plain1->size()<<" : "<<plain2->size()<<endl;
+#endif
 		epsilon_circuit->combine_epsilon(dt->epsilon_circuit,t, state_merger, init_op, commit_op);
 		for (int i=0; i<circuits.size(); i++)
 		{
@@ -59,13 +67,17 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 					circuits[i] = plain1->get_plain_circuit();
 				if (dt->circuits[i]==nullptr)
 					dt->circuits[i] = plain2->get_plain_circuit();
+#ifdef DT_DEBUG
 				cout<<circuits[i]->size()<<" : "<<dt->circuits[i]->size()<<endl;
+#endif
 				circuits[i]->combine_char(dt->circuits[i],t);
+#ifdef DT_DEBUG
 				cout<<epsilon_circuit->size()<<" : "<<circuits[i]->size()<<endl<<endl;
 				if (epsilon_circuit->size() != circuits[i]->size())
 				{
 					throw string("Incorrect combine!\n");
 				}
+#endif
 			}
 		}
 	}
@@ -92,16 +104,21 @@ void Transducer::reset(const std::vector<unique_ptr<DataValue> > &parameters)
 
 std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stream)
 {
-	int count_max = 3;
+//	int count_max = 3;
 	for (int i=0; i<stream.size(); i++)
 	{
+#ifdef DT_DEBUG
 		cout<<endl<<"Word # epsilon "<<i<<endl;
+#endif
+		/* no need if no sequential gate */
+		/*
 		int count;
 		if (i==0)
 			count = 1;
 		else
 			count = count_max;
 		for (int j=0; j<count; j++)
+			*/
 		{
 			shared_ptr<Circuit> c = epsilon_circuit;
 			c->reset();
@@ -111,7 +128,9 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 			states = c->get_state_out();
 		}
 
+#ifdef DT_DEBUG
 		cout<<endl<<"Word # char "<<i<<endl;
+#endif
 		{
 //			auto backup = copy_port(states);
 //			states = copy_port(NullPort);
@@ -131,9 +150,11 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 		}
 	}
 
-	for (int j=0; j<count_max; j++)
+//	for (int j=0; j<count_max; j++)
 	{
+#ifdef DT_DEBUG
 		cout<<endl<<"Final epsilon "<<endl;
+#endif
 		shared_ptr<Circuit> c = epsilon_circuit;
 		c->reset();
 		c->set_stream_in(DataValue::factory->get_instance(UNDEF));

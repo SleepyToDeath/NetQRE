@@ -3,6 +3,8 @@
 
 #include "op.h"
 
+using std::weak_ptr;
+
 namespace DT
 {
 	/*
@@ -76,9 +78,9 @@ namespace DT
 
 		private:
 		shared_ptr<Op> op;
-		std::vector<shared_ptr<Gate> > in;
-		std::vector<shared_ptr<Gate> > in_seq;
-		std::vector<shared_ptr<Gate> > out;
+		std::vector<weak_ptr<Gate> > in;
+		std::vector<weak_ptr<Gate> > in_seq;
+		std::vector<weak_ptr<Gate> > out;
 		unique_ptr<DataValue> val, val_old, val_init;
 		int cmb_wires;
 		int ready_wires;

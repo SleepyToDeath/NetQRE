@@ -37,24 +37,24 @@ TokenStream generate_test_case()
 
 int main()
 {
-	try
-	{
 	string code;
 	getline(cin, code);
-	Netqre::NetqreParser parser;
-	Netqre::Interpreter itp;
-	cout<<"#1\n";
-	auto ast = parser.parse(code);
-	cout<<"#2\n";
-	auto m = itp.interpret(ast);
-	cout<<"#3\n";
-	auto input = generate_test_case();
-	auto ans = m->process(input);
-	cout<<"Result: "<< ans->lower << " ~ " << ans->upper <<endl;
-	auto mm = m;
-	}
-	catch (string s)
+	for (int i=0; i<1; i++)
 	{
-		cout<<s;
+		try
+		{
+		Netqre::NetqreParser parser;
+		Netqre::Interpreter itp;
+		auto ast = parser.parse(code);
+		auto m = itp.interpret(ast);
+		auto input = generate_test_case();
+		auto ans = m->process(input);
+		cout<<"Result #"<<i<<": "<< ans->lower << " ~ " << ans->upper <<endl;
+		auto mm = m;
+		}
+		catch (string s)
+		{
+			cout<<s;
+		}
 	}
 }
