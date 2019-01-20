@@ -15,13 +15,20 @@ using std::cout;
 using std::vector;
 
 /*========== regex implementation =============*/
-#include "../regex_interpreter.hpp"
+/*
+#include "../regex/regex_interpreter.hpp"
 std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(new RegexInterpreter());
+*/
+/*=============================================*/
+
+/*========== netqre implementation =============*/
+#include "../netqre/interface.hpp"
+std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(new NetqreInterpreterInterface());
 /*=============================================*/
 
 /*
 	3 arguments
-	./regex grammar_file example_file config_file
+	./synthesizer grammar_file example_file config_file
 */
 int main(int argc, char *argv[]) {
 
@@ -36,7 +43,7 @@ int main(int argc, char *argv[]) {
 	ifstream fin_c(argv[3]); // config
 
 	auto parser = shared_ptr<GeneralConfigParser>(new GeneralConfigParser());
-	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());
+//	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());
 	int search_depth;
 	int batch_size;
 	int answer_count;
@@ -62,7 +69,10 @@ int main(int argc, char *argv[]) {
 	}
 	fin_g.close();
 
+	auto examples = prepare_examples();
+
 	/* input examples */
+	/*
 	int n_pos;
 	int n_neg;
 	fin_e>>n_pos;
@@ -80,6 +90,7 @@ int main(int argc, char *argv[]) {
 		examples->negative.push_back(tmp);
 	}
 	fin_e.close();
+	*/
 
 	/* input config */
 	fin_c>>search_depth;

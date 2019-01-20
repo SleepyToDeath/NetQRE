@@ -1,4 +1,4 @@
-all: regex-general-test
+all: netqre
 
 g: regex-general-test-g
 
@@ -34,11 +34,26 @@ SRC += lang/general/*h
 SRC += lang/general/json11/json11.cpp
 SRC += lang/general/json11/json11.hpp
 
+SRC2 = core/*pp
+SRC2 += lang/general/*pp
+SRC2 += lang/general/json11/json11.cpp
+SRC2 += lang/general/json11/json11.hpp
+SRC2 += lang/netqre/*pp
+SRC2 += ../netqre2dt/network_tokenizer/feature_vector.hpp
+SRC2 += ../netqre2dt/interpreter.cpp
+SRC2 += ../netqre2dt/op.cpp
+SRC2 += ../netqre2dt/op.hpp
+SRC2 += ../netqre2dt/parser.cpp
+SRC2 += ../data-transducer/*pp
+
 regex-general-test:
 	g++ -o ./testbed/regex $(SRC) -O2 -std=c++11 -pthread -lpcap
 
 regex-general-test-g:
 	g++ -o ./testbed/regex -g $(SRC) -std=c++11 -pthread -lpcap
+
+netqre:
+	g++ -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -pthread -lpcap
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config

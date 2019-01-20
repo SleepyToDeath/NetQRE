@@ -15,6 +15,7 @@ class NumericalTree;
 /* the executable produced by interpreter */
 class Machine {
 	public:
+	/* can run multiple times, auto reset each time */
 	std::unique_ptr<IntValue> process(TokenStream &feature_stream);
 
 	/* constant, won't change after construction */
@@ -27,6 +28,8 @@ class Machine {
 	private:
 	/* runtime info, initialize for each execution */
 	std::vector<ValueSpace> value_space;
+
+	void reset();
 	void collect_value_space(TokenStream &stream);
 	unique_ptr<IntValue> aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenStream& feature_stream, vector<DT::Word>& tag_stream);
 	std::vector<DT::Word> generate_tags(TokenStream &feature_stream);

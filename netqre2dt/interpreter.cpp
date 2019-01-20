@@ -24,6 +24,10 @@ namespace Netqre {
 /* [?] what threshold? */
 
 std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
+
+	/* auto reset */
+	reset();
+
 	auto tag_stream = generate_tags(feature_stream);
 	collect_value_space(feature_stream);
 
@@ -40,6 +44,12 @@ std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
 
 	/* compute final result of num tree */
 	return num_tree->eval();
+}
+
+void Machine::reset() {
+	value_space.clear();
+	for (int i=0; i<qre_list.size(); i++)
+		qre_list[i]->output = nullptr;
 }
 
 /* lvl = agg stack level */

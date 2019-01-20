@@ -422,13 +422,12 @@ class GeneralConfigParser {
 	shared_ptr<RedundancyPlan> rp;
 
 	void generate_input_dependent_syntax(shared_ptr<GeneralExample> example) {
-		vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
 		for (int i=0; i<state->dep_list.size(); i++)
 		{
 			auto lhs = state->dep_list[i];
 			if (lhs != nullptr)
 			{
-				auto range = GeneralProgram->interpreter->get_range(i, example);
+				auto range = GeneralProgram::interpreter->get_range(i, example);
 				auto new_rhs = shared_ptr<GeneralSyntaxRightHandSide>(new GeneralSyntaxRightHandSide());
 				lhs->option.push_back(new_rhs);
 				for (int j=0; j<range.size(); j++)
