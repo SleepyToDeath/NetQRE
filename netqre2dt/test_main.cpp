@@ -7,8 +7,8 @@ using namespace std;
 TokenStream generate_test_case()
 {
 	TokenStream s;
-	FeatureSlot zero(32, true, 1);
-	FeatureSlot one(32, true, 0);
+	FeatureSlot zero(32, true, 0);
+	FeatureSlot one(32, true, 1);
 	FeatureVector v00;
 	FeatureVector v01;
 	FeatureVector v10;
@@ -32,6 +32,32 @@ TokenStream generate_test_case()
 	s.push_back(v01);
 	s.push_back(v01);
 	s.push_back(v00);
+	/*
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	*/
+/*	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);
+	s.push_back(v01);
+	s.push_back(v01);
+	s.push_back(v00);*/
 	return s;
 }
 

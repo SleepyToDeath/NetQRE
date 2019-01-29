@@ -111,7 +111,7 @@ class IntValue: public DataValue
 	StreamFieldType upper;
 	StreamFieldType lower;
 
-	const static StreamFieldType MAXIMUM = 1<<31;
+	const static StreamFieldType MAXIMUM = 1<<20;
 };
 
 /* Each aggregation should push a register to value_stack

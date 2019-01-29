@@ -209,6 +209,13 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 					{
 						auto simplified = msg.simplified;
 						auto explored = msg.candidate;
+						#ifdef VERBOSE_MODE
+						std::cout<<"[New!!!!]"<<explored->get_complexity()<<" | "<<explored->to_string()<<std::endl;
+						#endif
+						#ifdef VERBOSE_MODE
+						if (simplified != nullptr)
+							std::cout<<"[New!]"<<simplified->to_string()<<std::endl;;
+						#endif
 						/* not redundant and not repeating */
 						if (simplified == explored)
 						{
@@ -252,8 +259,10 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 								std::cout<<"ANSWER FOUND: "<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
 								answer.push_back(candidate);
 								this_round.pop_back();
-								if (answer_counter == answer_count)
+								if (answer_counter >= answer_count)
 								{
+									while(!thread_master->all_tasks_done())
+										thread_master->find_finished_task();
 									return answer;
 								}
 							}
@@ -265,8 +274,9 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				}
 
 				/* if enough programs explored and all tasks submitted  */
-				if (counter >= batch_size && thread_master->all_tasks_done())
+				if ((counter >= batch_size || i == this_round.size()) && thread_master->all_tasks_done())
 					break;
+//				cout<<"Loop going on "<<counter<<" "<<batch_size<<endl;
 			}
 #endif
 
@@ -302,8 +312,8 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 					std::cout<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
 				std::cout<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
 				#ifdef VERBOSE_MODE
-				for (int i=0; i<buffer.size();i++)
-					cout<<buffer[i]->get_complexity()<<" | ";
+//				for (int i=0; i<buffer.size();i++)
+//					cout<<buffer[i]->get_complexity()<<" | ";
 				#endif
 				std::cout<<std::endl<<endl;;
 			}

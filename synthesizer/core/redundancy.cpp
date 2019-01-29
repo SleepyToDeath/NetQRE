@@ -76,7 +76,8 @@ shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect
 			}
 		}
 		if (maybe != suspect)
-			return std::static_pointer_cast<IESyntaxTree>(maybe);
+			return nullptr;
+//			return std::static_pointer_cast<IESyntaxTree>(maybe);
 		else
 			break;
 	}

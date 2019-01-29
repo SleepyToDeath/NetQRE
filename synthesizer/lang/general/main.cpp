@@ -38,9 +38,15 @@ int main(int argc, char *argv[]) {
 //	test_interpretor();
 //	return 0;
 
+	auto name_pos = string(argv[2]);
+	auto name_neg = string(argv[3]);
+	int threshold;
+	std::cin>>threshold;
+	auto examples = prepare_examples_from_pcap(name_pos, name_neg, threshold);
+
 	ifstream fin_g(argv[1]); // grammar
-	ifstream fin_e(argv[2]); // example
-	ifstream fin_c(argv[3]); // config
+//	ifstream fin_e(argv[2]); // example
+	ifstream fin_c(argv[4]); // config
 
 	auto parser = shared_ptr<GeneralConfigParser>(new GeneralConfigParser());
 //	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());
@@ -69,7 +75,7 @@ int main(int argc, char *argv[]) {
 	}
 	fin_g.close();
 
-	auto examples = prepare_examples();
+//	auto examples = prepare_examples(fin_e);
 
 	/* input examples */
 	/*
@@ -107,8 +113,9 @@ int main(int argc, char *argv[]) {
 	SearchGraph graph(search_depth, batch_size, explore_rate, answer_count, threads, parser->root, parser->rp);
 	shared_ptr<IEExample> examples_up = examples;
 	answer = graph.search_top_level_v2(examples_up);
+	cout<<"===========================================\n";
 	if (answer.size() == 0)
 		cout<<"Not found!"<<endl;
 	for (int i=0; i<answer.size(); i++)
-		cout<<answer[i]->to_string()<<endl;
+		cout<<answer[i]->to_program()->accept(examples)<<endl;
 }

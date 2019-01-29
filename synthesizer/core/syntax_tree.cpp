@@ -95,6 +95,10 @@ bool SyntaxTree::is_complete() {
 }
 
 double SyntaxTree::get_complexity() {
+
+	/* not used */
+	return 0;
+
 	if (complexity == 0)
 	{
 		if (root->get_type()->is_term)
@@ -117,8 +121,8 @@ double SyntaxTree::get_complexity() {
 //				complexity -= (subtree.size()) * 200;
 			else
 				*/
-			complexity -= (subtree.size()) * 100.0;
-			complexity -= 50.0;
+			complexity += (subtree.size()-1) * 100.0;
+//			complexity -= 50.0;
 		}
 	}
 	if (complexity == 0)
@@ -210,25 +214,37 @@ bool SyntaxTree::real_search_and_replace(
 	{
 		/* match, start to replace */
 		auto vars = shared_ptr<VariableMap>(new VariableMap());
-		collect_variable(vars, temp_src);
-		auto tree_dst = temp_dst->to_syntax_tree(vars, depth);
-		root = tree_dst->root;
-		subtree = tree_dst->subtree;
-		complexity = 0;
-		hash_value = 0;
-		complete = UNKNOWN;
-		matching_flag = true;
+		if (collect_variable(vars, temp_src))
+		{
+			auto tree_dst = temp_dst->to_syntax_tree(vars, depth);
+			root = tree_dst->root;
+			subtree = tree_dst->subtree;
+			complexity = 0;
+			hash_value = 0;
+			complete = UNKNOWN;
+			matching_flag = true;
+		}
 	}
 	
 	return matching_flag;
 }
 
-void SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp) {
+bool SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp) {
 	if (temp->is_variable())
-		vars->map[temp->var_name] = shared_from_this();
+	{
+		if (vars->map.count(temp->var_name) == 0)
+		{
+			vars->map[temp->var_name] = shared_from_this();
+			return true;
+		}
+		else
+			return equal(vars->map[temp->var_name]);
+	}
 	else {
 		for (int i=0; i<subtree.size();i++)
-			subtree[i]->collect_variable(vars, std::static_pointer_cast<SyntaxTreeTemplate>(temp->subtree[i]));
+			if (!subtree[i]->collect_variable(vars, std::static_pointer_cast<SyntaxTreeTemplate>(temp->subtree[i])))
+				return false;
+		return true;
 	}
 }
 

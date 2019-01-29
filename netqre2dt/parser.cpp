@@ -20,7 +20,7 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 	return program;
 }
 
-
+/* [TODO] This is a naive parser. Switch to lex & bison if possible */
 void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
 
 #ifdef DT_DEBUG
@@ -197,12 +197,12 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 					context->num_type = NumOpType::MUL;
 					parse_ns();
 					break;
-				case '/':
+				case '%':
 					context->num_type = NumOpType::DIV;
 					parse_ns();
 					break;
 				default:
-					if (code[cursor] >= 'a' && code[cursor] <= 'z')
+					if (code[cursor] == '/' || (code[cursor] >= 'a' && code[cursor] <= 'z'))
 						parse_it(NetqreExpType::QRE_VS);
 					else
 						parse_it(NetqreExpType::CONST);

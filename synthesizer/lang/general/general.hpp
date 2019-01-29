@@ -26,9 +26,11 @@ class GeneralMatchingResult {
 
 class AbstractCode {
 	public:
-	AbstractCode(std::string _pos, std::string _neg):pos(_pos),neg(_neg){}
+	AbstractCode(std::string _pos, std::string _neg):pos(_pos),neg(_neg),completable(true){}
+	AbstractCode():pos(""),neg(""),completable(false){}
 	std::string pos;
 	std::string neg;
+	bool completable;
 };
 
 class GeneralInterpreter {
@@ -54,6 +56,10 @@ class GeneralProgram: public IEProgram {
 	}
 
 	bool accept( shared_ptr<IEExample> input, IEConfig cfg = DEFAULT_IE_CONFIG) {
+		if (!source_code.completable)
+			return true;
+//		else
+//			cout<<"Completable Found!"<<endl;
 		auto r = interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
 		utility_rate = r.utility_rate;
 		return r.accept;
@@ -91,12 +97,11 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 		return functional;
 	}
 
-	std::string positive_abstract_code;
-	std::string negative_abstract_code;
+	std::string positive_abstract_code = "";
+	std::string negative_abstract_code = "";
 	bool functional; /* example of non-functional symbol : "(", ")", ",", non-functional symbols start with "$" */
 
 	private:
-
 
 	shared_ptr<IEProgram> to_program() {return nullptr;}
 };
@@ -120,7 +125,7 @@ class GeneralConfigParser {
 	shared_ptr<State> state;
 
 	bool is_id(char c) {
-		return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || (c=='_');
+		return (c>='0' && c<='9') || (c>='a' && c<='z') || (c>='A' && c<='Z') || (c=='_') || (c=='#');
 	}
 
 	shared_ptr<Token> tokenize_next(string code, shared_ptr<int> cursor) {
@@ -210,7 +215,7 @@ class GeneralConfigParser {
 						if (name2[0] == '\\' && name2[1] == 'r')
 						{
 							state->name_list[real_name2]->is_term = false;
-							int handle = stoi(name2.substr(0, name2.size()-2));
+							int handle = stoi(name2.substr(2, name2.size()-2));
 							if (state->dep_list.size() <= handle)
 								state->dep_list.resize(handle+1, nullptr);
 							state->dep_list[handle] = (state->name_list[real_name2]);
@@ -229,6 +234,7 @@ class GeneralConfigParser {
 	}
 
 	shared_ptr<SyntaxTreeTemplate> parse_template_recursive(string code, shared_ptr<int> cursor) {
+		cout<<code.substr((*cursor), code.size()-(*cursor))<<endl;
 		shared_ptr<Token> t = tokenize_next(code, cursor);
 		cout<<t->variable<<" | "<<t->name<<endl;
 		if (t->variable || t->lhs->is_term)
@@ -428,14 +434,14 @@ class GeneralConfigParser {
 			if (lhs != nullptr)
 			{
 				auto range = GeneralProgram::interpreter->get_range(i, example);
-				auto new_rhs = shared_ptr<GeneralSyntaxRightHandSide>(new GeneralSyntaxRightHandSide());
-				lhs->option.push_back(new_rhs);
 				for (int j=0; j<range.size(); j++)
 				{
+					auto new_rhs = shared_ptr<GeneralSyntaxRightHandSide>(new GeneralSyntaxRightHandSide());
+					lhs->option.push_back(new_rhs);
 					auto new_lhs = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 					new_lhs->is_term = true;
 					new_lhs->functional = true;
-					new_lhs->name = range[i];
+					new_lhs->name = range[j];
 					new_rhs->subexp.push_back(new_lhs);
 					new_rhs->subexp_full.push_back(new_lhs);
 				}
@@ -471,11 +477,17 @@ class GeneralSyntaxTree : public IESyntaxTree {
 		{
 			if (root->get_type()->is_term)
 			{
-				complexity = -100.0;
+//				complexity = -100.0;
+				if (root->get_type()->name == "_")
+					complexity = 300;
 			}
 			else if (root->get_option() == SyntaxLeftHandSide::NoOption)
 			{
-				complexity = 200.0;
+				complexity = 300.0;
+				if (root->get_type()->name == "#feature_set")
+					complexity = 500.0;
+				if (root->get_type()->name == "#agg_op")
+					complexity = 500.0;
 			}
 			else
 			{
@@ -489,7 +501,9 @@ class GeneralSyntaxTree : public IESyntaxTree {
 				else
 					*/
 					complexity += (subtree.size()-1) * 150.0;
-				complexity -= 20.0;
+//				complexity -= 20.0;
+				if (root->get_type()->name == "#re")
+					complexity += 300;
 			}
 			if (depth == 0)
 			{
@@ -498,9 +512,9 @@ class GeneralSyntaxTree : public IESyntaxTree {
 		}
 		if (complexity == 0)
 			complexity = 0.01;
-		if (program != nullptr)
-			return complexity/program->utility_rate;
-		else
+//		if (program != nullptr)
+//			return complexity/program->utility_rate;
+//		else
 			return complexity;
 	}
 
@@ -517,14 +531,25 @@ class GeneralSyntaxTree : public IESyntaxTree {
 		{
 			pos = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->positive_abstract_code;
 			neg = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->negative_abstract_code;
+			/* [!] it is assumed that pos & neg are either both completable or both uncompletable */
+			if (pos == "")
+				return AbstractCode();
 		}
 		else
 		{
 			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (root->get_type()->option[root->get_option()]);
 			int j = 0;
-			for (int i=0; i<rhs->subexp_full.size(); i++)	{
-				if (rhs->subexp_full[i]->is_functional()) {
+			bool completable_flag = true;
+			for (int i=0; i<rhs->subexp_full.size(); i++)	
+			{
+				if (rhs->subexp_full[i]->is_functional()) 
+				{
 					auto sub = (std::static_pointer_cast<GeneralSyntaxTree>(subtree[j])->to_code());
+					if (!sub.completable)
+					{
+						completable_flag = false;
+						break;
+					}
 					pos = pos + sub.pos;
 					neg = neg + sub.neg;
 					j++;
@@ -533,6 +558,15 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					pos = pos + (rhs->subexp_full[i]->name);
 					neg = neg + (rhs->subexp_full[i]->name);
 				}
+			}
+
+			if (!completable_flag)
+			{
+				pos = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->positive_abstract_code;
+				neg = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(root->get_type())->negative_abstract_code;
+				/* [!] it is assumed that pos & neg are either both completable or both uncompletable */
+				if (pos == "")
+					return AbstractCode();
 			}
 		}
 		return AbstractCode(pos, neg);

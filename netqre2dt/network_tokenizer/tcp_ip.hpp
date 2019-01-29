@@ -11,17 +11,21 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#define LLC_LENGTH_BYTE 8
+
 void packetHandler(u_char* arg, const struct pcap_pkthdr *pkthdr, u_char *packet);
 
 class TcpIpParser {
 	public:
 
 	std::shared_ptr<TokenStream> stream;
+	int llc_len;
 	int pkt_count;
 
-	std::shared_ptr<TokenStream> parse_pcap(std::string file_name) {
+	std::shared_ptr<TokenStream> parse_pcap(std::string file_name, bool with_llc) {
 
 		stream = shared_ptr<TokenStream>(new TokenStream());
+		llc_len = with_llc?LLC_LENGTH_BYTE:0;
 		pkt_count = 0;
 
 		char *dev, errbuf[PCAP_ERRBUF_SIZE];
@@ -52,17 +56,17 @@ class TcpIpParser {
 		const struct ip* ip_hdr;
 		const struct tcphdr* tcp_hdr;
 		eth_hdr = (struct ether_header*) pkt;
-		cout<<sizeof(struct ether_header)<<endl;
-		cout<<sizeof(struct ip)<<endl;
-		cout<<sizeof(struct tcphdr)<<endl;
-		ip_hdr = (struct ip*)(pkt + sizeof(struct ether_header));
-		std::cout<< (int)(ip_hdr->ip_p) <<std::endl;
+//		cout<<sizeof(struct ether_header)<<endl;
+//		cout<<sizeof(struct ip)<<endl;
+//		cout<<sizeof(struct tcphdr)<<endl;
+		ip_hdr = (struct ip*)(pkt + sizeof(struct ether_header) + llc_len);
+//		std::cout<< (int)(ip_hdr->ip_p) <<std::endl;
 		if (ip_hdr->ip_p == IPPROTO_TCP) 
-			tcp_hdr = (tcphdr*)(pkt + sizeof(struct ether_header) + sizeof(struct ip));
+			tcp_hdr = (tcphdr*)(pkt + sizeof(struct ether_header) + llc_len + sizeof(struct ip));
 		else
 			tcp_hdr = NULL;
 
-		cout<<endl;
+//		cout<<endl;
 
 		/* extract feature */
 		FeatureVector fv;
@@ -111,7 +115,7 @@ void packetHandler(u_char* arg, const struct pcap_pkthdr *pkthdr, u_char *packet
 void test_tcp_ip_parser(std::string file_name)
 {
 	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
-	auto stream = the_tcp_ip_parser->parse_pcap(file_name);
+	auto stream = the_tcp_ip_parser->parse_pcap(file_name, false);
 	for (size_t i=0; i<stream->size(); i++)
 	{
 		cout<<"Pkt#"<<i<<": \n";

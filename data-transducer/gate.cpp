@@ -63,18 +63,18 @@ void Gate::posedge()
 			for (int i=0; i<in.size(); i++)
 			{
 				param.push_back( in[i].lock()->output() );
-//				if (param.back()->type == VALID)
-//					flag = true;
+				if (param.back()->type == VALID)
+					flag = true;
 			}
 			for (int i=0; i<in_seq.size(); i++)
 			{
 				param.push_back( in_seq[i].lock()->output_seq() );
-//				if (param.back()->type == VALID)
-//					flag = true;
+				if (param.back()->type == VALID)
+					flag = true;
 			}
 			val = (*op)(param, val);
-//			if (val->type == VALID)
-//				flag = true;
+			if (val->type == VALID)
+				flag = true;
 		}
 		
 		for (int i=0; i<out.size(); i++)

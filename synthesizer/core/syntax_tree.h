@@ -80,7 +80,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	bool real_search_and_replace(shared_ptr<SyntaxTreeTemplate> temp_src, shared_ptr<SyntaxTreeTemplate> temp_dst);
 	void mutate(int option);
 	virtual void copy_initializer(shared_ptr<SyntaxTree> src);
-	void collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp);
+	bool collect_variable(shared_ptr<VariableMap> vars, shared_ptr<SyntaxTreeTemplate> temp);
 };
 
 bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b);

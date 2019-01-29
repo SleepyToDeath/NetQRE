@@ -1,5 +1,7 @@
 #include "multithread.h"
+#include <iostream>
 
+using std::cout;
 using std::string;
 
 MasterThread::MasterThread(int population, MeansOfProduction m) {
@@ -48,6 +50,7 @@ Mailbox MasterThread::find_finished_task() {
 		snapshot = finished_tasks.front();
 		finished_tasks.pop();
 		snapshot.finished_task = true;
+//		cout<<"Task Done!"<<buzy_workers<<" "<<finished_tasks.size()<<" "<<pending_tasks.size()<<"\n";
 	}
 	else
 	{
@@ -70,6 +73,8 @@ MasterThread::~MasterThread() {
 
 	if (!all_tasks_done())
 		throw string("[ERROR] There's unfinished task when exiting!\n");
+//	else
+//		cout<<"All tasks done! Nice!\n";
 
 	task_lock.lock();
 	for (int i=0; i<population; i++)
@@ -110,6 +115,9 @@ void WorkerThread::working_loop() {
 				break;
 
 				case KILL:
+				master->task_lock.lock();
+				master->buzy_workers--;
+				master->task_lock.unlock();
 				return;
 
 				default:

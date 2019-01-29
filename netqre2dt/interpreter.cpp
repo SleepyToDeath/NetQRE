@@ -188,7 +188,7 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 				auto l = predicate->subtree[0];
 				auto r = predicate->subtree[1];
 				int index = l->value;
-				unsigned long long value = r->value;
+				StreamFieldType value = r->value;
 				auto sat = unique_ptr<BoolValue> (new BoolValue());
 				sat->unknown = false;
 				sat->val = (fv[index].value == value);

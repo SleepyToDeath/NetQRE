@@ -1,0 +1,67 @@
+
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "_filter","_qre","_threshold" ]
+		] },
+		{ "_filter": [
+			[ "filter([_])" ]
+		] },
+		{ "_threshold": [
+			[ "threshold(0)" ]
+		] },
+		{ "_qre": [
+			[ "$qre(","_qre_vs","$)" ]
+		] },
+		{ "_qre_vs": [
+			[ "_agg_op","$(", "_qre_vs", "$,", "_feature_set", "$)" ],
+			[ "_qre_ps" ]
+		] },
+		{ "_agg_op": [
+			[ "max" ],
+			[ "min" ],
+			[ "sum" ]
+		] },
+		{ "_feature_set": [
+			[ "_feature_set", "\\r0" ]
+		] },
+		{ "_qre_ps": [
+			[ "$split(", "_qre_ps", "$,", "_qre_ps", "$,", "_agg_op", "$)" ],
+			[ "$iter(", "_qre_ps", "$,", "_agg_op", "$)" ],
+			[ "$/","_re","$/?1" ]
+		] },
+		{ "_re": [
+			[ "_re", "_re" ],
+			[ "$*(", "_re", "$)" ],
+			[ "_" ],
+			[ "$[", "_predicate_set", "$]" ]
+		]},
+		{ "_predicate_set": [
+			[ "predicate" ]
+		] },
+		{ "_predicate": [
+			[ "0", "$=", "\\r1" ],
+			[ "1", "$=", "\\r2" ]
+		] }
+	] },
+
+	{ "positive_abstract" : [
+		{ "_qre_ps": "iter( /_*(_)/?1, sum)" },
+		{ "_re": ": "_*(_)" },
+		{ "_predicate_set": "_" },
+		{ "_predicate": "_" }
+	] },
+
+	{ "negative_abstract" : [
+	] },
+
+	{ "conditional_redundancy" : [
+	] },
+	
+	{ "unconditional_redundancy" : [
+		{ "_re *( _re *( _re@1 ) )" : "" },
+		{ "_qre_ps iter( _qre_ps iter( _qre_ps@1, _agg_op@2 ) ,  _agg_op@3 )" : "" }
+	] }
+]
+
+

@@ -1,8 +1,12 @@
 all: netqre
 
-g: regex-general-test-g
+g: netqre-debug
+
+d: test-netqre-debug
 
 p: profile-regex
+
+test: test-netqre
 
 r: 
 	g++ -o ./example/gen ./example/gen.cpp -O2
@@ -12,7 +16,13 @@ test-pwd:
 	./example/gen | tee example/pwd.input
 	./testbed/regex lang/regex.json example/pwd.input example/config
 
-test:
+test-netqre:
+	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config
+
+test-netqre-debug:
+	gdb -ex run --args ./testbed/synthesizer ./lang/netqre/netqre.json ./lang/netqre/tcp.in ./lang/netqre/netqre.config
+
+test-reg:
 	./testbed/regex lang/regex_range_test.json example/pwd.input example/config
 
 test-c:
@@ -55,8 +65,12 @@ regex-general-test-g:
 netqre:
 	g++ -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -pthread -lpcap
 
+netqre-debug:
+	g++ -o ./testbed/synthesizer $(SRC2) -g --std=c++11 -pthread -lpcap
+
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config
 
 clean:
 	-rm testbed/regex
+	-rm testbed/synthesizer
