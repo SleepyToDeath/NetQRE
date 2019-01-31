@@ -1,5 +1,6 @@
 #include "syntax_tree.h"
 #include <cmath>
+#include <experimental/random>
 
 #include <iostream>
 using std::cout;
@@ -45,14 +46,10 @@ SyntaxTree::~SyntaxTree() {
 }
 
 void SyntaxTree::mutate(int option) {
-//	cout<<"doing mutation "<<option<<endl;
 	/* clean up previous mutation */
 	if (root->get_option() != SyntaxLeftHandSide::NoOption)
 	{
-		while(subtree.size()>0)
-		{
-			subtree.pop_back();
-		}
+		subtree.clear();
 	}
 
 	root->set_option(option);
@@ -67,7 +64,6 @@ void SyntaxTree::mutate(int option) {
 					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(r->subexp[i])),
 					depth+1
 				));
-//		cout<<"subtree size: "<<subtree.size()<<endl;
 	}
 
 }
@@ -130,7 +126,7 @@ double SyntaxTree::get_complexity() {
 	return complexity;
 }
 
-bool SyntaxTree::multi_mutate(shared_ptr<SyntaxTree> top, int max_depth, shared_ptr<SyntaxTree::Queue> queue) {
+bool SyntaxTree::multi_mutate(shared_ptr<SyntaxTree> &_this, shared_ptr<SyntaxTree> top, int max_depth, shared_ptr<SyntaxTree::Queue> queue) {
 
 	if (root->get_type()->is_term)
 		return false;
@@ -140,23 +136,43 @@ bool SyntaxTree::multi_mutate(shared_ptr<SyntaxTree> top, int max_depth, shared_
 		if (root->get_option() == SyntaxLeftHandSide::NoOption)
 		{
 			int branch_num = root->get_type()->option.size();
-//			if(root->get_type()->name == "char")
-//				cout<<"branch_num: "<<branch_num<<endl;
 			for (int i=0; i<branch_num; i++)
 			{
 				mutate(i);
 				queue->q.push_back(SyntaxTree::factory->get_new(top));
-				queue->q.back()->weight = top->weight/branch_num;
-//				cout<<"[New] "<<queue->q.back()->to_string()<<endl;
+//				queue->q.back()->weight = top->weight/branch_num;
 			}
 			mutate(SyntaxLeftHandSide::NoOption);
+			vector<shared_ptr<SyntaxTree> > &shortcut = root->get_type()->shortcut;
+			shared_ptr<SyntaxTree> this_bak = _this;
+			for (int i=0; i<shortcut.size(); i++)
+			{
+				_this = shortcut[i];
+				queue->q.push_back(SyntaxTree::factory->get_new(top));
+//				queue->q.back()->weight = top->weight/branch_num;
+			}
+			_this = this_bak;
 			return true;
 		}
 		else
 		{
+			vector<int> subtree_bak;
 			for (int i=0; i<subtree.size(); i++)
-				if (subtree[i]->multi_mutate(top, max_depth-1, queue))
+				subtree_bak.push_back(i);
+			for (int i=0; i<subtree.size(); i++)
+			{
+//				int tmp = i;
+				int l = std::experimental::randint(0,(int)subtree_bak.size()-1);
+				int tmp = subtree_bak.back();
+				subtree_bak[subtree_bak.size()-1] = subtree_bak[l];
+				subtree_bak[l] = tmp;
+				tmp = subtree_bak.back();
+
+				if (subtree[tmp]->multi_mutate(subtree[tmp], top, max_depth-1, queue))
 					return true;
+
+				subtree_bak.pop_back();
+			}
 			return false;
 		}
 	}

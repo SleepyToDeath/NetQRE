@@ -53,7 +53,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	};
 
 	/* mutate a node of depth AT MOST `max_depth` into all possible RHS, and append the results to `queue` */
-	bool multi_mutate(shared_ptr<SyntaxTree> root, int max_depth, shared_ptr<Queue> queue);
+	bool multi_mutate(shared_ptr<SyntaxTree> &_this, shared_ptr<SyntaxTree> top, int max_depth, shared_ptr<SyntaxTree::Queue> queue);
 
 	bool contain_prefix(shared_ptr<SyntaxTreeTemplate> temp);
 
@@ -125,6 +125,7 @@ class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide
 	int id;
 	std::string name;
 	std::vector<std::shared_ptr<SyntaxRightHandSide> > option;
+	std::vector<std::shared_ptr<SyntaxTree> > shortcut;
 	bool is_term;
 
 	static const int NoOption = -1;

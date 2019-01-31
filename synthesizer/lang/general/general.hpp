@@ -12,6 +12,7 @@ using std::endl;
 using std::string;
 using std::vector;
 using std::map;
+using std::static_pointer_cast;
 
 const std::string SYNTAX_ROOT_NAME = "program";
 
@@ -488,6 +489,8 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					complexity = 500.0;
 				if (root->get_type()->name == "#agg_op")
 					complexity = 500.0;
+				if (root->get_type()->name == "#re")
+					complexity = 300.0;
 			}
 			else
 			{
@@ -502,8 +505,8 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					*/
 					complexity += (subtree.size()-1) * 150.0;
 //				complexity -= 20.0;
-				if (root->get_type()->name == "#re")
-					complexity += 300;
+				if (root->get_type()->name == "#qre_vs")
+					complexity += 500.0;
 			}
 			if (depth == 0)
 			{
@@ -599,6 +602,59 @@ class GeneralSyntaxTree : public IESyntaxTree {
 	void copy_initializer(shared_ptr<SyntaxTree> src) {
 		for (int i=0; i<src->subtree.size(); i++)
 			subtree.push_back(shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(src->subtree[i])));
+	}
+
+	const int prune_depth = 3;
+
+	void prune()
+	{
+		if (get_depth() <= prune_depth)
+			return;
+		for (int i=0; i<subtree.size(); i++)
+		{
+			auto sub = static_pointer_cast<GeneralSyntaxTree>(subtree[i]);
+			if (sub->get_depth() == prune_depth)
+			{
+				vector<shared_ptr<SyntaxTree> >& shortcut = sub->root->get_type()->shortcut;
+				bool exist = false;
+				for (int j=0; j<shortcut.size(); j++)
+				{
+					if (sub->equal(shortcut[j]))
+					{
+						exist = true;
+						break;
+					}
+				}
+				if (!exist)
+				{
+					shortcut.push_back(SyntaxTree::factory->get_new(sub));
+				}
+				sub->root->set_option(SyntaxLeftHandSide::NoOption);
+				sub->subtree.clear();
+			}
+			else if (sub->get_depth() > prune_depth)
+			{
+				sub->prune();
+			}
+		}
+	}
+
+	int get_depth()
+	{
+		if (root->get_type()->is_term)
+			return 1;
+		else
+		{
+			int d = 0;
+			for (int i=0; i<subtree.size(); i++)
+			{
+				int d_sub = static_pointer_cast<GeneralSyntaxTree>(subtree[i])->get_depth();
+				if (d_sub > d)
+					d = d_sub;
+			}
+			d++;
+			return d;
+		}
 	}
 };
 

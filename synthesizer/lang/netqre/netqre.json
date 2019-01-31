@@ -23,7 +23,8 @@
 			[ "sum" ]
 		] },
 		{ "#feature_set": [
-			[ "#feature_set", "\\r0" ]
+			[ "#feature_set", "\\r0" ],
+			[ "\\r0" ]
 		] },
 		{ "#qre_ps": [
 			[ "$split(", "#qre_ps", "$,", "#qre_ps", "$,", "#agg_op", "$)" ],
@@ -39,8 +40,7 @@
 		{ "#predicate_set": [
 			[ "$||([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
 			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
-			[ "$[", "#predicate_entry", "$]" ]
-		] },
+			[ "$[", "#predicate_entry", "$]" ]		] },
 		{ "#predicate_entry": [
 			[ "0", "$=", "\\r1" ],
 			[ "1", "$=", "\\r2" ]

@@ -5,10 +5,13 @@
 #include <cmath>
 #include <unordered_set>
 //#define VERBOSE_MODE
+#define SILENCE_MODE
 #define USE_MULTITHREAD
 
 using std::endl;
 using std::cout;
+using std::unordered_set;
+using std::vector;
 
 SearchGraph::SearchGraph(int depth_threshold, 
 				int batch_size, 
@@ -16,7 +19,8 @@ SearchGraph::SearchGraph(int depth_threshold,
 				int answer_count, 
 				int threads,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
-				shared_ptr<RedundancyPlan> rp ) {
+				shared_ptr<RedundancyPlan> rp ) 
+{
 	this->batch_size = batch_size;
 	this->answer_count = answer_count;
 	this->depth_threshold = depth_threshold;
@@ -26,15 +30,24 @@ SearchGraph::SearchGraph(int depth_threshold,
 	this->rp = rp;
 }
 
-std::vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(shared_ptr<IEExample> examples) {
-	return enumerate_random_v2(examples);
+std::vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(
+	shared_ptr<IEExample> examples, 
+	vector<shared_ptr<IESyntaxTree> > seed = vector<shared_ptr<IESyntaxTree> >(),
+	unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate 
+	= unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree >() )
+{
+	return enumerate_random_v2(examples, seed, eliminate);
 }
 
-std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_ptr<IEExample> examples) {
-	std::vector<shared_ptr<IESyntaxTree> > this_round;
+std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
+	shared_ptr<IEExample> examples, 
+	std::vector<shared_ptr<IESyntaxTree> > seed,
+	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate)
+{
+	std::vector<shared_ptr<IESyntaxTree> > this_round = seed;
 	std::vector<shared_ptr<IESyntaxTree> > buffer;
 	std::vector<shared_ptr<IESyntaxTree> > answer;
-	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited;
+	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited = eliminate;
 
 	MeansOfProduction mop;
 	mop.rp = rp;
@@ -50,11 +63,16 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 
 	int depth = depth_threshold;
 	{
-		shared_ptr<IESyntaxTree> s = std::static_pointer_cast<IESyntaxTree>(SyntaxTree::factory->get_new(shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(starting_symbol))));
-		s->weight = 1;
-		this_round.push_back(s);
-		visited.clear();
-		visited.insert(s);
+		if (seed.empty())
+		{
+			shared_ptr<IESyntaxTree> s = std::static_pointer_cast<IESyntaxTree>(
+				SyntaxTree::factory->get_new(
+					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(starting_symbol))));
+			s->weight = 1;
+			this_round.push_back(s);
+			visited.insert(s);
+		}
+
 		while (this_round.size()>0)
 		{
 			/* prepare this round */
@@ -74,7 +92,8 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				#ifdef VERBOSE_MODE
 				std::cout<<"[Source!]"<<current->get_complexity()<<" | "<<current->to_string()<<std::endl;
 				#endif
-				if (current->multi_mutate(current, depth, tmp))
+				shared_ptr<SyntaxTree> place_holder = current;
+				if (current->multi_mutate(place_holder, current, depth, tmp))
 				{
 					/* push to buffer */
 					for (int j=0; j<tmp->q.size(); j++)
@@ -180,7 +199,8 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 					shared_ptr<IESyntaxTree> current = this_round[i];
 
 					/* explore new programs */
-					if (current->multi_mutate(current, depth, tmp))
+					shared_ptr<SyntaxTree> place_holder = current;
+					if (current->multi_mutate(place_holder, current, depth, tmp))
 					{
 						for (int j=0; j<tmp->q.size(); j++)
 						{
@@ -240,6 +260,9 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 						if (!msg.accept)
 						{
 							/* drop */
+							#ifdef VERBOSE_MODE
+							std::cout<<"[Rejected]"<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
+							#endif
 							total_drop += 1.0;
 							if (candidate->is_complete())
 								complete_drop += 1.0;
@@ -297,6 +320,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 			std::sort(buffer.begin(), buffer.end(), compare_syntax_tree_complexity);
 
 			/* print progress */
+#ifndef SILENCE_MODE
 			if (buffer.size()>0)
 			{
 				std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
@@ -311,12 +335,9 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(shared_
 				else
 					std::cout<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
 				std::cout<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
-				#ifdef VERBOSE_MODE
-//				for (int i=0; i<buffer.size();i++)
-//					cout<<buffer[i]->get_complexity()<<" | ";
-				#endif
 				std::cout<<std::endl<<endl;;
 			}
+#endif
 
 			/* prepare next round */
 			this_round.clear();

@@ -20,7 +20,7 @@ test-netqre:
 	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config
 
 test-netqre-debug:
-	gdb -ex run --args ./testbed/synthesizer ./lang/netqre/netqre.json ./lang/netqre/tcp.in ./lang/netqre/netqre.config
+	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config
 
 test-reg:
 	./testbed/regex lang/regex_range_test.json example/pwd.input example/config
@@ -66,7 +66,7 @@ netqre:
 	g++ -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -pthread -lpcap
 
 netqre-debug:
-	g++ -o ./testbed/synthesizer $(SRC2) -g --std=c++11 -pthread -lpcap
+	g++ -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -pthread -lpcap
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config
@@ -74,3 +74,4 @@ profile-regex:
 clean:
 	-rm testbed/regex
 	-rm testbed/synthesizer
+	-rm testbed/synthesizer_debug

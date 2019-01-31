@@ -349,8 +349,8 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 			for (int j=0; j<flow.size(); j++)
 			{
 				pkt = flow[j];
-				if (step == 0 && pkt[0].value == 1 && pkt[1].value == 0)
-					step++;
+				if (pkt[0].value == 1 && pkt[1].value == 0)
+					step = 1;
 				else if (step == 1 && pkt[0].value == 1 && pkt[1].value == 1)
 					step++;
 				else if (step == 2 && pkt[0].value == 0 && pkt[1].value == 1)
@@ -422,9 +422,9 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 			for (int j=0; j<flow.size(); j++)
 			{
 				pkt = flow[j];
-				if (step == 0 && pkt[0].value == 1 && pkt[1].value == 0)
+				if (pkt[0].value == 1 && pkt[1].value == 0)
 				{
-					step++;
+					step = 1;
 					cout<<"step1\n";
 				}
 				else if (step == 1 && pkt[0].value == 1 && pkt[1].value == 1)
@@ -447,6 +447,13 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 
 		cout<<"["<<examples->positive_token.size()<<"] positive flows left\n";
 
+	}
+
+	for (int i=0; i<examples->negative_token.size(); i++)
+	{
+		for (int j=0; j<examples->negative_token[i].size(); j++)
+			cout<<examples->negative_token[i][j][0].value<<examples->negative_token[i][j][1].value<<"-";
+		cout<<endl;
 	}
 
 	return examples;

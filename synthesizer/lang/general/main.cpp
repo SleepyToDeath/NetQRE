@@ -1,5 +1,6 @@
 #include "general.hpp"
 #include "../../core/search_graph.h"
+#include "merge_search.hpp"
 //#include "../network_tokenizer/tcp_ip.hpp"
 #include <vector>
 #include <iostream>
@@ -55,6 +56,7 @@ int main(int argc, char *argv[]) {
 	int answer_count;
 	int explore_rate;
 	int threads;
+	int minimal_example_size;
 
 	/* input grammar */
 	string string_g;
@@ -104,15 +106,17 @@ int main(int argc, char *argv[]) {
 	fin_c>>explore_rate;
 	fin_c>>answer_count;
 	fin_c>>threads;
+	fin_c>>minimal_example_size;
 
 	/* prepare */
 	parser->generate_input_dependent_syntax(examples);
 
 	/* do searching */
-	vector<shared_ptr<IESyntaxTree> > answer;
-	SearchGraph graph(search_depth, batch_size, explore_rate, answer_count, threads, parser->root, parser->rp);
-	shared_ptr<IEExample> examples_up = examples;
-	answer = graph.search_top_level_v2(examples_up);
+	vector<shared_ptr<GeneralSyntaxTree> > answer;
+	MergeSearch search_engine;
+	answer = search_engine.search(search_depth, batch_size, explore_rate, answer_count, threads, minimal_example_size, parser->root, parser->rp, examples);
+//	shared_ptr<IEExample> examples_up = examples;
+//	answer = graph.search_top_level_v2(examples_up);
 	cout<<"===========================================\n";
 	if (answer.size() == 0)
 		cout<<"Not found!"<<endl;
