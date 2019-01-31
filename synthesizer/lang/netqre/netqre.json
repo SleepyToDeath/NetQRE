@@ -23,7 +23,7 @@
 			[ "sum" ]
 		] },
 		{ "#feature_set": [
-			[ "#feature_set", "\\r0" ],
+			[ "#feature_set","$,", "\\r0" ],
 			[ "\\r0" ]
 		] },
 		{ "#qre_ps": [
