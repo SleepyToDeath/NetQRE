@@ -122,7 +122,17 @@ class MergeSearch
 			auto ans_wrong = ans;
 			auto ans_raw = ans_left;
 			for (int i=0; i<ans_right.size(); i++)
-				ans_raw.push_back(ans_right[i]);
+			{
+				bool exist = false;
+				for (int j=0; j<ans_left.size(); j++)
+					if (ans_left[j]->equal(ans_right[i]))
+					{
+						exist = true;
+						break;
+					}
+				if (!exist)
+					ans_raw.push_back(ans_right[i]);
+			}
 
 			for (int i=0; i<ans_raw.size(); i++)
 				if (ans_raw[i]->to_program()->accept(e))
