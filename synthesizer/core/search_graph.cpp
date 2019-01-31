@@ -5,7 +5,7 @@
 #include <cmath>
 #include <unordered_set>
 //#define VERBOSE_MODE
-#define SILENCE_MODE
+//#define SILENCE_MODE
 #define USE_MULTITHREAD
 
 using std::endl;

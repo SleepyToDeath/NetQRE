@@ -9,10 +9,10 @@ p: profile-regex
 test: test-netqre
 
 r: 
-	g++ -o ./example/gen ./example/gen.cpp -O2
+	g++-8 -o ./example/gen ./example/gen.cpp -O2
 
 test-pwd:
-	g++ -o ./example/gen ./example/gen.cpp -O2
+	g++-8 -o ./example/gen ./example/gen.cpp -O2
 	./example/gen | tee example/pwd.input
 	./testbed/regex lang/regex.json example/pwd.input example/config
 
@@ -34,7 +34,7 @@ test-r:
 	cat example/random.input
 
 regex6-g: lang/regex6.cpp lang/nfa.hpp lang/nfa_skip.hpp incomplete_execution.h search_tree.h search_tree.cpp search_graph.h search_graph.cpp syntax_tree.h syntax_tree.cpp
-	g++ -o regex lang/regex6.cpp incomplete_execution.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -g -std=c++11
+	g++-8 -o regex lang/regex6.cpp incomplete_execution.cpp search_tree.cpp search_graph.cpp syntax_tree.cpp -g -std=c++11
 
 SRC = core/*pp
 #SRC += lang/network_tokenizer/*pp
@@ -57,16 +57,16 @@ SRC2 += ../netqre2dt/parser.cpp
 SRC2 += ../data-transducer/*pp
 
 regex-general-test:
-	g++ -o ./testbed/regex $(SRC) -O2 -std=c++11 -pthread -lpcap
+	g++-8 -o ./testbed/regex $(SRC) -O2 -std=c++11 -pthread -lpcap
 
 regex-general-test-g:
-	g++ -o ./testbed/regex -g $(SRC) -std=c++11 -pthread -lpcap
+	g++-8 -o ./testbed/regex -g $(SRC) -std=c++11 -pthread -lpcap
 
 netqre:
-	g++ -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -pthread -lpcap
+	g++-8 -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -pthread -lpcap
 
 netqre-debug:
-	g++ -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -pthread -lpcap
+	g++-8 -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -pthread -lpcap
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config
