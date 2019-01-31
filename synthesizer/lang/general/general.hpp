@@ -604,7 +604,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			subtree.push_back(shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(src->subtree[i])));
 	}
 
-	const int prune_depth = 3;
+	const int prune_depth = 4;
 
 	void prune()
 	{
