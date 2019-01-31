@@ -26,7 +26,8 @@ class MergeSearch
 		this->minimal_example_size = minimal_example_size;
 		this->starting_symbol = starting_symbol;
 		this->rp = rp;
-		return real_search(e);
+		vector<shared_ptr<GeneralSyntaxTree> > global_pool;
+		return real_search(e, global_pool);
 	}
 
 	private:
@@ -41,20 +42,43 @@ class MergeSearch
 	shared_ptr<RedundancyPlan> rp;
 
 
-	std::vector<shared_ptr<GeneralSyntaxTree> > real_search(shared_ptr<NetqreExample> e)
+	std::vector<shared_ptr<GeneralSyntaxTree> > real_search(shared_ptr<NetqreExample> e, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
 		if (e->positive_token.size() <= minimal_example_size && e->negative_token.size() <= minimal_example_size)
 		{
 			/* base case */
 			cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 
-			SearchGraph graph(depth_threshold, batch_size, explore_rate, answer_count, threads, starting_symbol, rp);
-			vector<shared_ptr<IESyntaxTree> > seed;
-			std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate;
-			auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
 			vector<shared_ptr<GeneralSyntaxTree> > ans;
-			for (int i=0; i<ans_tmp.size(); i++)
-				ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_tmp[i]));
+
+			for (int i=0; i<global_pool.size(); i++)
+				if (global_pool[i]->to_program()->accept(e))
+					ans.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(global_pool[i])));
+
+			if (ans.size() < answer_count)
+			{
+				SearchGraph graph(depth_threshold, batch_size, explore_rate, answer_count, threads, starting_symbol, rp);
+				vector<shared_ptr<IESyntaxTree> > seed;
+				std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate;
+				auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
+				for (int i=0; i<ans_tmp.size(); i++)
+				{
+					bool exist = false;
+					for (int j=0; j<ans.size(); j++)
+					{
+						if (ans[j]->equal(ans_tmp[i]))
+						{
+							exist = true;
+							break;
+						}
+					}
+					if (!exist)
+					{
+						ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_tmp[i]));
+						global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans.back())));
+					}
+				}
+			}
 			cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 			return ans;
 		}
@@ -90,8 +114,8 @@ class MergeSearch
 					e_right->negative_token.push_back(e->negative_token[i]);
 			}
 
-			auto ans_left = real_search(e_left);
-			auto ans_right = real_search(e_right);
+			auto ans_left = real_search(e_left, global_pool);
+			auto ans_right = real_search(e_right, global_pool);
 
 			/* conquer */
 			std::vector<shared_ptr<GeneralSyntaxTree> > ans;
@@ -114,7 +138,7 @@ class MergeSearch
 				std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate;
 				for (int i=0; i<ans_wrong.size(); i++)
 				{
-					eliminate.insert(SyntaxTree::factory->get_new(ans_wrong[i]));
+					eliminate.insert(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans_wrong[i])));
 					seed.push_back(ans_wrong[i]);
 					ans_wrong[i]->prune();
 				}
@@ -124,6 +148,22 @@ class MergeSearch
 				for (int i=0; i<ans_fixed.size(); i++)
 					ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_fixed[i]));
 			}
+
+			for (int i=0; i<ans.size(); i++)
+			{
+				bool exist = false;
+				for (int j=0; j<global_pool.size(); j++)
+					if (ans[i]->equal(global_pool[j]))
+					{
+						exist = true;
+						break;
+					}
+				if (!exist)
+				{
+					global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans[i])));
+				}
+			}
+
 
 			cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 
