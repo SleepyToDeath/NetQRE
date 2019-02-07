@@ -1,6 +1,7 @@
 #ifndef NETQRE_INTERFACE_HPP
 #define NETQRE_INTERFACE_HPP
 
+#include "../../../netqre2dt/rpc/client.hpp"
 #include "../general/general.hpp"
 #include "../../../netqre2dt/interpreter.h"
 #include "../../../netqre2dt/parser.h"
@@ -18,7 +19,6 @@ using std::map;
 using std::vector;
 using std::max;
 
-
 class NetqreExample: public GeneralExample {
 	public:
 	vector<TokenStream> positive_token;
@@ -27,12 +27,19 @@ class NetqreExample: public GeneralExample {
 
 class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
+	NetqreInterpreterInterface(){
+		vector<string> servers;
+		servers.push_back(string("n2"));
+		servers.push_back(string("n3"));
+		manager = new Netqre::NetqreClientManager(servers);
+	}
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) {
 		auto e = std::static_pointer_cast<NetqreExample>(input);
-		auto ast = parser.parse(code.pos);
-		auto m = interpreter.interpret(ast);
+//		auto ast = parser.parse(code.pos);
+//		auto m = interpreter.interpret(ast);
 		GeneralMatchingResult res;
+
 
 		StreamFieldType pos_min_upper = -1;
 		StreamFieldType pos_min_lower = -1;
@@ -42,10 +49,13 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
 
+		manager->exec(code.pos, e->positive_token.size(), e->negative_token.size(), ans_pos, ans_neg);
+
 		for (int i=0; i<e->positive_token.size(); i++)
 		{
-			auto s = e->positive_token[i];
-			auto ans = m->process(s);
+//			auto s = e->positive_token[i];
+//			auto ans = m->process(s);
+			unique_ptr<Netqre::IntValue>& ans = ans_pos[i];
 			if (ans->lower < 0)
 			{
 				res.accept = false;
@@ -62,13 +72,14 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				pos_min_upper = min(pos_min_upper, ans->upper);
 				pos_min_lower = min(pos_min_lower, ans->lower);
 			}
-			ans_pos.push_back(std::move(ans));
+//			ans_pos.push_back(std::move(ans));
 		}
 
 		for (int i=0; i<e->negative_token.size(); i++)
 		{
-			auto s = e->negative_token[i];
-			auto ans = m->process(s);
+//			auto s = e->negative_token[i];
+//			auto ans = m->process(s);
+			unique_ptr<Netqre::IntValue>& ans = ans_neg[i];
 			if (ans->lower < 0)
 			{
 				res.accept = false;
@@ -85,7 +96,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				neg_max_upper = max(neg_max_upper, ans->upper);
 				neg_max_lower = max(neg_max_lower, ans->lower);
 			}
-			ans_neg.push_back(std::move(ans));
+//			ans_neg.push_back(std::move(ans));
 		}
 
 		if (!complete)
@@ -182,6 +193,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 	Netqre::Interpreter interpreter;
 	Netqre::NetqreParser parser;
+	Netqre::NetqreClientManager* manager;
 };
 
 shared_ptr<NetqreExample> prepare_examples(ifstream& fin) {

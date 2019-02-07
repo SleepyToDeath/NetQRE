@@ -604,7 +604,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			subtree.push_back(shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(src->subtree[i])));
 	}
 
-	const int prune_depth = 4;
+	const int prune_depth = 5;
 
 	void prune()
 	{
@@ -629,12 +629,38 @@ class GeneralSyntaxTree : public IESyntaxTree {
 				{
 					shortcut.push_back(SyntaxTree::factory->get_new(sub));
 				}
+				sub->harvest();
 				sub->root->set_option(SyntaxLeftHandSide::NoOption);
 				sub->subtree.clear();
 			}
 			else if (sub->get_depth() > prune_depth)
 			{
 				sub->prune();
+			}
+		}
+	}
+
+	void harvest()
+	{
+		if (get_depth() <= 2)
+			return;
+		for (int i=0; i<subtree.size(); i++)
+		{
+			auto sub = static_pointer_cast<GeneralSyntaxTree>(subtree[i]);
+			sub->harvest();
+			vector<shared_ptr<SyntaxTree> >& shortcut = sub->root->get_type()->shortcut;
+			bool exist = false;
+			for (int j=0; j<shortcut.size(); j++)
+			{
+				if (sub->equal(shortcut[j]))
+				{
+					exist = true;
+					break;
+				}
+			}
+			if (!exist)
+			{
+				shortcut.push_back(SyntaxTree::factory->get_new(sub));
 			}
 		}
 	}

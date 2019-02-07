@@ -4,6 +4,8 @@
 using std::cout;
 using std::string;
 
+const int idle_wait_time = 2;
+
 MasterThread::MasterThread(int population, MeansOfProduction m) {
 	this->population = population;
 	this->m = m;
@@ -97,6 +99,7 @@ WorkerThread::WorkerThread(shared_ptr<MasterThread> master, MeansOfProduction m)
 void WorkerThread::working_loop() {
 	while(true)
 	{
+		bool idle = false;
 		master->task_lock.lock();
 		if (!master->pending_tasks.empty())
 		{
@@ -127,6 +130,11 @@ void WorkerThread::working_loop() {
 			master->finished_tasks.push(msg);
 			master->buzy_workers--;
 		}
+		else
+			idle = true;
 		master->task_lock.unlock();
+
+		if (idle)
+			std::this_thread::sleep_for(std::chrono::milliseconds(idle_wait_time));
 	}
 }

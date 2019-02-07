@@ -3,6 +3,7 @@
 
 #include "feature_vector.hpp"
 #include <memory>
+#include <iostream>
 
 #include <pcap.h>
 #include <net/ethernet.h>
@@ -12,6 +13,9 @@
 #include <arpa/inet.h>
 
 #define LLC_LENGTH_BYTE 8
+
+using std::shared_ptr;
+using std::cout;
 
 void packetHandler(u_char* arg, const struct pcap_pkthdr *pkthdr, u_char *packet);
 

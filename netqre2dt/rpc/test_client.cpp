@@ -3,6 +3,5 @@
 
 int main()
 {
-	Netqre::NetqreClient c;
-	std::cout<< c.exec("01") << std::endl;
+	Netqre::NetqreClientManager mng;
 }

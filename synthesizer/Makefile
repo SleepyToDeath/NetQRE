@@ -46,6 +46,7 @@ SRC += lang/general/json11/json11.hpp
 
 SRC2 = core/*pp
 SRC2 += lang/general/*pp
+SRC2 += lang/general/*cc
 SRC2 += lang/general/json11/json11.cpp
 SRC2 += lang/general/json11/json11.hpp
 SRC2 += lang/netqre/*pp
@@ -63,10 +64,10 @@ regex-general-test-g:
 	g++-8 -o ./testbed/regex -g $(SRC) -std=c++11 -pthread -lpcap
 
 netqre:
-	g++-8 -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -pthread -lpcap
+	g++-8 -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -lrpc -pthread -lpcap
 
 netqre-debug:
-	g++-8 -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -pthread -lpcap
+	g++-8 -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -lrpc -pthread -lpcap
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config
