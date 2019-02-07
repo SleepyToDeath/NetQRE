@@ -13,6 +13,8 @@ using std::cout;
 using std::unordered_set;
 using std::vector;
 
+int total_programs_searched = 0;
+
 SearchGraph::SearchGraph(int depth_threshold, 
 				int batch_size, 
 				int explore_rate,
@@ -169,6 +171,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 								this_round.pop_back();
 								if (answer_counter == answer_count)
 								{
+									total_programs_searched += search_counter;
 									return answer;
 								}
 							}
@@ -286,6 +289,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 								{
 									while(!thread_master->all_tasks_done())
 										thread_master->find_finished_task();
+									total_programs_searched += search_counter;
 									return answer;
 								}
 							}
@@ -375,6 +379,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 		}
 	}
 
+	total_programs_searched += search_counter;
 	return answer;
 
 }

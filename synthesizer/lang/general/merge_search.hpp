@@ -4,6 +4,8 @@
 
 using std::shared_ptr;
 
+extern int total_programs_searched;
+
 class MergeSearch
 {
 	public:
@@ -26,6 +28,7 @@ class MergeSearch
 		this->minimal_example_size = minimal_example_size;
 		this->starting_symbol = starting_symbol;
 		this->rp = rp;
+		this->top_example = e;
 		vector<shared_ptr<GeneralSyntaxTree> > global_pool;
 		return real_search(e, global_pool);
 	}
@@ -38,6 +41,7 @@ class MergeSearch
 	int answer_count;
 	int threads;
 	int minimal_example_size;
+	shared_ptr<NetqreExample> top_example;
 	shared_ptr<IESyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
 
@@ -76,6 +80,13 @@ class MergeSearch
 					{
 						ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_tmp[i]));
 						global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans.back())));
+						if (global_pool.back()->to_program()->accept(top_example))
+						{
+							cout<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+							cout<<"Size of global pool: "<<global_pool.size()<<endl;
+							cout<<"Total programs searched: "<<total_programs_searched<<endl;
+							throw string("Answer Found!\n");
+						}
 					}
 				}
 			}
@@ -171,11 +182,20 @@ class MergeSearch
 				if (!exist)
 				{
 					global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans[i])));
+					if (global_pool.back()->to_program()->accept(top_example))
+					{
+						cout<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+						cout<<"Size of global pool: "<<global_pool.size()<<endl;
+						cout<<"Total programs searched: "<<total_programs_searched<<endl;
+						throw string("Answer Found!\n");
+					}
 				}
 			}
 
 
 			cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+			cout<<"Size of global pool: "<<global_pool.size()<<endl;
+			cout<<"Total programs searched: "<<total_programs_searched<<endl;
 
 			return ans;
 		}
