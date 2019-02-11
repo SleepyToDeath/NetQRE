@@ -18,6 +18,7 @@ using std::ifstream;
 using std::map;
 using std::vector;
 using std::max;
+using std::string;
 
 class NetqreExample: public GeneralExample {
 	public:
@@ -27,11 +28,8 @@ class NetqreExample: public GeneralExample {
 
 class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
-	NetqreInterpreterInterface(){
-		vector<string> servers;
-		servers.push_back(string("n2"));
-		servers.push_back(string("n3"));
-		manager = new Netqre::NetqreClientManager(servers);
+	NetqreInterpreterInterface(vector<string> servers, vector<int> ports){
+		manager = new Netqre::NetqreClientManager(servers, ports);
 	}
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) {
@@ -437,16 +435,16 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 				if (pkt[0].value == 1 && pkt[1].value == 0)
 				{
 					step = 1;
-					cout<<"step1\n";
+//					cout<<"step1\n";
 				}
 				else if (step == 1 && pkt[0].value == 1 && pkt[1].value == 1)
 				{
 					step++;
-					cout<<"step2\n";
+//					cout<<"step2\n";
 				}
 				else if (step == 2 && pkt[0].value == 0 && pkt[1].value == 1)
 				{
-					cout<<"step3\n";
+//					cout<<"step3\n";
 					valid = true;
 					break;
 				}
@@ -461,12 +459,14 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 
 	}
 
+/*
 	for (int i=0; i<examples->negative_token.size(); i++)
 	{
 		for (int j=0; j<examples->negative_token[i].size(); j++)
 			cout<<examples->negative_token[i][j][0].value<<examples->negative_token[i][j][1].value<<"-";
 		cout<<endl;
 	}
+	*/
 
 	return examples;
 }

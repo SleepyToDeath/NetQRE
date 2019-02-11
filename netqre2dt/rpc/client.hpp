@@ -16,9 +16,7 @@ using std::mutex;
 
 namespace Netqre {
 
-constexpr int SERVICE_PORT = 23333;
 constexpr int THREAD_COUNT = 4;
-constexpr int MAX_WORKLOAD = 16;
 const string SERVICE_NAME = string("netqre_service");
 
 class IntValueMsg {
@@ -78,11 +76,12 @@ class NetqreClient {
 class NetqreClientManager {
 	public:
 
-	NetqreClientManager(vector<string> server_list)
+	NetqreClientManager(vector<string> server_list, vector<int> port_list)
 	{
+		if (server_list.size() != port_list.size())
+			throw string("Servers and ports don't match!\n");
 		for (int i=0; i<server_list.size(); i++)
-			for (int j=0; j<32; j++)
-				clients.push_back(new NetqreClient(server_list[i], SERVICE_PORT + j));
+			clients.push_back(new NetqreClient(server_list[i], port_list[i]));
 	}
 
 	/* distributed execution, with load balancing, collect answers in pos_ans and neg_ans */
@@ -96,20 +95,15 @@ class NetqreClientManager {
 
 		for (int i=0; i<pos_size; i++)
 		{
-			int min_count = MAX_WORKLOAD + 1;
+			int min_count = clients[0]->get_buzy_threads();
 			int lazy_client = 0;
-//			while(min_count > MAX_WORKLOAD)
+			for (int j=1; j<clients.size(); j++)
 			{
-				min_count = clients[0]->get_buzy_threads();
-				lazy_client = 0;
-				for (int j=1; j<clients.size(); j++)
+				int tmp = clients[j]->get_buzy_threads();
+				if (tmp < min_count)
 				{
-					int tmp = clients[j]->get_buzy_threads();
-					if (tmp < min_count)
-					{
-						min_count = tmp;
-						lazy_client = j;
-					}
+					min_count = tmp;
+					lazy_client = j;
 				}
 			}
 			pos_handle.push_back(clients[lazy_client]->exec(code, true, i));
@@ -118,20 +112,15 @@ class NetqreClientManager {
 
 		for (int i=0; i<neg_size; i++)
 		{
-			int min_count = MAX_WORKLOAD + 1;
+			int min_count = clients[0]->get_buzy_threads();
 			int lazy_client = 0;
-//			while(min_count > MAX_WORKLOAD)
+			for (int j=1; j<clients.size(); j++)
 			{
-				min_count = clients[0]->get_buzy_threads();
-				lazy_client = 0;
-				for (int j=1; j<clients.size(); j++)
+				int tmp = clients[j]->get_buzy_threads();
+				if (tmp < min_count)
 				{
-					int tmp = clients[j]->get_buzy_threads();
-					if (tmp < min_count)
-					{
-						min_count = tmp;
-						lazy_client = j;
-					}
+					min_count = tmp;
+					lazy_client = j;
 				}
 			}
 			neg_handle.push_back(clients[lazy_client]->exec(code, false, i));

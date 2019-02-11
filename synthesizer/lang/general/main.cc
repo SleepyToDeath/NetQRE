@@ -24,7 +24,7 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<Gen
 
 /*========== netqre implementation =============*/
 #include "../netqre/interface.hpp"
-std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(new NetqreInterpreterInterface());
+std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter; 
 /*=============================================*/
 
 /*
@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 //	test_interpretor();
 //	return 0;
 
-	auto name_pos = string(argv[2]);
-	auto name_neg = string(argv[3]);
+	auto name_pos = string(argv[2]); // example pos
+	auto name_neg = string(argv[3]); // example neg
 	int threshold;
 	std::cin>>threshold;
 	auto examples = prepare_examples_from_pcap(name_pos, name_neg, threshold);
@@ -48,6 +48,22 @@ int main(int argc, char *argv[]) {
 	ifstream fin_g(argv[1]); // grammar
 //	ifstream fin_e(argv[2]); // example
 	ifstream fin_c(argv[4]); // config
+	ifstream fin_s(argv[5]); // server list
+
+	int server_count;
+	fin_s >> server_count;
+	vector<string> servers;
+	vector<int> ports;
+	for (int i = 0; i<server_count; i++)
+	{
+		string tmp_s;
+		int tmp_p;
+		fin_s >> tmp_s;
+		fin_s >> tmp_p;
+		servers.push_back(tmp_s);
+		ports.push_back(tmp_p);
+	}
+	GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(new NetqreInterpreterInterface(servers, ports));
 
 	auto parser = shared_ptr<GeneralConfigParser>(new GeneralConfigParser());
 //	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());

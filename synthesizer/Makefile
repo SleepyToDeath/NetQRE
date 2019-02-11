@@ -17,10 +17,10 @@ test-pwd:
 	./testbed/regex lang/regex.json example/pwd.input example/config
 
 test-netqre:
-	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config
+	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
 test-netqre-debug:
-	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config
+	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
 test-reg:
 	./testbed/regex lang/regex_range_test.json example/pwd.input example/config

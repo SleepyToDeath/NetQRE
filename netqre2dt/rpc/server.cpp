@@ -1,5 +1,6 @@
 #include <rpc/server.h>
 #include <iostream>
+#include <string>
 #include "client.hpp"
 #include "../../synthesizer/lang/netqre/interface.hpp"
 
@@ -9,7 +10,7 @@ Netqre::Interpreter interpreter;
 Netqre::NetqreParser parser;
 
 int main(int argc, char *argv[]) {
-	rpc::server srv(Netqre::SERVICE_PORT + (argv[3][0] - '0') * 10 + argv[3][1] - '0');
+	rpc::server srv(std::stoi(argv[3], nullptr));
 	auto e = prepare_examples_from_pcap(string(argv[1]), string(argv[2]),3);
 
 	srv.bind(Netqre::SERVICE_NAME, [&](std::string code, bool example_positive, int example_index) {
