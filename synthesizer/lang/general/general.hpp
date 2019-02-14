@@ -490,7 +490,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 				if (root->get_type()->name == "#agg_op")
 					complexity = 500.0;
 				if (root->get_type()->name == "#re")
-					complexity = 300.0;
+					complexity = 200.0;
 			}
 			else
 			{
@@ -505,8 +505,12 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					*/
 					complexity += (subtree.size()-1) * 150.0;
 //				complexity -= 20.0;
+				// [!] don't do this other than for experiment
 				if (root->get_type()->name == "#qre_vs")
-					complexity += 500.0;
+					complexity += 600.0;
+
+				if (root->get_type()->name == "#predicate_set" && subtree.size() == 2)
+					complexity -= 600.0;
 			}
 			if (depth == 0)
 			{
@@ -604,9 +608,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			subtree.push_back(shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(src->subtree[i])));
 	}
 
-	const int prune_depth = 5;
-
-	void prune()
+	void prune(int prune_depth)
 	{
 		if (get_depth() <= prune_depth)
 			return;
@@ -635,7 +637,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			}
 			else if (sub->get_depth() > prune_depth)
 			{
-				sub->prune();
+				sub->prune(prune_depth);
 			}
 		}
 	}

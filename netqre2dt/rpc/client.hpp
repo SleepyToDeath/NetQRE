@@ -5,6 +5,8 @@
 #include <mutex>
 #include <iostream>
 #include "../op.hpp"
+#include <utility>
+#include <map>
 
 using std::vector;
 using std::unique_ptr;
@@ -13,6 +15,8 @@ using std::future;
 using std::cout;
 using std::endl;
 using std::mutex;
+using std::map;
+using std::pair;
 
 namespace Netqre {
 
@@ -73,6 +77,41 @@ class NetqreClient {
 	rpc::client c;
 };
 
+typedef std::future< RPCLIB_MSGPACK::object_handle > RpcHandle;
+
+class ExecConf
+{
+	public:
+	string code;
+	bool pos;
+	int index;
+};
+
+bool operator <(const ExecConf a, const ExecConf b)
+{
+	if (a.code.size() < b.code.size())
+		return true;
+	if (a.code.size() > b.code.size())
+		return false;
+	for (int i=0; i<a.code.size(); i++)
+	{
+		if (a.code[i] < b.code[i])
+			return true;
+		if (a.code[i] > b.code[i])
+			return false;
+	}
+	if (a.pos && !b.pos)
+		return true;
+	if (b.pos && !a.pos)
+		return false;
+	if (a.index < b.index)
+		return true;
+	if (b.index < a.index)
+		return false;
+	return false;
+}
+
+
 class NetqreClientManager {
 	public:
 
@@ -82,60 +121,110 @@ class NetqreClientManager {
 			throw string("Servers and ports don't match!\n");
 		for (int i=0; i<server_list.size(); i++)
 			clients.push_back(new NetqreClient(server_list[i], port_list[i]));
+		cache.clear();
 	}
 
 	/* distributed execution, with load balancing, collect answers in pos_ans and neg_ans */
 	/* examples should be already shared with servers */
 	void exec(string code, int pos_size, int neg_size, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
 	{
-		vector<std::future< RPCLIB_MSGPACK::object_handle > > pos_handle;
-		vector<std::future< RPCLIB_MSGPACK::object_handle > > neg_handle;
+		vector< RpcHandle > pos_handle;
+		vector< RpcHandle > neg_handle;
 		vector<int> pos_client;
 		vector<int> neg_client;
 
+		vector<ExecConf> pos_conf_list;
+		vector<ExecConf> neg_conf_list;
+
 		for (int i=0; i<pos_size; i++)
 		{
-			int min_count = clients[0]->get_buzy_threads();
-			int lazy_client = 0;
-			for (int j=1; j<clients.size(); j++)
+			ExecConf conf;
+			conf.code = code;
+			conf.pos = true;
+			conf.index = i;
+			pos_conf_list.push_back(conf);
+			cache_lock.lock();
+			if (cache.count(conf) > 0)
 			{
-				int tmp = clients[j]->get_buzy_threads();
-				if (tmp < min_count)
-				{
-					min_count = tmp;
-					lazy_client = j;
-				}
+				pos_handle.push_back(RpcHandle());
+				pos_client.push_back(-1);
+				cache_lock.unlock();
+				continue;
 			}
+			cache_lock.unlock();
+
+			int lazy_client = next_client;
+			lazy_client++;
+			if (lazy_client >= clients.size())
+				lazy_client = 0;
+			next_client = lazy_client;
 			pos_handle.push_back(clients[lazy_client]->exec(code, true, i));
 			pos_client.push_back(lazy_client);
 		}
 
 		for (int i=0; i<neg_size; i++)
 		{
-			int min_count = clients[0]->get_buzy_threads();
-			int lazy_client = 0;
-			for (int j=1; j<clients.size(); j++)
+			ExecConf conf;
+			conf.code = code;
+			conf.pos = false;
+			conf.index = i;
+			neg_conf_list.push_back(conf);
+			cache_lock.lock();
+			if (cache.count(conf) > 0)
 			{
-				int tmp = clients[j]->get_buzy_threads();
-				if (tmp < min_count)
-				{
-					min_count = tmp;
-					lazy_client = j;
-				}
+				neg_handle.push_back(RpcHandle());
+				neg_client.push_back(-1);
+				cache_lock.unlock();
+				continue;
 			}
+			cache_lock.unlock();
+
+			int lazy_client = next_client;
+			lazy_client++;
+			if (lazy_client >= clients.size())
+				lazy_client = 0;
+			next_client = lazy_client;
 			neg_handle.push_back(clients[lazy_client]->exec(code, false, i));
 			neg_client.push_back(lazy_client);
 		}
 
 		for (int i=0; i<pos_handle.size(); i++)
-			pos_ans.push_back(clients[ pos_client[i] ]->collect( pos_handle[i] ));
+			if (pos_client[i] != -1)
+			{
+				pos_ans.push_back(clients[ pos_client[i] ]->collect( pos_handle[i] ));
+				cache_lock.lock();
+				cache[pos_conf_list[i]] = copy_typed_data(IntValue, pos_ans.back());
+				cache_lock.unlock();
+			}
+			else
+			{
+				cache_lock.lock();
+				pos_ans.push_back(copy_typed_data(IntValue, cache[pos_conf_list[i]]));
+				cache_lock.unlock();
+			}
 
 		for (int i=0; i<neg_handle.size(); i++)
-			neg_ans.push_back(clients[ neg_client[i] ]->collect( neg_handle[i] ));
+			if (neg_client[i] != -1)
+			{
+				neg_ans.push_back(clients[ neg_client[i] ]->collect( neg_handle[i] ));
+				cache_lock.lock();
+				cache[neg_conf_list[i]] = copy_typed_data(IntValue, neg_ans.back());
+				cache_lock.unlock();
+			}
+			else
+			{
+				cache_lock.lock();
+				neg_ans.push_back(copy_typed_data(IntValue, cache[neg_conf_list[i]]));
+				cache_lock.unlock();
+			}
 
 	}
 
+	int next_client = 0;
 	vector<NetqreClient*> clients;
+
+	mutex cache_lock;
+	map< ExecConf, unique_ptr<IntValue> > cache;
 };
 
 }

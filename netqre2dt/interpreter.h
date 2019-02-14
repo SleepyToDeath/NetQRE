@@ -18,6 +18,8 @@ class Machine {
 	/* can run multiple times, auto reset each time */
 	std::unique_ptr<IntValue> process(TokenStream &feature_stream);
 
+	bool valid();
+
 	/* constant, won't change after construction */
 	std::vector< std::shared_ptr<QRELeaf> > qre_list;
 	std::shared_ptr<NumericalTree> num_tree;

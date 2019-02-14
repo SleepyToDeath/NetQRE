@@ -245,6 +245,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 							/* send accept checking tasks to workers */
 							thread_master->do_accept(simplified, examples);
 							helper_counter++;
+							counter++;
 						}
 						/* redundant but not repeating */
 						else if ((simplified != nullptr) && (visited.count(simplified) == 0))
@@ -276,7 +277,6 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						{
 							/* append to this_round */
 							this_round.push_back(candidate);
-							counter++;
 
 							/* if answer found */
 							if (candidate->is_complete())

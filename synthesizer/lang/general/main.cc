@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
 
 	auto name_pos = string(argv[2]); // example pos
 	auto name_neg = string(argv[3]); // example neg
-	int threshold;
-	std::cin>>threshold;
+	int threshold = 3;
+//	std::cin>>threshold;
 	auto examples = prepare_examples_from_pcap(name_pos, name_neg, threshold);
 
 	ifstream fin_g(argv[1]); // grammar

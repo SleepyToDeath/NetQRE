@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <map>
 #include <utility>
+#include <set>
 
 #include <iostream>
 using std::cout;
@@ -17,6 +18,7 @@ using std::move;
 using std::map;
 using std::for_each;
 using std::pair;
+using std::set;
 
 namespace Netqre {
 
@@ -44,6 +46,48 @@ std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
 
 	/* compute final result of num tree */
 	return num_tree->eval();
+}
+
+bool check_predicate(int &last_feature, shared_ptr<NetqreAST> pred)
+{
+	if (pred->type == NetqreExpType::PREDICATE)
+	{
+		auto l = pred->subtree[0];
+		int index = l->value;
+		if (index <= last_feature)
+			return false;
+		last_feature = index;
+	}
+	else
+	{
+		for (int i=0; i<pred->subtree.size(); i++)
+			if (!check_predicate(last_feature, pred->subtree[i]))
+				return false;
+	}
+	return true;
+}
+	
+bool Machine::valid()
+{
+	for (int i=0; i<qre_list.size(); i++)
+	{
+		auto cur = qre_list[i];
+		set<StreamFieldType> features;
+		for (int j=0; j<cur->agg_stack.size(); j++)
+			for (int k=0; k<cur->agg_stack[j].param.size(); k++)
+				if (features.count(cur->agg_stack[j].param[k])>0)
+					return false;
+				else
+					features.insert(cur->agg_stack[j].param[k]);
+	}
+
+	for (int i=0; i<predicates.size(); i++)
+	{
+		int last_feat = -1;
+		if (!check_predicate(last_feat, predicates[i]))
+			return false;
+	}
+	return true;
 }
 
 void Machine::reset() {

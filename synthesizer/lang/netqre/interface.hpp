@@ -11,6 +11,8 @@
 #include <fstream>
 #include <map>
 #include <vector>
+#include <utility>
+
 
 using std::min;
 using std::max;
@@ -19,6 +21,7 @@ using std::map;
 using std::vector;
 using std::max;
 using std::string;
+using std::pair;
 
 class NetqreExample: public GeneralExample {
 	public:
@@ -34,10 +37,24 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) {
 		auto e = std::static_pointer_cast<NetqreExample>(input);
-//		auto ast = parser.parse(code.pos);
-//		auto m = interpreter.interpret(ast);
+
+		std::pair< std::string, shared_ptr<NetqreExample> > key;
+		key.first = code.pos;
+		key.second = e;
+//		if (cache.count(key) > 0)
+//			return cache[key];
+
+		auto ast = parser.parse(code.pos);
+		auto m = interpreter.interpret(ast);
 		GeneralMatchingResult res;
 
+		if (!m->valid())
+		{
+			res.accept = false;
+			res.utility_rate = 1.0;
+//			cache[key] = res;
+			return res;
+		}
 
 		StreamFieldType pos_min_upper = -1;
 		StreamFieldType pos_min_lower = -1;
@@ -58,6 +75,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			{
 				res.accept = false;
 				res.utility_rate = 1.0;
+//				cache[key] = res;
 				return res;
 			}
 			if (i==0)
@@ -82,6 +100,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			{
 				res.accept = false;
 				res.utility_rate = 1.0;
+//				cache[key] = res;
 				return res;
 			}
 			if (i==0)
@@ -117,16 +136,19 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 							);
 			if (res.accept)
 			{
+				/*
 				cout<<"Answer found:"<<code.pos<<endl<<" Threshold range:"<<neg_max_upper<<" ~ "<<pos_min_lower<<endl;
 				for (int i=0; i<ans_pos.size(); i++)
 					cout<<"Positive output#"<<i<<": "<<ans_pos[i]->lower<<"~"<<ans_pos[i]->upper<<endl;
 				for (int i=0; i<ans_neg.size(); i++)
 					cout<<"Negative output#"<<i<<": "<<ans_neg[i]->lower<<"~"<<ans_neg[i]->upper<<endl;
+					*/
 			}
 		}
 
 		res.utility_rate = 1.0;
 
+//		cache[key] = res;
 		return res;
 	}
 
@@ -192,6 +214,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	Netqre::Interpreter interpreter;
 	Netqre::NetqreParser parser;
 	Netqre::NetqreClientManager* manager;
+//	std::map< pair<std::string, shared_ptr<NetqreExample> >, GeneralMatchingResult > cache;
 };
 
 shared_ptr<NetqreExample> prepare_examples(ifstream& fin) {

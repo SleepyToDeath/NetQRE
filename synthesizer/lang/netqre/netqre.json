@@ -33,7 +33,6 @@
 		] },
 		{ "#re": [
 			[ "#re", "#re" ],
-			[ "$*(", "#re", "$)" ],
 			[ "_" ],
 			[ "#predicate_set" ]
 		]},
@@ -69,7 +68,6 @@
 		{ "#predicate_set &&([ #predicate_entry 1 = \\r2@1 ],[ #predicate_entry 1 = \\r2@2 ])" : "#re _" },
 		{ "#re #re #re@1 #re@2 #re@3" : "#re _" },
 		{ "#qre_ps split( #qre_ps split( #qre_ps@1, #qre_ps@2, #agg_op@3 ), #qre_ps@4, #agg_op@4)" : "#re _" },
-		{ "#re *( #re *( #re@1 ) )" : "#re _" },
 		{ "#qre_ps iter( #qre_ps iter( #qre_ps@1, #agg_op@2 ) ,  #agg_op@3 )" : "#re _" }
 	] }
 ]
