@@ -25,6 +25,13 @@ class GeneralMatchingResult {
 	double utility_rate;
 };
 
+class GeneralTestResult {
+	public:
+	double pos_accuracy;
+	double neg_accuracy;
+};
+
+
 class AbstractCode {
 	public:
 	AbstractCode(std::string _pos, std::string _neg):pos(_pos),neg(_neg),completable(true){}
@@ -39,6 +46,8 @@ class GeneralInterpreter {
 	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
+	virtual GeneralTestResult test(string code, shared_ptr<GeneralExample> input) 
+		{ GeneralTestResult res; res.pos_accuracy = 0; res.neg_accuracy = 0; return res; }
 };
 
 class GeneralExample: public IEExample {
@@ -464,9 +473,10 @@ class GeneralSyntaxTree : public IESyntaxTree {
 	public:
 
 	shared_ptr<GeneralProgram> program = nullptr;
+	int prune_count;
 
-	GeneralSyntaxTree(shared_ptr<SyntaxTree> src):	IESyntaxTree(src) {}
-	GeneralSyntaxTree(shared_ptr<SyntaxTreeNode> root, int depth): IESyntaxTree(root, depth) {}
+	GeneralSyntaxTree(shared_ptr<SyntaxTree> src):	IESyntaxTree(src) { prune_count = static_pointer_cast<GeneralSyntaxTree>(src)->prune_count;}
+	GeneralSyntaxTree(shared_ptr<SyntaxTreeNode> root, int depth, int prune_count): IESyntaxTree(root, depth) { this->prune_count = prune_count;}
 	shared_ptr<IEProgram> to_program() {
 		if (program == nullptr)
 			program = shared_ptr<GeneralProgram>(new GeneralProgram(to_code(), is_complete()));
@@ -491,6 +501,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					complexity = 500.0;
 				if (root->get_type()->name == "#re")
 					complexity = 200.0;
+				complexity -= prune_count * 200;
 			}
 			else
 			{
@@ -504,13 +515,16 @@ class GeneralSyntaxTree : public IESyntaxTree {
 				else
 					*/
 					complexity += (subtree.size()-1) * 150.0;
+					complexity -= prune_count * 100;
 //				complexity -= 20.0;
 				// [!] don't do this other than for experiment
 				if (root->get_type()->name == "#qre_vs")
 					complexity += 600.0;
 
+				if (root->get_type()->name == "#predicate_set" && subtree.size() == 1)
+					complexity += 600;
 				if (root->get_type()->name == "#predicate_set" && subtree.size() == 2)
-					complexity -= 600.0;
+					complexity -= 1200;
 			}
 			if (depth == 0)
 			{
@@ -610,6 +624,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 
 	void prune(int prune_depth)
 	{
+		prune_count = 1;
 		if (get_depth() <= prune_depth)
 			return;
 		for (int i=0; i<subtree.size(); i++)
@@ -691,12 +706,12 @@ class GeneralSyntaxTreeFactory : public SyntaxTreeFactory {
 
 	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root, int depth) 
 	{
-		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root, depth));
+		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root, depth, 0));
 	}
 
 	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTreeNode> root) 
 	{
-		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root, 0));
+		return shared_ptr<GeneralSyntaxTree>(new GeneralSyntaxTree(root, 0, 0));
 	}
 
 	shared_ptr<SyntaxTree> get_new( shared_ptr<SyntaxTree> src) 

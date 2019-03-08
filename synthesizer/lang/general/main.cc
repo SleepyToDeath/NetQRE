@@ -25,6 +25,7 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = unique_ptr<Gen
 /*========== netqre implementation =============*/
 #include "../netqre/interface.hpp"
 std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter; 
+int MergeSearch::force_search_factor;
 /*=============================================*/
 
 /*
@@ -43,7 +44,10 @@ int main(int argc, char *argv[]) {
 	auto name_neg = string(argv[3]); // example neg
 	int threshold = 3;
 //	std::cin>>threshold;
-	auto examples = prepare_examples_from_pcap(name_pos, name_neg, threshold);
+	auto examples = prepare_training_set_from_pcap(name_pos, name_neg, threshold);
+	auto test_set = prepare_test_set_from_pcap(name_pos, name_neg, threshold);
+	test_set->pos_offset = examples->positive_token.size();
+	test_set->neg_offset = examples->negative_token.size();
 
 	ifstream fin_g(argv[1]); // grammar
 //	ifstream fin_e(argv[2]); // example
@@ -113,6 +117,7 @@ int main(int argc, char *argv[]) {
 		fin_e>>tmp;
 		examples->negative.push_back(tmp);
 	}
+
 	fin_e.close();
 	*/
 
@@ -123,6 +128,7 @@ int main(int argc, char *argv[]) {
 	fin_c>>answer_count;
 	fin_c>>threads;
 	fin_c>>minimal_example_size;
+	fin_c>>MergeSearch::force_search_factor;
 
 	/* prepare */
 	parser->generate_input_dependent_syntax(examples);
@@ -137,5 +143,13 @@ int main(int argc, char *argv[]) {
 	if (answer.size() == 0)
 		cout<<"Not found!"<<endl;
 	for (int i=0; i<answer.size(); i++)
+	{
 		cout<<answer[i]->to_program()->accept(examples)<<endl;
+		test_set->threshold = examples->threshold;
+		test_set->indistinguishable_is_negative = examples->indistinguishable_is_negative;
+		auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), test_set);
+		cout<<"Positive accuracy: "<<res.pos_accuracy<<endl;
+		cout<<"Negative accuracy: "<<res.neg_accuracy<<endl;
+		cout<<endl;
+	}
 }

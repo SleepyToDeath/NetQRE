@@ -11,7 +11,8 @@ Netqre::NetqreParser parser;
 
 int main(int argc, char *argv[]) {
 	rpc::server srv(std::stoi(argv[3], nullptr));
-	auto e = prepare_examples_from_pcap(string(argv[1]), string(argv[2]),3);
+	auto e_train = prepare_training_set_from_pcap(string(argv[1]), string(argv[2]),3);
+	auto e_test = prepare_test_set_from_pcap(string(argv[1]), string(argv[2]),3);
 
 	srv.bind(Netqre::SERVICE_NAME, [&](std::string code, bool example_positive, int example_index) {
 //		cout<<"Request received\n";
@@ -20,13 +21,29 @@ int main(int argc, char *argv[]) {
 		unique_ptr<Netqre::IntValue> ans;
 		if (example_positive)
 		{
-			auto s = e->positive_token[example_index];
-			ans = m->process(s);
+			if (example_index < e_train->positive_token.size())
+			{
+				auto s = e_train->positive_token[example_index];
+				ans = m->process(s);
+			}
+			else
+			{
+				auto s = e_test->positive_token[example_index - e_train->positive_token.size()];
+				ans = m->process(s);
+			}
 		}
 		else
 		{
-			auto s = e->negative_token[example_index];
-			ans = m->process(s);
+			if (example_index < e_train->negative_token.size())
+			{
+				auto s = e_train->negative_token[example_index];
+				ans = m->process(s);
+			}
+			else
+			{
+				auto s = e_test->negative_token[example_index - e_train->negative_token.size()];
+				ans = m->process(s);
+			}
 		}
 
 		Netqre::IntValueMsg ret;

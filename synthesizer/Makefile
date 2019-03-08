@@ -19,6 +19,14 @@ test-pwd:
 test-netqre:
 	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
+testall:
+	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt > testbed/log1 &
+	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt > testbed/log2 &
+	cd ./testbed; /bin/bash ./check_result.sh 2
+
+kill:
+	killall synthesizer
+
 test-netqre-debug:
 	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 

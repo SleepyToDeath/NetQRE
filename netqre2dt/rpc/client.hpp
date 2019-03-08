@@ -126,7 +126,7 @@ class NetqreClientManager {
 
 	/* distributed execution, with load balancing, collect answers in pos_ans and neg_ans */
 	/* examples should be already shared with servers */
-	void exec(string code, int pos_size, int neg_size, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
+	void exec(string code, int pos_offset, int pos_size, int neg_offset, int neg_size, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
 	{
 		vector< RpcHandle > pos_handle;
 		vector< RpcHandle > neg_handle;
@@ -136,7 +136,7 @@ class NetqreClientManager {
 		vector<ExecConf> pos_conf_list;
 		vector<ExecConf> neg_conf_list;
 
-		for (int i=0; i<pos_size; i++)
+		for (int i=pos_offset; i<pos_offset+pos_size; i++)
 		{
 			ExecConf conf;
 			conf.code = code;
@@ -162,7 +162,7 @@ class NetqreClientManager {
 			pos_client.push_back(lazy_client);
 		}
 
-		for (int i=0; i<neg_size; i++)
+		for (int i=neg_offset; i<neg_offset+neg_size; i++)
 		{
 			ExecConf conf;
 			conf.code = code;

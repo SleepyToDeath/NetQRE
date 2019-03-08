@@ -25,8 +25,13 @@ using std::pair;
 
 class NetqreExample: public GeneralExample {
 	public:
+	int pos_offset = 0;
+	int neg_offset = 0;
 	vector<TokenStream> positive_token;
 	vector<TokenStream> negative_token;
+
+	double threshold = 0;
+	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
 };
 
 class NetqreInterpreterInterface: public GeneralInterpreter {
@@ -35,7 +40,56 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		manager = new Netqre::NetqreClientManager(servers, ports);
 	}
 
-	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) {
+	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
+		auto e = std::static_pointer_cast<NetqreExample>(input);
+		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
+		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
+		GeneralTestResult res;
+		int pos_counter = 0;
+		int neg_counter = 0;
+
+		manager->exec(code, e->pos_offset, e->positive_token.size(), e->neg_offset, e->negative_token.size(), ans_pos, ans_neg);
+
+		for (int i=0; i<ans_pos.size(); i++)
+		{
+			unique_ptr<Netqre::IntValue>& ans = ans_pos[i];
+			if (e->indistinguishable_is_negative)
+			{
+				if (ans->upper > e->threshold && ans->lower >= e->threshold)
+					pos_counter ++;
+			}
+			else
+			{
+				if (ans->upper >= e->threshold && ans->lower >= e->threshold)
+					pos_counter ++;
+			}
+		}
+
+		for (int i=0; i<ans_neg.size(); i++)
+		{
+			unique_ptr<Netqre::IntValue>& ans = ans_neg[i];
+			if (e->indistinguishable_is_negative)
+			{
+				if (ans->upper <= e->threshold && ans->lower <= e->threshold)
+					neg_counter ++;
+			}
+			else
+			{
+				if (ans->upper <= e->threshold && ans->lower < e->threshold)
+					neg_counter ++;
+			}
+		}
+
+		cout<<"Threshold: "<<e->threshold<<endl;
+		cout<<"accurate predictions:"<<pos_counter<<" "<<neg_counter<<endl;
+		res.pos_accuracy = (double)pos_counter / (double)ans_pos.size();
+		res.neg_accuracy = (double)neg_counter / (double)ans_neg.size();
+
+		return res;
+	}
+
+
+	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg ) {
 		auto e = std::static_pointer_cast<NetqreExample>(input);
 
 		std::pair< std::string, shared_ptr<NetqreExample> > key;
@@ -64,7 +118,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
 
-		manager->exec(code.pos, e->positive_token.size(), e->negative_token.size(), ans_pos, ans_neg);
+		manager->exec(code.pos, e->pos_offset, e->positive_token.size(), e->neg_offset, e->negative_token.size(), ans_pos, ans_neg);
 
 		for (int i=0; i<e->positive_token.size(); i++)
 		{
@@ -119,7 +173,6 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		if (!complete)
 		{
 			res.accept = neg_max_lower < pos_min_upper;
-//			cout<<"[output]:"<<neg_max_lower<<" ~ "<<neg_max_upper<<"     ~     "<<pos_min_lower<<" ~ "<<pos_min_upper<<endl;
 		}
 		else
 		{
@@ -136,8 +189,17 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 							);
 			if (res.accept)
 			{
-				/*
+				e->threshold = pos_min_lower;
+				if (pos_min_lower != pos_min_upper)
+					e->indistinguishable_is_negative = true;
+				else
+					e->indistinguishable_is_negative = false;
+			}
+			if (res.accept && e->negative_token.size()>400)
+			{
 				cout<<"Answer found:"<<code.pos<<endl<<" Threshold range:"<<neg_max_upper<<" ~ "<<pos_min_lower<<endl;
+				cout<<"[output]:"<<neg_max_lower<<" ~ "<<neg_max_upper<<"     ~     "<<pos_min_lower<<" ~ "<<pos_min_upper<<endl;
+				/*
 				for (int i=0; i<ans_pos.size(); i++)
 					cout<<"Positive output#"<<i<<": "<<ans_pos[i]->lower<<"~"<<ans_pos[i]->upper<<endl;
 				for (int i=0; i<ans_neg.size(); i++)
@@ -165,11 +227,14 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			vector<string> ans;
 			for(int i=0; i<e->positive_token[0][0].size(); i++)
 			{
-				stringstream ss;
-				string tmp;
-				ss<<i;
-				ss>>tmp;
-				ans.push_back(tmp);
+				if (e->positive_token[0][0][i].iterative)
+				{
+					stringstream ss;
+					string tmp;
+					ss<<i;
+					ss>>tmp;
+					ans.push_back(tmp);
+				}
 			}
 			return ans;
 		}
@@ -210,6 +275,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 		return ans;
 	}
+
+	
 
 	Netqre::Interpreter interpreter;
 	Netqre::NetqreParser parser;
@@ -327,20 +394,21 @@ shared_ptr<NetqreExample> prepare_examples_old() {
 	return ans;
 }
 
-shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, string negative_file_name, int threshold) {
+shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, string negative_file_name, int threshold) {
 	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
 	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
 
 	{
 		auto raw_stream = the_tcp_ip_parser->parse_pcap(negative_file_name, true);
 		map<vector<int>, TokenStream > flows;
-		for (int i=0; i<raw_stream->size(); i++)
+		for (int i=raw_stream->size()/2; i<raw_stream->size(); i++)
 		{
 			vector<int> tuple;
 			tuple.push_back((*raw_stream)[i][0].value);
 			tuple.push_back((*raw_stream)[i][1].value);
 			tuple.push_back((*raw_stream)[i][2].value);
 			tuple.push_back((*raw_stream)[i][3].value);
+			tuple.push_back(i / 100000);
 
 			if ((tuple[0] > tuple[1]) || (tuple[0] == tuple[1] && tuple[2]>tuple[3]))
 			{
@@ -355,6 +423,17 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 			FeatureVector cur;
 			cur.push_back((*raw_stream)[i][4]);
 			cur.push_back((*raw_stream)[i][5]);
+			cur.push_back(FeatureSlot(1, true, tuple[0]));
+			cur.push_back(FeatureSlot(1, true, tuple[1]));
+			cur.push_back(FeatureSlot(1, true, tuple[2]));
+			cur.push_back(FeatureSlot(1, true, tuple[3]));
+
+			cur.push_back((*raw_stream)[i][6]);
+			cur.push_back((*raw_stream)[i][7]);
+			cur.push_back((*raw_stream)[i][8]);
+			cur.push_back((*raw_stream)[i][9]);
+			cur.push_back((*raw_stream)[i][10]);
+			cur.push_back((*raw_stream)[i][11]);
 
 			flows[tuple].push_back(cur);
 		}
@@ -396,10 +475,10 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 
 			}
 			if (!valid)
-				examples->negative_token.push_back(flow);
+				examples->positive_token.push_back(flow);
 		}
 
-		cout<<"["<<examples->negative_token.size()<<"] negative flows left\n";
+		cout<<"["<<examples->positive_token.size()<<"] ill-formed flows left\n";
 
 	}
 
@@ -407,7 +486,7 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 	{
 		auto raw_stream = the_tcp_ip_parser->parse_pcap(positive_file_name, false);
 		map<vector<int>, TokenStream > flows;
-		for (int i=0; i<raw_stream->size(); i++)
+		for (int i=raw_stream->size()/2; i<raw_stream->size(); i++)
 		{
 			vector<int> tuple;
 			tuple.push_back((*raw_stream)[i][0].value);
@@ -428,6 +507,17 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 			FeatureVector cur;
 			cur.push_back((*raw_stream)[i][4]);
 			cur.push_back((*raw_stream)[i][5]);
+			cur.push_back(FeatureSlot(1, true, tuple[0]));
+			cur.push_back(FeatureSlot(1, true, tuple[1]));
+			cur.push_back(FeatureSlot(1, true, tuple[2]));
+			cur.push_back(FeatureSlot(1, true, tuple[3]));
+
+			cur.push_back((*raw_stream)[i][6]);
+			cur.push_back((*raw_stream)[i][7]);
+			cur.push_back((*raw_stream)[i][8]);
+			cur.push_back((*raw_stream)[i][9]);
+			cur.push_back((*raw_stream)[i][10]);
+			cur.push_back((*raw_stream)[i][11]);
 
 			flows[tuple].push_back(cur);
 		}
@@ -475,10 +565,200 @@ shared_ptr<NetqreExample> prepare_examples_from_pcap(string positive_file_name, 
 					step = 0;
 			}
 			if (valid)
+				examples->negative_token.push_back(flow);
+		}
+
+		cout<<"["<<examples->negative_token.size()<<"] normal flows left\n";
+
+	}
+
+/*
+	for (int i=0; i<examples->negative_token.size(); i++)
+	{
+		for (int j=0; j<examples->negative_token[i].size(); j++)
+			cout<<examples->negative_token[i][j][0].value<<examples->negative_token[i][j][1].value<<"-";
+		cout<<endl;
+	}
+	*/
+
+	return examples;
+}
+
+shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_name, string negative_file_name, int threshold) {
+	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
+	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
+
+	{
+		auto raw_stream = the_tcp_ip_parser->parse_pcap(negative_file_name, true);
+		map<vector<int>, TokenStream > flows;
+		for (int i=0; i<raw_stream->size()/2; i++)
+		{
+			vector<int> tuple;
+			tuple.push_back((*raw_stream)[i][0].value);
+			tuple.push_back((*raw_stream)[i][1].value);
+			tuple.push_back((*raw_stream)[i][2].value);
+			tuple.push_back((*raw_stream)[i][3].value);
+			tuple.push_back(i / 100000);
+
+			if ((tuple[0] > tuple[1]) || (tuple[0] == tuple[1] && tuple[2]>tuple[3]))
+			{
+				int tmp = tuple[0];
+				tuple[0] = tuple[1];
+				tuple[1] = tmp;
+				tmp = tuple[2];
+				tuple[2] = tuple[3];
+				tuple[3] = tmp;
+			}
+
+			FeatureVector cur;
+			cur.push_back((*raw_stream)[i][4]);
+			cur.push_back((*raw_stream)[i][5]);
+			cur.push_back(FeatureSlot(1, true, tuple[0]));
+			cur.push_back(FeatureSlot(1, true, tuple[1]));
+			cur.push_back(FeatureSlot(1, true, tuple[2]));
+			cur.push_back(FeatureSlot(1, true, tuple[3]));
+
+			cur.push_back((*raw_stream)[i][6]);
+			cur.push_back((*raw_stream)[i][7]);
+			cur.push_back((*raw_stream)[i][8]);
+			cur.push_back((*raw_stream)[i][9]);
+			cur.push_back((*raw_stream)[i][10]);
+			cur.push_back((*raw_stream)[i][11]);
+
+			flows[tuple].push_back(cur);
+		}
+
+		size_t maximum = 0;
+		size_t count = 0; 
+		vector<TokenStream> raw_negative;
+		for_each(flows.begin(), flows.end(), [&](std::pair<vector<int>, TokenStream> cur) {
+			if (cur.second.size()>threshold)
+			{
+				raw_negative.push_back(cur.second);
+				count ++;
+				maximum = max(maximum, cur.second.size());
+			}
+		});
+		cout<<"Totally ["<<count<<"] flows longer than threshold. Maximum length is ["<<maximum<<"].\n";
+
+		
+		for (int i=0; i<raw_negative.size(); i++)
+		{
+			TokenStream& flow = raw_negative[i];
+			FeatureVector pkt;
+			bool valid = false;
+			int step = 0;
+			for (int j=0; j<flow.size(); j++)
+			{
+				pkt = flow[j];
+				if (pkt[0].value == 1 && pkt[1].value == 0)
+					step = 1;
+				else if (step == 1 && pkt[0].value == 1 && pkt[1].value == 1)
+					step++;
+				else if (step == 2 && pkt[0].value == 0 && pkt[1].value == 1)
+				{
+					valid = true;
+					break;
+				}
+				else
+					step = 0;
+
+			}
+			if (!valid)
 				examples->positive_token.push_back(flow);
 		}
 
-		cout<<"["<<examples->positive_token.size()<<"] positive flows left\n";
+		cout<<"["<<examples->positive_token.size()<<"] ill-formed flows left\n";
+
+	}
+
+
+	{
+		auto raw_stream = the_tcp_ip_parser->parse_pcap(positive_file_name, false);
+		map<vector<int>, TokenStream > flows;
+		for (int i=0; i<raw_stream->size()/2; i++)
+		{
+			vector<int> tuple;
+			tuple.push_back((*raw_stream)[i][0].value);
+			tuple.push_back((*raw_stream)[i][1].value);
+			tuple.push_back((*raw_stream)[i][2].value);
+			tuple.push_back((*raw_stream)[i][3].value);
+
+			if ((tuple[0] > tuple[1]) || (tuple[0] == tuple[1] && tuple[2]>tuple[3]))
+			{
+				int tmp = tuple[0];
+				tuple[0] = tuple[1];
+				tuple[1] = tmp;
+				tmp = tuple[2];
+				tuple[2] = tuple[3];
+				tuple[3] = tmp;
+			}
+
+			FeatureVector cur;
+			cur.push_back((*raw_stream)[i][4]);
+			cur.push_back((*raw_stream)[i][5]);
+			cur.push_back(FeatureSlot(1, true, tuple[0]));
+			cur.push_back(FeatureSlot(1, true, tuple[1]));
+			cur.push_back(FeatureSlot(1, true, tuple[2]));
+			cur.push_back(FeatureSlot(1, true, tuple[3]));
+
+			cur.push_back((*raw_stream)[i][6]);
+			cur.push_back((*raw_stream)[i][7]);
+			cur.push_back((*raw_stream)[i][8]);
+			cur.push_back((*raw_stream)[i][9]);
+			cur.push_back((*raw_stream)[i][10]);
+			cur.push_back((*raw_stream)[i][11]);
+
+			flows[tuple].push_back(cur);
+		}
+
+		size_t maximum = 0;
+		size_t count = 0; 
+		vector<TokenStream> raw_positive;
+		for_each(flows.begin(), flows.end(), [&](std::pair<vector<int>, TokenStream> cur) {
+			if (cur.second.size()>threshold)
+			{
+				raw_positive.push_back(cur.second);
+				count ++;
+				maximum = max(maximum, cur.second.size());
+			}
+		});
+		cout<<"Totally ["<<count<<"] flows longer than threshold. Maximum length is ["<<maximum<<"].\n";
+
+		
+		for (int i=0; i<raw_positive.size(); i++)
+		{
+			TokenStream& flow = raw_positive[i];
+			FeatureVector pkt;
+			bool valid = false;
+			int step = 0;
+			for (int j=0; j<flow.size(); j++)
+			{
+				pkt = flow[j];
+				if (pkt[0].value == 1 && pkt[1].value == 0)
+				{
+					step = 1;
+//					cout<<"step1\n";
+				}
+				else if (step == 1 && pkt[0].value == 1 && pkt[1].value == 1)
+				{
+					step++;
+//					cout<<"step2\n";
+				}
+				else if (step == 2 && pkt[0].value == 0 && pkt[1].value == 1)
+				{
+//					cout<<"step3\n";
+					valid = true;
+					break;
+				}
+				else
+					step = 0;
+			}
+			if (valid)
+				examples->negative_token.push_back(flow);
+		}
+
+		cout<<"["<<examples->negative_token.size()<<"] normal flows left\n";
 
 	}
 

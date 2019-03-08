@@ -15,11 +15,11 @@
 		] },
 		{ "#qre_vs": [
 			[ "#agg_op","$(", "#qre_vs", "$,", "#feature_set", "$)" ],
+			[ "$split(","#qre_ps",", /*(_)/?1, sum)" ],
 			[ "$split( split(/*(_)/?1,","#qre_ps",",sum), /*(_)/?1, sum)" ]
 		] },
 		{ "#agg_op": [
 			[ "max" ],
-			[ "min" ],
 			[ "sum" ]
 		] },
 		{ "#feature_set": [
@@ -41,6 +41,8 @@
 			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
 			[ "$[", "#predicate_entry", "$]" ]		] },
 		{ "#predicate_entry": [
+			[ "7", "$=", "\\r8" ],
+			[ "8", "$=", "\\r9" ],
 			[ "0", "$=", "\\r1" ],
 			[ "1", "$=", "\\r2" ]
 		] }

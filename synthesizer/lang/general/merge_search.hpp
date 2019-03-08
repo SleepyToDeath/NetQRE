@@ -30,10 +30,14 @@ class MergeSearch
 		this->starting_symbol = starting_symbol;
 		this->rp = rp;
 		this->top_example = e;
+		e->pos_offset = 0;
+		e->neg_offset = 0;
 		vector<shared_ptr<GeneralSyntaxTree> > global_pool;
 		collect_tree(e);
 		return search_by_layer(global_pool);
 	}
+
+	static int force_search_factor;
 
 	private:
 	
@@ -60,26 +64,34 @@ class MergeSearch
 
 			if (e->positive_token.size() <= minimal_example_size)
 			{
+				e_left->pos_offset = e->pos_offset;
 				e_left->positive_token = e->positive_token;
+				e_right->pos_offset = e->pos_offset;
 				e_right->positive_token = e->positive_token;
 			}
 			else
 			{
+				e_left->pos_offset = e->pos_offset;
 				for (int i=0; i< e->positive_token.size()/2; i++)
 					e_left->positive_token.push_back(e->positive_token[i]);
+				e_right->pos_offset = e->pos_offset + e_left->positive_token.size();
 				for (int i=e->positive_token.size()/2; i< e->positive_token.size(); i++)
 					e_right->positive_token.push_back(e->positive_token[i]);
 			}
 
 			if (e->negative_token.size() <= minimal_example_size)
 			{
+				e_left->neg_offset = e->neg_offset;
 				e_left->negative_token = e->negative_token;
+				e_left->neg_offset = e->neg_offset;
 				e_right->negative_token = e->negative_token;
 			}
 			else
 			{
+				e_left->neg_offset = e->neg_offset;
 				for (int i=0; i< e->negative_token.size()/2; i++)
 					e_left->negative_token.push_back(e->negative_token[i]);
+				e_right->neg_offset = e->neg_offset + e_left->negative_token.size();
 				for (int i=e->negative_token.size()/2; i< e->negative_token.size(); i++)
 					e_right->negative_token.push_back(e->negative_token[i]);
 			}
@@ -105,6 +117,7 @@ class MergeSearch
 		{
 			for (int i=0; i<e_tree.size(); i++)
 			{
+				cout<<"Size of global pool: "<<global_pool.size()<<endl;
 				for (int j=0; j<e_tree[i].size(); j++)
 				{	
 					int local_answer_count = answer_count * (e_tree.size()-i) / e_tree.size();
@@ -113,6 +126,7 @@ class MergeSearch
 					real_search_single(e_tree[i][j], local_answer_count, global_pool);
 				}
 
+				cout<<"Size of global pool: "<<global_pool.size()<<endl;
 				vector<shared_ptr<GeneralSyntaxTree> > tmp;
 				for (int k=0; k<global_pool.size(); k++)
 				{
@@ -124,6 +138,7 @@ class MergeSearch
 						tmp.push_back(global_pool[k]);
 				}
 				global_pool = tmp;
+				cout<<"Size of global pool: "<<global_pool.size()<<endl;
 			}
 		}
 		catch (std::vector<shared_ptr<GeneralSyntaxTree> > _ans)
@@ -147,7 +162,7 @@ class MergeSearch
 				ans_wrong.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(global_pool[i])));
 	
 		if (ans.size() >= local_answer_count)
-			if (std::experimental::randint(0,local_answer_count) == local_answer_count/2)
+			if (std::experimental::randint(0,local_answer_count*force_search_factor) == local_answer_count/2)
 				local_answer_count = ans.size() + 1;
 
 		if (ans.size() < local_answer_count)
@@ -159,7 +174,7 @@ class MergeSearch
 			for (int i=0; i<ans_wrong.size(); i++)
 			{
 				eliminate.insert(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans_wrong[i])));
-				for (int j=3; j<=6; j++)
+				for (int j=3; j<=7; j++)
 				{
 					seed.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans_wrong[i])));
 					static_pointer_cast<GeneralSyntaxTree>(seed.back())->prune(j);
@@ -194,6 +209,7 @@ class MergeSearch
 						cout<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 						cout<<"Size of global pool: "<<global_pool.size()<<endl;
 						cout<<"Total programs searched: "<<total_programs_searched<<endl;
+						cout<<global_pool.back()->to_string()<<endl;;
 						throw vector<shared_ptr<GeneralSyntaxTree> >(1, global_pool.back());
 					}
 				}
@@ -203,6 +219,20 @@ class MergeSearch
 		cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 		return ans;
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================= Old Version Below ====================================================== */
 
 	std::vector<shared_ptr<GeneralSyntaxTree> > real_search(shared_ptr<NetqreExample> e, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{

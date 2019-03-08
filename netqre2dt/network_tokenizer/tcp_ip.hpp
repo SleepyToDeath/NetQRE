@@ -74,18 +74,18 @@ class TcpIpParser {
 
 		/* extract feature */
 		FeatureVector fv;
-		FeatureSlot src_ip(32, true, ip_hdr->ip_src.s_addr);
-		FeatureSlot dst_ip(32, true, ip_hdr->ip_dst.s_addr);
+		FeatureSlot src_ip(32, true, ip_hdr->ip_src.s_addr); // 0
+		FeatureSlot dst_ip(32, true, ip_hdr->ip_dst.s_addr); // 1
 
 		fv.push_back(src_ip);
 		fv.push_back(dst_ip);
 
 		if (tcp_hdr!=NULL)
 		{
-			FeatureSlot src_port(1, true, tcp_hdr->th_sport);
-			FeatureSlot dst_port(1, true, tcp_hdr->th_dport);
-			FeatureSlot syn_flag(1, false, tcp_hdr->syn);
-			FeatureSlot ack_flag(1, false, tcp_hdr->ack);
+			FeatureSlot src_port(1, true, tcp_hdr->th_sport); // 2
+			FeatureSlot dst_port(1, true, tcp_hdr->th_dport); // 3
+			FeatureSlot syn_flag(1, false, tcp_hdr->syn); // 4
+			FeatureSlot ack_flag(1, false, tcp_hdr->ack); // 5
 			fv.push_back(src_port);
 			fv.push_back(dst_port);
 			fv.push_back(syn_flag);
@@ -102,6 +102,20 @@ class TcpIpParser {
 			fv.push_back(syn_flag);
 			fv.push_back(ack_flag);
 		}
+
+		FeatureSlot ttl(32, true, ip_hdr->ip_ttl); // 6
+		FeatureSlot proto(32, false, ip_hdr->ip_p); // 7
+		FeatureSlot tos(32, false, ip_hdr->ip_tos); // 8
+		FeatureSlot id(32, true, ip_hdr->ip_id); // 9
+		FeatureSlot len(32, true, ip_hdr->ip_len); // 10
+		FeatureSlot offset(32, true, ip_hdr->ip_off); // 11
+		
+		fv.push_back(ttl);
+		fv.push_back(proto);
+		fv.push_back(tos);
+		fv.push_back(id);
+		fv.push_back(len);
+		fv.push_back(offset);
 
 		stream->push_back(fv);
 	}

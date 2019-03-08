@@ -72,13 +72,16 @@ bool Machine::valid()
 	for (int i=0; i<qre_list.size(); i++)
 	{
 		auto cur = qre_list[i];
-		set<StreamFieldType> features;
+		int last_feat = -1;
 		for (int j=0; j<cur->agg_stack.size(); j++)
 			for (int k=0; k<cur->agg_stack[j].param.size(); k++)
-				if (features.count(cur->agg_stack[j].param[k])>0)
+			{
+				int cur_feat = cur->agg_stack[j].param[k];
+				if (cur_feat <= last_feat)
 					return false;
 				else
-					features.insert(cur->agg_stack[j].param[k]);
+					last_feat = cur_feat;
+			}
 	}
 
 	for (int i=0; i<predicates.size(); i++)
