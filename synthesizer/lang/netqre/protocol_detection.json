@@ -1,0 +1,47 @@
+
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "#filter","#qre_top","#threshold" ]
+		] },
+		{ "#filter": [
+			[ "filter([_])" ]
+		] },
+		{ "#threshold": [
+			[ "threshold(0)" ]
+		] },
+		{ "#qre_top": [
+			[ "$qre(","#qre_vs","$)" ]
+		] },
+		{ "#qre_vs": [
+			[ "#agg_op","$(", "#qre_ps", "$,", "#feature_set", "$)" ]
+		] },
+		{ "#agg_op": [
+			[ "min" ]
+		] },
+		{ "#feature_set": [
+			[ "#feature_set","$,", "\\r0" ],
+			[ "\\r0" ]
+		] },
+		{ "#qre_ps": [
+			[ "/*(_)/?1" ]
+		] }
+	] },
+
+	{ "positive_abstract" : [
+		{ "#qre_ps": "iter( /_*(_)/?1, sum)" },
+		{ "#threshold": "threshold(0)" },
+		{ "#filter": "filter([_])" }
+	] },
+
+	{ "negative_abstract" : [
+	] },
+
+	{ "conditional_redundancy" : [
+	] },
+	
+	{ "unconditional_redundancy" : [
+	] }
+]
+
+

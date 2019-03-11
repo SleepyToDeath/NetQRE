@@ -518,8 +518,8 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					complexity -= prune_count * 100;
 //				complexity -= 20.0;
 				// [!] don't do this other than for experiment
-				if (root->get_type()->name == "#qre_vs")
-					complexity += 600.0;
+//				if (root->get_type()->name == "#qre_vs")
+//					complexity += 600.0;
 
 				if (root->get_type()->name == "#predicate_set" && subtree.size() == 1)
 					complexity += 600;

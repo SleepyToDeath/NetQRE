@@ -11,8 +11,11 @@ Netqre::NetqreParser parser;
 
 int main(int argc, char *argv[]) {
 	rpc::server srv(std::stoi(argv[3], nullptr));
-	auto e_train = prepare_training_set_from_pcap(string(argv[1]), string(argv[2]),3);
-	auto e_test = prepare_test_set_from_pcap(string(argv[1]), string(argv[2]),3);
+//	auto e_train = prepare_training_set_from_pcap(string(argv[1]), string(argv[2]),3, 8);
+//	auto e_test = prepare_test_set_from_pcap(string(argv[1]), string(argv[2]),3, 8);
+	auto e_train = shared_ptr<NetqreExample>(new NetqreExample());
+	auto e_test = shared_ptr<NetqreExample>(new NetqreExample());
+	prepare_example_from_pcap_one(string(argv[1]), string(argv[2]), 100, e_train, e_test);
 
 	srv.bind(Netqre::SERVICE_NAME, [&](std::string code, bool example_positive, int example_index) {
 //		cout<<"Request received\n";

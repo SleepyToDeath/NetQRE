@@ -63,3 +63,22 @@ Totally [1397] flows longer than threshold. Maximum length is [92].
 Totally [12532] flows longer than threshold. Maximum length is [21421].
 [3079] normal flows left
 
+Answer found! Current task size: 5 4
+Size of global pool: 8
+Total programs searched: 63535
+filter([_])qre(max(split(split(/*(_)/?1,iter(/&&([0=0],[1=0])&&([1=1],[8=0])/?1,sum),sum),/*(_)/?1,sum),5,6))threshold(0)
+===========================================
+Answer found:filter([_])qre(max(split(split(/*(_)/?1,iter(/&&([0=0],[1=0])&&([1=1],[8=0])/?1,sum),sum),/*(_)/?1,sum),5,6))threshold(0)
+ Threshold range:2 ~ 2
+ [output]:2 ~ 2     ~     2 ~ 3
+ 1
+ Threshold: 2
+ accurate predictions:159 382
+ Positive accuracy: 1
+ Negative accuracy: 0.994792
+
+
+ real    2m43.264s
+ user    4m53.880s
+ sys     2m18.560s
+

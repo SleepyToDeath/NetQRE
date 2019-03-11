@@ -6,6 +6,7 @@
 #include "../../../netqre2dt/interpreter.h"
 #include "../../../netqre2dt/parser.h"
 #include "../../../netqre2dt/network_tokenizer/tcp_ip.hpp"
+#include "../../../netqre2dt/network_tokenizer/protocol_detection.hpp"
 #include <sstream>
 #include <algorithm>
 #include <fstream>
@@ -195,7 +196,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				else
 					e->indistinguishable_is_negative = false;
 			}
-			if (res.accept && e->negative_token.size()>400)
+			if (res.accept && e->negative_token.size()>20)
 			{
 				cout<<"Answer found:"<<code.pos<<endl<<" Threshold range:"<<neg_max_upper<<" ~ "<<pos_min_lower<<endl;
 				cout<<"[output]:"<<neg_max_lower<<" ~ "<<neg_max_upper<<"     ~     "<<pos_min_lower<<" ~ "<<pos_min_upper<<endl;
@@ -394,7 +395,7 @@ shared_ptr<NetqreExample> prepare_examples_old() {
 	return ans;
 }
 
-shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, string negative_file_name, int threshold) {
+shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, string negative_file_name, int threshold, int flow_batch_size) {
 	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
 	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
 
@@ -452,6 +453,9 @@ shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, 
 		cout<<"Totally ["<<count<<"] flows longer than threshold. Maximum length is ["<<maximum<<"].\n";
 
 		
+		{
+		int batch_counter = 0;
+		TokenStream flow_batch;
 		for (int i=0; i<raw_negative.size(); i++)
 		{
 			TokenStream& flow = raw_negative[i];
@@ -475,7 +479,19 @@ shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, 
 
 			}
 			if (!valid)
-				examples->positive_token.push_back(flow);
+			{
+				if (batch_counter == 0)
+					flow_batch = TokenStream();
+				for (int i=0; i<flow.size(); i++)
+					flow_batch.push_back(flow[i]);
+				batch_counter ++;
+				if (batch_counter == flow_batch_size)
+				{
+					examples->positive_token.push_back(flow_batch);
+					batch_counter = 0;
+				}
+			}
+		}
 		}
 
 		cout<<"["<<examples->positive_token.size()<<"] ill-formed flows left\n";
@@ -536,6 +552,9 @@ shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, 
 		cout<<"Totally ["<<count<<"] flows longer than threshold. Maximum length is ["<<maximum<<"].\n";
 
 		
+		{
+		int batch_counter = 0;
+		TokenStream flow_batch;
 		for (int i=0; i<raw_positive.size(); i++)
 		{
 			TokenStream& flow = raw_positive[i];
@@ -565,7 +584,19 @@ shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, 
 					step = 0;
 			}
 			if (valid)
-				examples->negative_token.push_back(flow);
+			{
+				if (batch_counter == 0)
+					flow_batch = TokenStream();
+				for (int i=0; i<flow.size(); i++)
+					flow_batch.push_back(flow[i]);
+				batch_counter ++;
+				if (batch_counter == flow_batch_size)
+				{
+					examples->negative_token.push_back(flow_batch);
+					batch_counter = 0;
+				}
+			}
+		}
 		}
 
 		cout<<"["<<examples->negative_token.size()<<"] normal flows left\n";
@@ -584,7 +615,112 @@ shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, 
 	return examples;
 }
 
-shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_name, string negative_file_name, int threshold) {
+void prepare_example_from_pcap_one(
+	string positive_file_name, 
+	string negative_file_name, 
+	int packet_batch_size, 
+	shared_ptr<NetqreExample> training_set,
+	shared_ptr<NetqreExample> testing_set) {
+		{
+		the_detection_parser = shared_ptr<DetectionParser>(new DetectionParser());
+		auto raw_stream = the_detection_parser->parse_pcap(negative_file_name, false, 100, 2);
+
+		{
+			int i = 0;
+			while(i<(*raw_stream).size()/2)
+			{
+				TokenStream sample;
+				for (int j=0; j<packet_batch_size; j++)
+				{
+					if (i>=(*raw_stream).size()/2)
+						break;
+					sample.push_back((*raw_stream)[i]);
+					i++;
+				}
+				if (i>=(*raw_stream).size()/2)
+					break;
+				training_set->positive_token.push_back(sample);
+			}
+			cout<<"training set positive size: "<<training_set->positive_token.size()<<endl;
+		}
+
+
+		{
+			int i = (*raw_stream).size()/2;
+			while(i<(*raw_stream).size())
+			{
+				TokenStream sample;
+				for (int j=0; j<packet_batch_size; j++)
+				{
+					if (i>=(*raw_stream).size())
+						break;
+					sample.push_back((*raw_stream)[i]);
+					i++;
+				}
+				if (i>=(*raw_stream).size())
+					break;
+				testing_set->positive_token.push_back(sample);
+			}
+			cout<<"testing set positive size: "<<testing_set->positive_token.size()<<endl;
+		}
+		}
+
+		{
+		the_detection_parser = shared_ptr<DetectionParser>(new DetectionParser());
+		auto raw_stream = the_detection_parser->parse_pcap(positive_file_name, false, 100, 2);
+
+		{
+			int i = 0;
+			while(i<(*raw_stream).size()/2)
+			{
+				TokenStream sample;
+				for (int j=0; j<packet_batch_size; j++)
+				{
+					if (i>=(*raw_stream).size()/2)
+						break;
+					sample.push_back((*raw_stream)[i]);
+					i++;
+				}
+				if (i>=(*raw_stream).size()/2)
+					break;
+				training_set->negative_token.push_back(sample);
+			}
+			cout<<"training set negative size: "<<training_set->negative_token.size()<<endl;
+		}
+
+
+		{
+			int i = (*raw_stream).size()/2;
+			while(i<(*raw_stream).size())
+			{
+				TokenStream sample;
+				for (int j=0; j<packet_batch_size; j++)
+				{
+					if (i>=(*raw_stream).size())
+						break;
+					sample.push_back((*raw_stream)[i]);
+					i++;
+				}
+				if (i>=(*raw_stream).size())
+					break;
+				testing_set->negative_token.push_back(sample);
+			}
+			cout<<"testing set negative size: "<<testing_set->negative_token.size()<<endl;
+		}
+		}
+}
+
+void prepare_example_from_pcap_two(
+	string positive_file_name, 
+	string negative_file_name, 
+	int threshold, 
+	int flow_batch_size, 
+	shared_ptr<NetqreExample> training_set,
+	shared_ptr<NetqreExample> testing_set) {
+
+}
+
+shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_name, string negative_file_name, int threshold, int flow_batch_size) {
 	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
 	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
 
@@ -641,7 +777,9 @@ shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_na
 		});
 		cout<<"Totally ["<<count<<"] flows longer than threshold. Maximum length is ["<<maximum<<"].\n";
 
-		
+		{
+		int batch_counter = 0;
+		TokenStream flow_batch;
 		for (int i=0; i<raw_negative.size(); i++)
 		{
 			TokenStream& flow = raw_negative[i];
@@ -664,8 +802,21 @@ shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_na
 					step = 0;
 
 			}
+
 			if (!valid)
-				examples->positive_token.push_back(flow);
+			{
+				if (batch_counter == 0)
+					flow_batch = TokenStream();
+				for (int i=0; i<flow.size(); i++)
+					flow_batch.push_back(flow[i]);
+				batch_counter ++;
+				if (batch_counter == flow_batch_size)
+				{
+					examples->positive_token.push_back(flow_batch);
+					batch_counter = 0;
+				}
+			}
+		}
 		}
 
 		cout<<"["<<examples->positive_token.size()<<"] ill-formed flows left\n";
@@ -725,7 +876,9 @@ shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_na
 		});
 		cout<<"Totally ["<<count<<"] flows longer than threshold. Maximum length is ["<<maximum<<"].\n";
 
-		
+		{
+		int batch_counter = 0;
+		TokenStream flow_batch;
 		for (int i=0; i<raw_positive.size(); i++)
 		{
 			TokenStream& flow = raw_positive[i];
@@ -755,7 +908,19 @@ shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_na
 					step = 0;
 			}
 			if (valid)
-				examples->negative_token.push_back(flow);
+			{
+				if (batch_counter == 0)
+					flow_batch = TokenStream();
+				for (int i=0; i<flow.size(); i++)
+					flow_batch.push_back(flow[i]);
+				batch_counter ++;
+				if (batch_counter == flow_batch_size)
+				{
+					examples->negative_token.push_back(flow_batch);
+					batch_counter = 0;
+				}
+			}
+		}
 		}
 
 		cout<<"["<<examples->negative_token.size()<<"] normal flows left\n";

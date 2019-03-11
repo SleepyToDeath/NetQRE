@@ -17,7 +17,7 @@ test-pwd:
 	./testbed/regex lang/regex.json example/pwd.input example/config
 
 test-netqre:
-	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
+	./testbed/synthesizer ./lang/netqre/protocol_detection.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
 testall:
 	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/small_valid_tcp.pcap ./testbed/large_random_tcp.pcap ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt > testbed/log1 &
