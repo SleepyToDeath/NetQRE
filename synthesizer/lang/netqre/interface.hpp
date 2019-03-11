@@ -190,7 +190,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 							);
 			if (res.accept)
 			{
-				e->threshold = pos_min_lower;
+				e->threshold = (pos_min_lower + neg_max_upper)/2;
 				if (pos_min_lower != pos_min_upper)
 					e->indistinguishable_is_negative = true;
 				else
@@ -623,7 +623,7 @@ void prepare_example_from_pcap_one(
 	shared_ptr<NetqreExample> testing_set) {
 		{
 		the_detection_parser = shared_ptr<DetectionParser>(new DetectionParser());
-		auto raw_stream = the_detection_parser->parse_pcap(negative_file_name, false, 100, 2);
+		auto raw_stream = the_detection_parser->parse_pcap(negative_file_name, false, 100, 8);
 
 		{
 			int i = 0;

@@ -44,12 +44,13 @@ int main(int argc, char *argv[]) {
 	auto name_neg = string(argv[3]); // example neg
 	int threshold = 3;
 	int flow_batch_size = 8;
+	int packet_batch_size = 100;
 //	std::cin>>threshold;
 //	auto examples = prepare_training_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
 //	auto test_set = prepare_test_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
 	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
 	auto test_set = shared_ptr<NetqreExample>(new NetqreExample());
-	prepare_example_from_pcap_one(name_pos, name_neg, 100, examples, test_set);
+	prepare_example_from_pcap_one(name_pos, name_neg, packet_batch_size, examples, test_set);
 	test_set->pos_offset = examples->positive_token.size();
 	test_set->neg_offset = examples->negative_token.size();
 

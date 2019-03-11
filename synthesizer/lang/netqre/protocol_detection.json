@@ -17,19 +17,19 @@
 			[ "#agg_op","$(", "#qre_ps", "$,", "#feature_set", "$)" ]
 		] },
 		{ "#agg_op": [
-			[ "min" ]
+			[ "min"] , [ "max" ], [ "sum" ]
 		] },
 		{ "#feature_set": [
 			[ "#feature_set","$,", "\\r0" ],
 			[ "\\r0" ]
 		] },
 		{ "#qre_ps": [
+			[ "iter(/_/?1,sum)" ],
 			[ "/*(_)/?1" ]
 		] }
 	] },
 
 	{ "positive_abstract" : [
-		{ "#qre_ps": "iter( /_*(_)/?1, sum)" },
 		{ "#threshold": "threshold(0)" },
 		{ "#filter": "filter([_])" }
 	] },
