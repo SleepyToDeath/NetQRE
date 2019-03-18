@@ -26,23 +26,9 @@ using std::pair;
 
 class NetqreExample: public GeneralExample {
 	public:
-	int pos_offset = 0;
-	int neg_offset = 0;
 	vector<TokenStream> positive_token;
 	vector<TokenStream> negative_token;
-
-	double threshold = 0;
-	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
 };
-
-
-class NetqreExampleHandle: public NetqreExample {
-	public:
-	bool informative;
-	vector<int> positive_token;
-	vector<int> negative_token;
-};
-
 
 class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
@@ -58,7 +44,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		int pos_counter = 0;
 		int neg_counter = 0;
 
-		manager->exec(code, e->pos_offset, e->positive_token.size(), e->neg_offset, e->negative_token.size(), ans_pos, ans_neg);
+		manager->exec(code, e, ans_pos, ans_neg);
 
 		for (int i=0; i<ans_pos.size(); i++)
 		{
@@ -128,7 +114,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
 
-		manager->exec(code.pos, e->pos_offset, e->positive_token.size(), e->neg_offset, e->negative_token.size(), ans_pos, ans_neg);
+		manager->exec(code.pos, e, ans_pos, ans_neg);
 
 		for (int i=0; i<e->positive_token.size(); i++)
 		{

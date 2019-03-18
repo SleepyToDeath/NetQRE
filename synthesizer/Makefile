@@ -8,7 +8,7 @@ p: profile-regex
 
 test: test-netqre
 
-CC=g++
+CC=g++-8
 
 r: 
 	$(CC) -o ./example/gen ./example/gen.cpp -O2

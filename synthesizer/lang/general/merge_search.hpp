@@ -19,7 +19,7 @@ class MergeSearch
 				int minimal_example_size,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp,
-				shared_ptr<NetqreExample> e)
+				shared_ptr<NetqreExampleHandle> e)
 	{
 		this->depth_threshold = depth_threshold;
 		this->batch_size = batch_size;
@@ -52,11 +52,11 @@ class MergeSearch
 	shared_ptr<RedundancyPlan> rp;
 	vector< vector<shared_ptr<NetqreExampleHandle> > > e_tree; //example tree
 
-	int merge_tree(int layer)
+	void merge_tree(int layer)
 	{
 		e_tree[layer+1].clear();
 		int last = -1;
-		for (i=0; i<e_tree[layer].size(); i++)
+		for (int i=0; i<e_tree[layer].size(); i++)
 			if (e_tree[layer][i]->informative)
 				if (last == -1)
 					last = i;
@@ -78,15 +78,15 @@ class MergeSearch
 				}
 	}
 
-	int collect_tree(shared_ptr<NetqreExample> e)
+	int collect_tree(shared_ptr<NetqreExampleHandle> e)
 	{
 		int depth;
 		if (e->positive_token.size() <= minimal_example_size && e->negative_token.size() <= minimal_example_size)
 			depth = 1;
 		else
 		{
-			auto e_left = shared_ptr<NetqreExample>(new NetqreExample());
-			auto e_right = shared_ptr<NetqreExample>(new NetqreExample());
+			auto e_left = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+			auto e_right = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
 
 			if (e->positive_token.size() <= minimal_example_size)
 			{
@@ -129,7 +129,7 @@ class MergeSearch
 		}
 
 		if (depth > e_tree.size())
-			e_tree.push_back(vector<shared_ptr<NetqreExample> >());
+			e_tree.push_back(vector<shared_ptr<NetqreExampleHandle> >());
 
 		e_tree[depth-1].push_back(e);
 

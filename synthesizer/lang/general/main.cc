@@ -48,11 +48,22 @@ int main(int argc, char *argv[]) {
 //	std::cin>>threshold;
 //	auto examples = prepare_training_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
 //	auto test_set = prepare_test_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
-	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
-	auto test_set = shared_ptr<NetqreExample>(new NetqreExample());
-	prepare_example_from_pcap_one(name_pos, name_neg, packet_batch_size, examples, test_set);
+	auto examples_ = shared_ptr<NetqreExample>(new NetqreExample());
+	auto test_set_ = shared_ptr<NetqreExample>(new NetqreExample());
+	prepare_example_from_pcap_one(name_pos, name_neg, packet_batch_size, examples_, test_set_);
+
+	auto examples = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+	auto test_set = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
 	test_set->pos_offset = examples->positive_token.size();
 	test_set->neg_offset = examples->negative_token.size();
+	for (int i=0; i<examples_->positive_token.size(); i++)
+		examples->positive_token.push_back(i);
+	for (int i=0; i<examples_->negative_token.size(); i++)
+		examples->negative_token.push_back(i);
+	for (int i=0; i<test_set_->positive_token.size(); i++)
+		test_set->positive_token.push_back(i+test_set->pos_offset);
+	for (int i=0; i<test_set_->negative_token.size(); i++)
+		test_set->negative_token.push_back(i+test_set->neg_offset);
 
 	ifstream fin_g(argv[1]); // grammar
 //	ifstream fin_e(argv[2]); // example

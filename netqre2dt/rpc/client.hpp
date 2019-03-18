@@ -7,6 +7,7 @@
 #include "../op.hpp"
 #include <utility>
 #include <map>
+#include "../../synthesizer/lang/general/general.hpp"
 
 using std::vector;
 using std::unique_ptr;
@@ -17,6 +18,17 @@ using std::endl;
 using std::mutex;
 using std::map;
 using std::pair;
+
+class NetqreExampleHandle: public GeneralExample {
+	public:
+	vector<int> positive_token;
+	vector<int> negative_token;
+	int pos_offset = 0;
+	int neg_offset = 0;
+	bool informative;
+	double threshold = 0;
+	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
+};
 
 namespace Netqre {
 
@@ -188,7 +200,7 @@ class NetqreClientManager {
 			neg_client.push_back(lazy_client);
 		}
 
-		distribute(pos_handle, neg_handle, pos_client, neg_client, pos_ans, neg_ans);
+		distribute(pos_handle, neg_handle, pos_client, neg_client, pos_conf_list, neg_conf_list, pos_ans, neg_ans);
 
 	}
 
@@ -254,16 +266,18 @@ class NetqreClientManager {
 			neg_client.push_back(lazy_client);
 		}
 
-		distribute(pos_handle, neg_handle, pos_client, neg_client, pos_ans, neg_ans);
+		distribute(pos_handle, neg_handle, pos_client, neg_client, pos_conf_list, neg_conf_list, pos_ans, neg_ans);
 
 	}
 
 
 	void distribute(
-		vector< RpcHandle > pos_handle,
-		vector< RpcHandle > neg_handle,
-		vector<int> pos_client,
-		vector<int> neg_client,
+		vector< RpcHandle > &pos_handle,
+		vector< RpcHandle > &neg_handle,
+		vector<int> &pos_client,
+		vector<int> &neg_client,
+		vector<ExecConf> &pos_conf_list,
+		vector<ExecConf> &neg_conf_list,
 		vector<unique_ptr<IntValue> >& pos_ans, 
 		vector<unique_ptr<IntValue> >& neg_ans)
 	{
