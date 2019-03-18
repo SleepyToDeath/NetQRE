@@ -8,11 +8,13 @@ p: profile-regex
 
 test: test-netqre
 
+CC=g++
+
 r: 
-	g++-8 -o ./example/gen ./example/gen.cpp -O2
+	$(CC) -o ./example/gen ./example/gen.cpp -O2
 
 test-pwd:
-	g++-8 -o ./example/gen ./example/gen.cpp -O2
+	$(CC) -o ./example/gen ./example/gen.cpp -O2
 	./example/gen | tee example/pwd.input
 	./testbed/regex lang/regex.json example/pwd.input example/config
 
@@ -66,16 +68,16 @@ SRC2 += ../netqre2dt/parser.cpp
 SRC2 += ../data-transducer/*pp
 
 regex-general-test:
-	g++-8 -o ./testbed/regex $(SRC) -O2 -std=c++11 -pthread -lpcap
+	$(CC) -o ./testbed/regex $(SRC) -O2 -std=c++11 -pthread -lpcap
 
 regex-general-test-g:
-	g++-8 -o ./testbed/regex -g $(SRC) -std=c++11 -pthread -lpcap
+	$(CC) -o ./testbed/regex -g $(SRC) -std=c++11 -pthread -lpcap
 
 netqre:
-	g++-8 -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -lrpc -pthread -lpcap
+	$(CC) -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -lrpc -pthread -lpcap
 
 netqre-debug:
-	g++-8 -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -lrpc -pthread -lpcap
+	$(CC) -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -lrpc -pthread -lpcap
 
 profile-regex:
 	valgrind --tool=callgrind --dump-instr=yes ./testbed/regex lang/regex.json example/xlarge.input example/config

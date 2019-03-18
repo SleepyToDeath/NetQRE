@@ -188,6 +188,85 @@ class NetqreClientManager {
 			neg_client.push_back(lazy_client);
 		}
 
+		distribute(pos_handle, neg_handle, pos_client, neg_client, pos_ans, neg_ans);
+
+	}
+
+	void exec(string code, shared_ptr<NetqreExampleHandle> e, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
+	{
+		vector< RpcHandle > pos_handle;
+		vector< RpcHandle > neg_handle;
+		vector<int> pos_client;
+		vector<int> neg_client;
+
+		vector<ExecConf> pos_conf_list;
+		vector<ExecConf> neg_conf_list;
+
+		for (int i=0; i<e->positive_token.size(); i++)
+		{
+			ExecConf conf;
+			conf.code = code;
+			conf.pos = true;
+			conf.index = e->positive_token[i];
+			pos_conf_list.push_back(conf);
+			cache_lock.lock();
+			if (cache.count(conf) > 0)
+			{
+				pos_handle.push_back(RpcHandle());
+				pos_client.push_back(-1);
+				cache_lock.unlock();
+				continue;
+			}
+			cache_lock.unlock();
+
+			int lazy_client = next_client;
+			lazy_client++;
+			if (lazy_client >= clients.size())
+				lazy_client = 0;
+			next_client = lazy_client;
+			pos_handle.push_back(clients[lazy_client]->exec(conf.code, conf.pos, conf.index));
+			pos_client.push_back(lazy_client);
+		}
+
+		for (int i=0; i<e->negative_token.size(); i++)
+		{
+			ExecConf conf;
+			conf.code = code;
+			conf.pos = false;
+			conf.index = e->negative_token[i];
+			neg_conf_list.push_back(conf);
+			cache_lock.lock();
+			if (cache.count(conf) > 0)
+			{
+				neg_handle.push_back(RpcHandle());
+				neg_client.push_back(-1);
+				cache_lock.unlock();
+				continue;
+			}
+			cache_lock.unlock();
+
+			int lazy_client = next_client;
+			lazy_client++;
+			if (lazy_client >= clients.size())
+				lazy_client = 0;
+			next_client = lazy_client;
+			neg_handle.push_back(clients[lazy_client]->exec(conf.code, conf.pos, conf.index));
+			neg_client.push_back(lazy_client);
+		}
+
+		distribute(pos_handle, neg_handle, pos_client, neg_client, pos_ans, neg_ans);
+
+	}
+
+
+	void distribute(
+		vector< RpcHandle > pos_handle,
+		vector< RpcHandle > neg_handle,
+		vector<int> pos_client,
+		vector<int> neg_client,
+		vector<unique_ptr<IntValue> >& pos_ans, 
+		vector<unique_ptr<IntValue> >& neg_ans)
+	{
 		for (int i=0; i<pos_handle.size(); i++)
 			if (pos_client[i] != -1)
 			{

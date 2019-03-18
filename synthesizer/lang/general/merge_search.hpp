@@ -47,10 +47,36 @@ class MergeSearch
 	int answer_count;
 	int threads;
 	int minimal_example_size;
-	shared_ptr<NetqreExample> top_example;
+	shared_ptr<NetqreExampleHandle> top_example;
 	shared_ptr<IESyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
-	vector< vector<shared_ptr<NetqreExample> > > e_tree; //example tree
+	vector< vector<shared_ptr<NetqreExampleHandle> > > e_tree; //example tree
+
+	int merge_tree(int layer)
+	{
+		e_tree[layer+1].clear();
+		int last = -1;
+		for (i=0; i<e_tree[layer].size(); i++)
+			if (e_tree[layer][i]->informative)
+				if (last == -1)
+					last = i;
+				else
+				{
+					auto upper = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+					auto left = e_tree[layer][last];
+					auto right = e_tree[layer][i];
+					upper->informative = true;
+					for (int j=0; j<left->positive_token.size(); j++)
+						upper->positive_token.push_back(left->positive_token[j]);
+					for (int j=0; j<right->positive_token.size(); j++)
+						upper->positive_token.push_back(right->positive_token[j]);
+					for (int j=0; j<left->positive_token.size(); j++)
+						upper->negative_token.push_back(left->negative_token[j]);
+					for (int j=0; j<right->positive_token.size(); j++)
+						upper->negative_token.push_back(right->negative_token[j]);
+					e_tree[layer+1].push_back(upper);
+				}
+	}
 
 	int collect_tree(shared_ptr<NetqreExample> e)
 	{
@@ -126,6 +152,8 @@ class MergeSearch
 					real_search_single(e_tree[i][j], local_answer_count, global_pool);
 				}
 
+				merge_tree(i);
+
 				cout<<"Size of global pool: "<<global_pool.size()<<endl;
 				vector<shared_ptr<GeneralSyntaxTree> > tmp;
 				for (int k=0; k<global_pool.size(); k++)
@@ -148,7 +176,7 @@ class MergeSearch
 		return ans;
 	}
 
-	std::vector<shared_ptr<GeneralSyntaxTree> > real_search_single(shared_ptr<NetqreExample> e, int local_answer_count, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
+	std::vector<shared_ptr<GeneralSyntaxTree> > real_search_single(shared_ptr<NetqreExampleHandle> e, int local_answer_count, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
 		cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 
@@ -161,9 +189,13 @@ class MergeSearch
 			else
 				ans_wrong.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(global_pool[i])));
 	
+		e->informative = true;
 		if (ans.size() >= local_answer_count)
 			if (std::experimental::randint(0,local_answer_count*force_search_factor) == local_answer_count/2)
 				local_answer_count = ans.size() + 1;
+			else
+				e->informative = false;
+
 
 		if (ans.size() < local_answer_count)
 		{

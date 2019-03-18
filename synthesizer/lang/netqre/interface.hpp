@@ -35,6 +35,15 @@ class NetqreExample: public GeneralExample {
 	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
 };
 
+
+class NetqreExampleHandle: public NetqreExample {
+	public:
+	bool informative;
+	vector<int> positive_token;
+	vector<int> negative_token;
+};
+
+
 class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
 	NetqreInterpreterInterface(vector<string> servers, vector<int> ports){
@@ -42,7 +51,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	}
 
 	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
-		auto e = std::static_pointer_cast<NetqreExample>(input);
+		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
 		GeneralTestResult res;
@@ -91,9 +100,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg ) {
-		auto e = std::static_pointer_cast<NetqreExample>(input);
+		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
 
-		std::pair< std::string, shared_ptr<NetqreExample> > key;
+		std::pair< std::string, shared_ptr<NetqreExampleHandle> > key;
 		key.first = code.pos;
 		key.second = e;
 //		if (cache.count(key) > 0)
