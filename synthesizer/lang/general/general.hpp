@@ -522,9 +522,9 @@ class GeneralSyntaxTree : public IESyntaxTree {
 //					complexity += 600.0;
 
 				if (root->get_type()->name == "#predicate_set" && subtree.size() == 1)
-					complexity += 600;
+					complexity += 500;
 				if (root->get_type()->name == "#predicate_set" && subtree.size() == 2)
-					complexity -= 1200;
+					complexity -= 1000;
 			}
 			if (depth == 0)
 			{

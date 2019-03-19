@@ -57,7 +57,7 @@ class MergeSearch
 		e_tree[layer+1].clear();
 		int last = -1;
 		for (int i=0; i<e_tree[layer].size(); i++)
-			if (e_tree[layer][i]->informative)
+			if (e_tree[layer][i]->informative || layer > 0)
 				if (last == -1)
 					last = i;
 				else
@@ -70,12 +70,16 @@ class MergeSearch
 						upper->positive_token.push_back(left->positive_token[j]);
 					for (int j=0; j<right->positive_token.size(); j++)
 						upper->positive_token.push_back(right->positive_token[j]);
-					for (int j=0; j<left->positive_token.size(); j++)
+					for (int j=0; j<left->negative_token.size(); j++)
 						upper->negative_token.push_back(left->negative_token[j]);
-					for (int j=0; j<right->positive_token.size(); j++)
+					for (int j=0; j<right->negative_token.size(); j++)
 						upper->negative_token.push_back(right->negative_token[j]);
 					e_tree[layer+1].push_back(upper);
+					last = -1;
 				}
+		if (last != -1)
+			e_tree[layer+1].push_back(e_tree[layer][last]);
+		cout<<e_tree[layer+1].size()<<" informative data points left in layer "<<layer+1<<endl;
 	}
 
 	int collect_tree(shared_ptr<NetqreExampleHandle> e)
@@ -152,7 +156,7 @@ class MergeSearch
 					real_search_single(e_tree[i][j], local_answer_count, global_pool);
 				}
 
-				merge_tree(i);
+//				merge_tree(i);
 
 				cout<<"Size of global pool: "<<global_pool.size()<<endl;
 				vector<shared_ptr<GeneralSyntaxTree> > tmp;

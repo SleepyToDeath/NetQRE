@@ -46,11 +46,13 @@ int main(int argc, char *argv[]) {
 	int flow_batch_size = 8;
 	int packet_batch_size = 100;
 //	std::cin>>threshold;
-//	auto examples = prepare_training_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
-//	auto test_set = prepare_test_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
+	auto examples_ = prepare_training_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
+	auto test_set_ = prepare_test_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
+	/*
 	auto examples_ = shared_ptr<NetqreExample>(new NetqreExample());
 	auto test_set_ = shared_ptr<NetqreExample>(new NetqreExample());
 	prepare_example_from_pcap_one(name_pos, name_neg, packet_batch_size, examples_, test_set_);
+	*/
 
 	auto examples = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
 	auto test_set = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
@@ -147,7 +149,7 @@ int main(int argc, char *argv[]) {
 	fin_c>>MergeSearch::force_search_factor;
 
 	/* prepare */
-	parser->generate_input_dependent_syntax(examples);
+	parser->generate_input_dependent_syntax(examples_);
 
 	/* do searching */
 	vector<shared_ptr<GeneralSyntaxTree> > answer;
