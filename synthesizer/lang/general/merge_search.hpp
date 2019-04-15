@@ -182,7 +182,7 @@ class MergeSearch
 
 	std::vector<shared_ptr<GeneralSyntaxTree> > real_search_single(shared_ptr<NetqreExampleHandle> e, int local_answer_count, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
-		cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+		cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<" "<<e->pos_offset<<" "<<e->neg_offset<<endl;
 
 		vector<shared_ptr<GeneralSyntaxTree> > ans;
 		vector<shared_ptr<GeneralSyntaxTree> > ans_wrong;

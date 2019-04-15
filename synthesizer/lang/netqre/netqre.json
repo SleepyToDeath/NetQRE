@@ -41,10 +41,13 @@
 			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
 			[ "$[", "#predicate_entry", "$]" ]		] },
 		{ "#predicate_entry": [
-			[ "7", "$=", "\\r8" ],
 			[ "8", "$=", "\\r9" ],
-			[ "0", "$=", "\\r1" ],
-			[ "1", "$=", "\\r2" ]
+			[ "10", "$=", "\\r11" ],
+			[ "11", "$=", "\\r12" ],
+			[ "12", "$=", "\\r13" ],
+			[ "13", "$=", "\\r14" ],
+			[ "14", "$=", "\\r15" ],
+			[ "15", "$=", "\\r16" ]
 		] }
 
 	] },
@@ -66,8 +69,6 @@
 	
 	{ "unconditional_redundancy" : [
 		{ "#predicate_set ||([ #predicate_entry@1 ],[ #predicate_entry@1 ])" : "#re _" },
-		{ "#predicate_set &&([ #predicate_entry 0 = \\r1@1 ],[ #predicate_entry 0 = \\r1@2 ])" : "#re _" },
-		{ "#predicate_set &&([ #predicate_entry 1 = \\r2@1 ],[ #predicate_entry 1 = \\r2@2 ])" : "#re _" },
 		{ "#re #re #re@1 #re@2 #re@3" : "#re _" },
 		{ "#qre_ps split( #qre_ps split( #qre_ps@1, #qre_ps@2, #agg_op@3 ), #qre_ps@4, #agg_op@4)" : "#re _" },
 		{ "#qre_ps iter( #qre_ps iter( #qre_ps@1, #agg_op@2 ) ,  #agg_op@3 )" : "#re _" }

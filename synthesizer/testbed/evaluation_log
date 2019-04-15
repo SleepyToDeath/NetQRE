@@ -1,0 +1,147 @@
+SYN flood:
+
+Answer found! Current task size: 3 3
+Size of global pool: 2
+Total programs searched: 13089
+filter([_])qre(sum(split(split(/*(_)/?1,split(iter(/[13=1]/?1,max),iter(/[10=1]/?1,max),max),sum),/*(_)/?1,sum),0,1,2,3,4))threshold(0)
+===========================================
+Answer found:filter([_])qre(sum(split(split(/*(_)/?1,split(iter(/[13=1]/?1,max),iter(/[10=1]/?1,max),max),sum),/*(_)/?1,sum),0,1,2,3,4))threshold(0)
+ Threshold range:60 ~ 60
+ [output]:60 ~ 60     ~     60 ~ 90
+ 1
+ Threshold: 60
+ accurate predictions:250 250
+ Positive accuracy: 1
+ Negative accuracy: 1
+
+Time: 18s
+
+
+
+
+
+
+ACK flood:
+
+Answer found! Current task size: 6 6
+Size of global pool: 5
+Total programs searched: 2659
+filter([_])qre(sum(split(iter(/_/?1,max),iter(/[8=40]/?1,max),max),0,1,2,3,4))threshold(0)
+===========================================
+Answer found:filter([_])qre(sum(split(iter(/_/?1,max),iter(/[8=40]/?1,max),max),0,1,2,3,4))threshold(0)
+ Threshold range:30 ~ 30
+ [output]:29 ~ 30     ~     30 ~ 30
+ 1
+ Threshold: 30
+ accurate predictions:250 250
+ Positive accuracy: 1
+ Negative accuracy: 1
+
+
+ real    0m2.659s
+ user    0m7.532s
+ sys     0m4.800s
+
+
+
+
+
+UDP flood:
+
+
+Answer found! Current task size: 2 2
+Size of global pool: 1
+Total programs searched: 1238
+filter([_])qre(sum(split(split(/*(_)/?1,/_/?1,sum),/*(_)/?1,sum),2))threshold(0)
+===========================================
+Answer found:filter([_])qre(sum(split(split(/*(_)/?1,/_/?1,sum),/*(_)/?1,sum),2))threshold(0)
+ Threshold range:45 ~ 90
+ [output]:45 ~ 45     ~     90 ~ 90
+ 1
+ Threshold: 67
+ accurate predictions:250 250
+ Positive accuracy: 1
+ Negative accuracy: 1
+
+
+ real    0m1.381s
+ user    0m3.816s
+ sys     0m0.724s
+
+
+
+
+
+slowloris:
+
+
+Answer found! Current task size: 3 47
+Size of global pool: 4
+Total programs searched: 3974
+filter([_])qre(max(sum(sum(split(split(/*(_)/?1,/_/?1,sum),/*(_)/?1,sum),3,19),2),1))threshold(0)
+===========================================
+Answer found:filter([_])qre(max(sum(sum(split(split(/*(_)/?1,/_/?1,sum),/*(_)/?1,sum),3,19),2),1))threshold(0)
+ Threshold range:33 ~ 48
+ [output]:33 ~ 33     ~     48 ~ 48
+ 1
+ Threshold: 40
+ accurate predictions:3 250
+ Positive accuracy: 1
+ Negative accuracy: 1
+
+
+ real    0m5.865s
+ user    0m15.020s
+ sys     0m9.492s
+
+
+
+
+
+port scanning: (nmap)
+
+
+Answer found! Current task size: 2 2
+Size of global pool: 1
+Total programs searched: 414
+filter([_])qre(sum(split(/_/?1,/*(_)/?1,sum),3))threshold(0)
+===========================================
+Answer found:filter([_])qre(sum(split(/_/?1,/*(_)/?1,sum),3))threshold(0)
+ Threshold range:30 ~ 56
+ [output]:30 ~ 30     ~     56 ~ 56
+ 1
+ Threshold: 43
+ accurate predictions:25 250
+ Positive accuracy: 1
+ Negative accuracy: 1
+
+
+ real    0m0.624s
+ user    0m1.120s
+ sys     0m0.348s
+
+
+
+
+
+
+password cracking: (ncrack)
+Answer found! Current task size: 37 375
+Size of global pool: 2
+Total programs searched: 29757
+filter([_])qre(max(sum(sum(split(split(/*(_)/?1,/_/?1,sum),/*(_)/?1,sum),7,16),6),1))threshold(0)
+===========================================
+Answer found:filter([_])qre(max(sum(sum(split(split(/*(_)/?1,/_/?1,sum),/*(_)/?1,sum),7,16),6),1))threshold(0)
+ Threshold range:78 ~ 90
+ [output]:78 ~ 78     ~     90 ~ 90
+ 1
+ Threshold: 84
+ accurate predictions:25 250
+ Positive accuracy: 1
+ Negative accuracy: 1
+
+
+ real    1m6.763s
+ user    3m2.724s
+ sys     2m57.944s
+
