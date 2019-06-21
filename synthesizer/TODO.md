@@ -6,7 +6,7 @@
 ## Add compare primitive
 	- `[ field > value ]`
 	- `[ field < value ]`
-	- How to extract candidate fields???
+	- How to extract candidate fields and values??/
 
 
 ## Use temporal information as feature, express trending
@@ -27,7 +27,7 @@
 ### How:
 	1. add a preprocessor that filters packet by {some pattern} (How???)
 	2. add a field of {time to next packet} to each packet
-	3. then we can use compare primitive [ {time to next packet} > / < some value ] to find out time between two consecutive occurance of {some pattern}
+	3. then we can use compare primitive [ {time to next packet} > / < some value ] to identify satisfying instances of time between two consecutive occurance of {some pattern}
 	4. then gather by counting `iter(/ _* [ {time to next packet} > / < some value ] _* /?1, sum)`
 
 ### why it finds trending?
