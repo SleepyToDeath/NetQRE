@@ -130,7 +130,7 @@ unique_ptr<IntValue> Machine::aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenS
 		vector<StreamFieldType> signature;
 		vector<int> & p = qre->agg_stack[lvl].param;
 		for (int j=0; j<p.size(); j++)
-			signature.push_back(feature_stream[i][p[j]].value);
+			signature.push_back(feature_stream[i][p[j]]);
 		sub_streams[signature].first.push_back(feature_stream[i]);
 		sub_streams[signature].second.push_back(tag_stream[i]);
 	}
@@ -163,7 +163,7 @@ void Machine::collect_value_space(TokenStream &stream) {
 	{
 		value_space.push_back(ValueSpace());
 		for (int j=0; j<stream.size(); j++)
-			value_space[i].range.insert(stream[j][i].value);
+			value_space[i].range.insert(stream[j][i]);
 	}
 }
 
@@ -238,7 +238,7 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 				StreamFieldType value = r->value;
 				auto sat = unique_ptr<BoolValue> (new BoolValue());
 				sat->unknown = false;
-				sat->val = (fv[index].value == value);
+				sat->val = (fv[index] == value);
 				return sat;
 			}
 

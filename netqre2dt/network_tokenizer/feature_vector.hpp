@@ -4,20 +4,11 @@
 #include <vector>
 //#include "../data-transducer/op.h"
 
-typedef int StreamFieldType;
+using std::vector;
 
-class FeatureSlot
-{
-	public:
-	FeatureSlot(size_t _size, bool _iterative, StreamFieldType _value):
-		size(_size),iterative(_iterative),value(_value) { }
+typedef long long StreamFieldType;
 
-//	FeatureSlot(const FeatureSlot& src):FeatureSlot(src.size, src.iterative, src.value) { }
-
-	size_t size; /* in bits, aligned to lowest bit */
-	bool iterative; /* iterative: no specific value will appear in the program, only iterate through all values, e.g. src_ip; non-iterative: otherwise, e.g. ethernet type */
-	StreamFieldType value;
-};
+typedef StreamFieldType FeatureSlot;
 
 /*
 class CmpFeatureVector: public DT::CmpTagValue
@@ -87,7 +78,22 @@ class TokenStream
 	}
 
 	std::vector<FeatureVector> tokens;
+
 };
 
+class StreamConfig
+{
+	public:
+	/* number of fields in each vector */
+	int field_number;
+
+	/* in bits, aligned to lowest bit */
+	vector<size_t> field_size; 
+	
+	/* iterative: no specific value will appear in the program, 
+		only iterate through all values, e.g. src_ip; 
+		non-iterative: otherwise, e.g. ethernet type */
+	vector<bool> field_iterative; 
+};
 #endif
 

@@ -61,12 +61,12 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 		context->subtree.push_back(ast);
 	};
 
-	auto parse_num = [&]() -> int
+	auto parse_num = [&]() -> StreamFieldType
 	{
 		int old_cursor = cursor;
 		while (cursor < code.length() && code[cursor]>='0' && code[cursor]<='9')
 			cursor++;
-		return stoi(code.substr(old_cursor, cursor-old_cursor));
+		return stoll(code.substr(old_cursor, cursor-old_cursor));
 	};
 			
 	auto parse_ns = [&,this]()

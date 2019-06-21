@@ -73,3 +73,233 @@
 ]
 
 
+
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "#filter","#qre_top","#threshold" ]
+		] },
+		{ "#filter": [
+			[ "filter([_])" ]
+		] },
+		{ "#threshold": [
+			[ "threshold(0)" ]
+		] },
+		{ "#qre_top": [
+			[ "$qre(","#qre_vs","$)" ]
+		] },
+		{ "#qre_vs": [
+			[ "#agg_op","$(", "#qre_vs", "$,", "#feature_set", "$)" ],
+			[ "$split(","#qre_ps",", /*(_)/?1, sum)" ],
+			[ "$split( split(/*(_)/?1,","#qre_ps",",sum), /*(_)/?1, sum)" ]
+		] },
+		{ "#agg_op": [
+			[ "max" ],
+			[ "sum" ]
+		] },
+		{ "#feature_set": [
+			[ "\\r0","$,", "\\r0" ],
+			[ "\\r0" ]
+		] },
+		{ "#qre_ps": [
+			[ "$split(", "#qre_ps", "$,", "#qre_ps", "$,", "#agg_op", "$)" ],
+			[ "$iter(", "#qre_ps", "$,", "#agg_op", "$)" ],
+			[ "$/","#re","$/?1" ]
+		] },
+		{ "#re": [
+			[ "#re", "#re" ],
+			[ "_" ],
+			[ "#predicate_set" ]
+		]},
+		{ "#predicate_set": [
+			[ "$||([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
+			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
+			[ "$[", "#predicate_entry", "$]" ]		] },
+		{ "#predicate_entry": [
+			[ "8", "$=", "\\r9" ],
+			[ "10", "$=", "\\r11" ],
+			[ "11", "$=", "\\r12" ],
+			[ "12", "$=", "\\r13" ],
+			[ "13", "$=", "\\r14" ],
+			[ "14", "$=", "\\r15" ],
+			[ "15", "$=", "\\r16" ]
+		] }
+
+	] },
+
+	{ "positive_abstract" : [
+		{ "#qre_ps": "iter( /_*(_)/?1, sum)" },
+		{ "#re": "_*(_)" },
+		{ "#predicate_set": "_" },
+		{ "#predicate_entry": "_" },
+		{ "#threshold": "threshold(0)" },
+		{ "#filter": "filter([_])" }
+	] },
+
+	{ "negative_abstract" : [
+	] },
+
+	{ "conditional_redundancy" : [
+	] },
+	
+	{ "unconditional_redundancy" : [
+		{ "#predicate_set ||([ #predicate_entry@1 ],[ #predicate_entry@1 ])" : "#re _" },
+		{ "#re #re #re@1 #re@2 #re@3" : "#re _" },
+		{ "#qre_ps split( #qre_ps split( #qre_ps@1, #qre_ps@2, #agg_op@3 ), #qre_ps@4, #agg_op@4)" : "#re _" },
+		{ "#qre_ps iter( #qre_ps iter( #qre_ps@1, #agg_op@2 ) ,  #agg_op@3 )" : "#re _" }
+	] }
+]
+
+
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "#filter","#qre_top","#threshold" ]
+		] },
+		{ "#filter": [
+			[ "filter([_])" ]
+		] },
+		{ "#threshold": [
+			[ "threshold(0)" ]
+		] },
+		{ "#qre_top": [
+			[ "$qre(","#qre_vs","$)" ]
+		] },
+		{ "#qre_vs": [
+			[ "#agg_op","$(", "#qre_ps", "$,", "#feature_set", "$)" ]
+		] },
+		{ "#agg_op": [
+			[ "max" ],
+			[ "sum" ]
+		] },
+		{ "#feature_set": [
+			[ "0,1,2,3,4"]
+		] },
+		{ "#qre_ps": [
+			[ "$split(", "#qre_ps", "$,", "#qre_ps", "$,", "#agg_op", "$)" ],
+			[ "$iter(", "#qre_ps", "$,", "#agg_op", "$)" ],
+			[ "$/","#re","$/?1" ]
+		] },
+		{ "#re": [
+			[ "#re", "#re" ],
+			[ "_" ],
+			[ "#predicate_set" ]
+		]},
+		{ "#predicate_set": [
+			[ "$||([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
+			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
+			[ "$[", "#predicate_entry", "$]" ]		] },
+		{ "#predicate_entry": [
+			[ "8", "$=", "\\r9" ],
+			[ "10", "$=", "\\r11" ],
+			[ "11", "$=", "\\r12" ],
+			[ "12", "$=", "\\r13" ],
+			[ "13", "$=", "\\r14" ],
+			[ "14", "$=", "\\r15" ],
+			[ "15", "$=", "\\r16" ]
+		] }
+
+	] },
+
+	{ "positive_abstract" : [
+		{ "#qre_ps": "iter( /_*(_)/?1, sum)" },
+		{ "#re": "_*(_)" },
+		{ "#predicate_set": "_" },
+		{ "#predicate_entry": "_" },
+		{ "#threshold": "threshold(0)" },
+		{ "#filter": "filter([_])" }
+	] },
+
+	{ "negative_abstract" : [
+	] },
+
+	{ "conditional_redundancy" : [
+	] },
+	
+	{ "unconditional_redundancy" : [
+		{ "#predicate_set ||([ #predicate_entry@1 ],[ #predicate_entry@1 ])" : "#re _" },
+		{ "#re #re #re@1 #re@2 #re@3" : "#re _" },
+		{ "#qre_ps split( #qre_ps split( #qre_ps@1, #qre_ps@2, #agg_op@3 ), #qre_ps@4, #agg_op@4)" : "#re _" },
+		{ "#qre_ps iter( #qre_ps iter( #qre_ps@1, #agg_op@2 ) ,  #agg_op@3 )" : "#re _" }
+	] }
+]
+
+
+[
+	{ "syntax" : [ 
+		{ "program": [
+			[ "#filter","#qre_top","#threshold" ]
+		] },
+		{ "#filter": [
+			[ "filter([_])" ]
+		] },
+		{ "#threshold": [
+			[ "threshold(0)" ]
+		] },
+		{ "#qre_top": [
+			[ "$qre(","#qre_vs","$)" ]
+		] },
+		{ "#qre_vs": [
+			[ "#agg_op","$(", "#qre_vs", "$,", "#feature_set", "$)" ],
+			[ "qre_ps"],
+			[ "$split(","#qre_ps",", /*(_)/?1, sum)" ],
+			[ "$split( split(/*(_)/?1,","#qre_ps",",sum), /*(_)/?1, sum)" ]
+		] },
+		{ "#agg_op": [
+			[ "max" ],
+			[ "sum" ]
+		] },
+		{ "#feature_set": [
+			[ "\\r0","$,", "\\r0" ],
+			[ "\\r0" ]
+		] },
+		{ "#qre_ps": [
+			[ "$split(", "#qre_ps", "$,", "#qre_ps", "$,", "#agg_op", "$)" ],
+			[ "$iter(", "#qre_ps", "$,", "#agg_op", "$)" ],
+			[ "$/","#re","$/?1" ]
+		] },
+		{ "#re": [
+			[ "#re", "#re" ],
+			[ "_" ],
+			[ "#predicate_set" ]
+		]},
+		{ "#predicate_set": [
+			[ "$||([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
+			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
+			[ "$[", "#predicate_entry", "$]" ]		] },
+		{ "#predicate_entry": [
+			[ "8", "$=", "\\r9" ],
+			[ "10", "$=", "\\r11" ],
+			[ "11", "$=", "\\r12" ],
+			[ "12", "$=", "\\r13" ],
+			[ "13", "$=", "\\r14" ],
+			[ "14", "$=", "\\r15" ],
+			[ "15", "$=", "\\r16" ]
+		] }
+
+	] },
+
+	{ "positive_abstract" : [
+		{ "#qre_ps": "iter( /_*(_)/?1, sum)" },
+		{ "#re": "_*(_)" },
+		{ "#predicate_set": "_" },
+		{ "#predicate_entry": "_" },
+		{ "#threshold": "threshold(0)" },
+		{ "#filter": "filter([_])" }
+	] },
+
+	{ "negative_abstract" : [
+	] },
+
+	{ "conditional_redundancy" : [
+	] },
+	
+	{ "unconditional_redundancy" : [
+		{ "#predicate_set ||([ #predicate_entry@1 ],[ #predicate_entry@1 ])" : "#re _" },
+		{ "#re #re #re@1 #re@2 #re@3" : "#re _" },
+		{ "#qre_ps split( #qre_ps split( #qre_ps@1, #qre_ps@2, #agg_op@3 ), #qre_ps@4, #agg_op@4)" : "#re _" },
+		{ "#qre_ps iter( #qre_ps iter( #qre_ps@1, #agg_op@2 ) ,  #agg_op@3 )" : "#re _" }
+	] }
+]
+
+

@@ -46,13 +46,30 @@ int main(int argc, char *argv[]) {
 	int flow_batch_size = 8;
 	int packet_batch_size = 100;
 //	std::cin>>threshold;
-//	auto examples = prepare_training_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
-//	auto test_set = prepare_test_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
-	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
-	auto test_set = shared_ptr<NetqreExample>(new NetqreExample());
-	prepare_example_from_pcap_one(name_pos, name_neg, packet_batch_size, examples, test_set);
-	test_set->pos_offset = examples->positive_token.size();
-	test_set->neg_offset = examples->negative_token.size();
+//	auto e_train_ = prepare_training_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
+//	auto e_test_ = prepare_test_set_from_pcap(name_pos, name_neg, threshold, flow_batch_size);
+	/*
+	auto e_train_ = shared_ptr<NetqreExample>(new NetqreExample());
+	auto e_test_ = shared_ptr<NetqreExample>(new NetqreExample());
+	prepare_example_from_pcap_one(name_pos, name_neg, packet_batch_size, e_train_, e_test_);
+	*/
+	auto e_train_ = shared_ptr<NetqreExample>(new NetqreExample());
+	e_train_->from_file(argv[2], argv[3]);
+	auto e_test_ = e_train_->split();
+	
+
+	auto e_train = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+	auto e_test = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+	e_test->pos_offset = e_train->positive_token.size();
+	e_test->neg_offset = e_train->negative_token.size();
+	for (int i=0; i<e_train_->positive_token.size(); i++)
+		e_train->positive_token.push_back(i);
+	for (int i=0; i<e_train_->negative_token.size(); i++)
+		e_train->negative_token.push_back(i);
+	for (int i=0; i<e_test_->positive_token.size(); i++)
+		e_test->positive_token.push_back(i+e_test->pos_offset);
+	for (int i=0; i<e_test_->negative_token.size(); i++)
+		e_test->negative_token.push_back(i+e_test->neg_offset);
 
 	ifstream fin_g(argv[1]); // grammar
 //	ifstream fin_e(argv[2]); // example
@@ -75,7 +92,7 @@ int main(int argc, char *argv[]) {
 	GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(new NetqreInterpreterInterface(servers, ports));
 
 	auto parser = shared_ptr<GeneralConfigParser>(new GeneralConfigParser());
-//	shared_ptr<GeneralExample> examples = shared_ptr<GeneralExample>(new GeneralExample());
+//	shared_ptr<GeneralExample> e_train = shared_ptr<GeneralExample>(new GeneralExample());
 	int search_depth;
 	int batch_size;
 	int answer_count;
@@ -102,9 +119,9 @@ int main(int argc, char *argv[]) {
 	}
 	fin_g.close();
 
-//	auto examples = prepare_examples(fin_e);
+//	auto e_train = prepare_examples(fin_e);
 
-	/* input examples */
+	/* input e_train */
 	/*
 	int n_pos;
 	int n_neg;
@@ -114,13 +131,13 @@ int main(int argc, char *argv[]) {
 	{
 		string tmp;
 		fin_e>>tmp;
-		examples->positive.push_back(tmp);
+		e_train->positive.push_back(tmp);
 	}
 	for (int i=0; i<n_neg; i++)
 	{
 		string tmp;
 		fin_e>>tmp;
-		examples->negative.push_back(tmp);
+		e_train->negative.push_back(tmp);
 	}
 
 	fin_e.close();
@@ -136,23 +153,23 @@ int main(int argc, char *argv[]) {
 	fin_c>>MergeSearch::force_search_factor;
 
 	/* prepare */
-	parser->generate_input_dependent_syntax(examples);
+	parser->generate_input_dependent_syntax(e_train_);
 
 	/* do searching */
 	vector<shared_ptr<GeneralSyntaxTree> > answer;
 	MergeSearch search_engine;
-	answer = search_engine.search(search_depth, batch_size, explore_rate, answer_count, threads, minimal_example_size, parser->root, parser->rp, examples);
-//	shared_ptr<IEExample> examples_up = examples;
+	answer = search_engine.search(search_depth, batch_size, explore_rate, answer_count, threads, minimal_example_size, parser->root, parser->rp, e_train);
+//	shared_ptr<IEExample> examples_up = e_train;
 //	answer = graph.search_top_level_v2(examples_up);
 	cout<<"===========================================\n";
 	if (answer.size() == 0)
 		cout<<"Not found!"<<endl;
 	for (int i=0; i<answer.size(); i++)
 	{
-		cout<<answer[i]->to_program()->accept(examples)<<endl;
-		test_set->threshold = examples->threshold;
-		test_set->indistinguishable_is_negative = examples->indistinguishable_is_negative;
-		auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), test_set);
+		cout<<answer[i]->to_program()->accept(e_train)<<endl;
+		e_test->threshold = e_train->threshold;
+		e_test->indistinguishable_is_negative = e_train->indistinguishable_is_negative;
+		auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), e_test);
 		cout<<"Positive accuracy: "<<res.pos_accuracy<<endl;
 		cout<<"Negative accuracy: "<<res.neg_accuracy<<endl;
 		cout<<endl;
