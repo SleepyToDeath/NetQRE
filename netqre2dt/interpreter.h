@@ -21,20 +21,20 @@ class Machine {
 	bool valid();
 
 	/* constant, won't change after construction */
-	std::vector< std::shared_ptr<QRELeaf> > qre_list;
+	vector< std::shared_ptr<QRELeaf> > qre_list;
 	std::shared_ptr<NumericalTree> num_tree;
 	std::shared_ptr<NetqreAST> filter;
-	std::vector< std::shared_ptr<NetqreAST> > predicates;
+	vector< std::shared_ptr<NetqreAST> > predicates;
 	StreamFieldType threshold;
 
 	private:
 	/* runtime info, initialize for each execution */
-	std::vector<ValueSpace> value_space;
+	vector<ValueSpace> value_space;
 
 	void reset();
 	void collect_value_space(TokenStream &stream);
 	unique_ptr<IntValue> aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenStream& feature_stream, vector<DT::Word>& tag_stream);
-	std::vector<DT::Word> generate_tags(TokenStream &feature_stream);
+	vector<DT::Word> generate_tags(TokenStream &feature_stream);
 	std::unique_ptr<BoolValue> satisfy(shared_ptr<NetqreAST> predicate, FeatureVector & fv);
 
 };
@@ -61,13 +61,13 @@ class QRELeaf {
 	public:
 	std::unique_ptr<IntValue> output;
 
-	std::vector<Aggregator> agg_stack;
+	vector<Aggregator> agg_stack;
 	std::shared_ptr<DT::Transducer> transducer;
 };
 
 class Aggregator {
 	public:
-	std::vector<int> param;
+	vector<int> param;
 	std::shared_ptr<MergeIntOp> aggop;
 };
 
@@ -90,7 +90,7 @@ class Interpreter
 	std::shared_ptr<DT::Transducer> real_interpret_qre(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine);
 	std::shared_ptr<DT::Transducer> real_interpret_re(std::shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine);
 
-	void collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates);
+	void collect_predicates(std::shared_ptr<NetqreAST> ast, vector<shared_ptr<NetqreAST> > & predicates);
 };
 
 }

@@ -1,11 +1,11 @@
 #include "transducer.h"
 #include <iostream>
 
-using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
 using std::cout;
 using std::endl;
+using Rubify::string;
 
 namespace DT
 {
@@ -83,7 +83,7 @@ void Transducer::combine(shared_ptr<Transducer> dt, CombineType t, std::shared_p
 	}
 }
 
-void Transducer::reset(const std::vector<unique_ptr<DataValue> > &parameters)
+void Transducer::reset(const vector<unique_ptr<DataValue> > &parameters)
 {
 	NullPort = epsilon_circuit->get_state_out();
 
@@ -102,7 +102,7 @@ void Transducer::reset(const std::vector<unique_ptr<DataValue> > &parameters)
 		states->init[i] = copy_data(parameters[i]);
 }
 
-std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stream)
+vector< unique_ptr<DataValue> > Transducer::process(vector<Word> &stream)
 {
 //	int count_max = 3;
 	for (int i=0; i<stream.size(); i++)
@@ -171,9 +171,9 @@ std::vector< unique_ptr<DataValue> > Transducer::process(std::vector<Word> &stre
 	return ans;
 }
 
-std::vector<int> Transducer::get_signature()
+vector<int> Transducer::get_signature()
 {
-	return std::vector<int>(1,0);
+	return vector<int>(1,0);
 }
 
 /*

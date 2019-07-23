@@ -7,14 +7,14 @@
 #define DEBUG_PRINT_9
 #define DEBUG_PRINT_8
 
-#include <vector>
 #include <string>
 #include <iostream>
 #include <memory>
 #include <map>
+#include "rubify.hpp"
 
 using std::shared_ptr;
-using std::vector;
+using Rubify::vector;
 
 class SyntaxRightHandSide;
 class SyntaxLeftHandSide;
@@ -31,7 +31,7 @@ class SyntaxTreeTemplate;
 	Every time it mutates, you get a new one */
 class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	public:
-	std::vector< shared_ptr<SyntaxTree> > subtree; // read only
+	vector< shared_ptr<SyntaxTree> > subtree; // read only
 	shared_ptr<SyntaxTreeNode> root; // read only
 	double weight;
 
@@ -42,7 +42,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	class Queue
 	{
 		public:
-		std::vector< shared_ptr<SyntaxTree> > q;
+		vector< shared_ptr<SyntaxTree> > q;
 	};
 
 	class VariableMap
@@ -124,8 +124,8 @@ class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide
 	public:
 	int id;
 	std::string name;
-	std::vector<std::shared_ptr<SyntaxRightHandSide> > option;
-	std::vector<std::shared_ptr<SyntaxTree> > shortcut;
+	vector<std::shared_ptr<SyntaxRightHandSide> > option;
+	vector<std::shared_ptr<SyntaxTree> > shortcut;
 	bool is_term;
 
 	static const int NoOption = -1;
@@ -136,9 +136,9 @@ class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSi
 	int id;
 	std::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
-	std::vector<std::shared_ptr<SyntaxLeftHandSide> > subexp;
+	vector<std::shared_ptr<SyntaxLeftHandSide> > subexp;
 
-	virtual std::string to_string(std::vector<std::string> subs) {return "";};
+	virtual std::string to_string(vector<std::string> subs) {return "";};
 };
 
 class SyntaxTreeFactory {

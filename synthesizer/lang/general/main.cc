@@ -2,18 +2,16 @@
 #include "../../core/search_graph.h"
 #include "merge_search.hpp"
 //#include "../network_tokenizer/tcp_ip.hpp"
-#include <vector>
 #include <iostream>
 #include <fstream>
+#include "rubify.hpp"
 
 using std::ifstream;
 using std::endl;
-using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
 using std::cin;
 using std::cout;
-using std::vector;
 
 /*========== regex implementation =============*/
 /*
@@ -58,8 +56,8 @@ int main(int argc, char *argv[]) {
 	auto e_test_ = e_train_->split();
 	
 
-	auto e_train = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
-	auto e_test = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+	auto e_train = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
+	auto e_test = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 	e_test->pos_offset = e_train->positive_token.size();
 	e_test->neg_offset = e_train->negative_token.size();
 	for (int i=0; i<e_train_->positive_token.size(); i++)

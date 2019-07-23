@@ -2,7 +2,7 @@
 #define MULTITHREAD_H
 
 #include "redundancy.h"
-#include "incomplete_execution.h"
+#include "../../general-lang/incomplete_execution.h"
 #include <mutex>
 #include <queue>
 #include <thread>
@@ -59,8 +59,8 @@ class MasterThread : public std::enable_shared_from_this<MasterThread> {
 	MeansOfProduction m;
 
 	/* placeholder */
-	std::vector<std::thread> thread_pool;
-	std::vector<shared_ptr<WorkerThread> > worker_pool;
+	vector<std::thread> thread_pool;
+	vector<shared_ptr<WorkerThread> > worker_pool;
 };
 
 class WorkerThread : public std::enable_shared_from_this<WorkerThread> {

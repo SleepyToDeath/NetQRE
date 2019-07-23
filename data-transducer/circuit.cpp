@@ -3,10 +3,8 @@
 
 using std::shared_ptr;
 using std::unique_ptr;
-using std::vector;
-using std::string;
 using std::move;
-
+using Rubify::string;
 using std::cout;
 using std::endl;
 

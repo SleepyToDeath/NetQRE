@@ -3,8 +3,9 @@
 
 #include <vector>
 //#include "../data-transducer/op.h"
+#include "rubify.hpp"
 
-using std::vector;
+using Rubify::vector;
 
 typedef long long StreamFieldType;
 

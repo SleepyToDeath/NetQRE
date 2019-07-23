@@ -78,9 +78,9 @@ namespace DT
 
 		private:
 		shared_ptr<Op> op;
-		std::vector<weak_ptr<Gate> > in;
-		std::vector<weak_ptr<Gate> > in_seq;
-		std::vector<weak_ptr<Gate> > out;
+		vector<weak_ptr<Gate> > in;
+		vector<weak_ptr<Gate> > in_seq;
+		vector<weak_ptr<Gate> > out;
 		unique_ptr<DataValue> val, val_old, val_init;
 		int cmb_wires;
 		int ready_wires;

@@ -4,31 +4,116 @@
 #include <rpc/client.h>
 #include <mutex>
 #include <iostream>
+#include <fstream>
 #include "../op.hpp"
 #include <utility>
 #include <map>
-#include "../../synthesizer/lang/general/general.hpp"
+#include "../../general-lang/general.hpp"
+//#include "../../synthesizer/lang/general/general.hpp"
 
-using std::vector;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::future;
 using std::cout;
 using std::endl;
 using std::mutex;
-using std::map;
+using Rubify::map;
 using std::pair;
 
-class NetqreExampleHandle: public GeneralExample {
+class NetqreExample: public GeneralExample{
 	public:
-	vector<int> positive_token;
-	vector<int> negative_token;
-	int pos_offset = 0;
-	int neg_offset = 0;
-	bool informative;
-	double threshold = 0;
-	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
+	vector<TokenStream> positive_token;
+	vector<TokenStream> negative_token;
+	StreamConfig config;
+
+	void from_file(string negative_file, string positive_file)
+	{
+		{
+		std::ifstream fin;
+		fin.open(positive_file);
+		int flows;
+		int packets;
+		fin>>flows>>packets>>config.field_number;
+		for (int i=0; i<config.field_number; i++)
+		{
+			StreamFieldType tmp;
+			fin>>tmp;
+			config.field_iterative.push_back(tmp == 1);
+		}
+
+		/* read data */
+		for (int i=0; i<flows; i++)
+		{
+			TokenStream tmps;
+			for (int j=0; j<packets; j++)
+			{
+				FeatureVector tmpv;
+				for (int k=0; k<config.field_number; k++)
+				{
+					StreamFieldType tmpf;
+					fin>>tmpf;
+					tmpv.push_back(tmpf);
+				}
+				tmps.push_back(tmpv);
+			}
+			positive_token.push_back(tmps);
+		}
+		fin.close();
+		}
+
+		{
+		std::ifstream fin;
+		fin.open(negative_file);
+		int flows;
+		int packets;
+		fin>>flows>>packets>>config.field_number;
+		for (int i=0; i<config.field_number; i++)
+		{
+			StreamFieldType tmp;
+			fin>>tmp;
+//			config.field_iterative.push_back(tmp == 1);
+		}
+
+		/* read data */
+		for (int i=0; i<flows; i++)
+		{
+			TokenStream tmps;
+			for (int j=0; j<packets; j++)
+			{
+				FeatureVector tmpv;
+				for (int k=0; k<config.field_number; k++)
+				{
+					StreamFieldType tmpf;
+					fin>>tmpf;
+					tmpv.push_back(tmpf);
+				}
+				tmps.push_back(tmpv);
+			}
+			negative_token.push_back(tmps);
+		}
+		fin.close();
+		}
+
+	}
+
+	shared_ptr<NetqreExample> split()
+	{
+		auto suf = shared_ptr<NetqreExample>(new NetqreExample());
+		int mid_pos = positive_token.size()/2;
+		int mid_neg = negative_token.size()/2;
+		for (int i=mid_pos; i<positive_token.size(); i++)
+			suf->positive_token.push_back(positive_token[i]);
+		for (int i=mid_neg; i<negative_token.size(); i++)
+			suf->negative_token.push_back(negative_token[i]);
+		for (int i=mid_pos; i<positive_token.size(); i++)
+			positive_token.pop_back();
+		for (int i=mid_neg; i<negative_token.size(); i++)
+			negative_token.pop_back();
+		return suf;
+	}
+
 };
+
 
 namespace Netqre {
 
@@ -204,7 +289,7 @@ class NetqreClientManager {
 
 	}
 
-	void exec(string code, shared_ptr<NetqreExampleHandle> e, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
+	void exec(string code, shared_ptr<GeneralExampleHandle> e, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
 	{
 		vector< RpcHandle > pos_handle;
 		vector< RpcHandle > neg_handle;

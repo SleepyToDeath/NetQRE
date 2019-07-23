@@ -1,6 +1,5 @@
 #include "redundancy.h"
 #include <iostream>
-using namespace std;
 
 shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect, shared_ptr<IEExample> examples) {
 	/* check conditional */

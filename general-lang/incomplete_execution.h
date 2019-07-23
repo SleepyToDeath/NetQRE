@@ -54,7 +54,7 @@ class IESyntaxLeftHandSide : public SyntaxLeftHandSide {
 
 class IESyntaxRightHandSide : public SyntaxRightHandSide {
 	public:
-	virtual shared_ptr<IEProgram> combine_subprograms(std::vector< shared_ptr<IEProgram> > subprograms) = 0;
+	virtual shared_ptr<IEProgram> combine_subprograms(vector< shared_ptr<IEProgram> > subprograms) = 0;
 };
 
 #endif

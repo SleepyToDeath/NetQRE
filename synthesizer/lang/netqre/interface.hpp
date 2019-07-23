@@ -3,6 +3,7 @@
 
 #include "../../../netqre2dt/rpc/client.hpp"
 #include "../general/general.hpp"
+#include "../../../general-lang/general.hpp"
 #include "../../../netqre2dt/interpreter.h"
 #include "../../../netqre2dt/parser.h"
 //#include "../../../netqre2dt/network_tokenizer/tcp_ip.hpp"
@@ -10,8 +11,6 @@
 #include <sstream>
 #include <algorithm>
 #include <fstream>
-#include <map>
-#include <vector>
 #include <utility>
 #include <memory>
 
@@ -19,107 +18,13 @@
 using std::min;
 using std::max;
 using std::ifstream;
-using std::map;
-using std::vector;
+using Rubify::map;
+using Rubify::vector;
 using std::max;
-using std::string;
+using Rubify::string;
 using std::pair;
 using std::shared_ptr;
 using std::unique_ptr;
-
-class NetqreExample: public GeneralExample {
-	public:
-	vector<TokenStream> positive_token;
-	vector<TokenStream> negative_token;
-	StreamConfig config;
-
-	void from_file(string negative_file, string positive_file)
-	{
-		{
-		std::ifstream fin;
-		fin.open(positive_file);
-		int flows;
-		int packets;
-		fin>>flows>>packets>>config.field_number;
-		for (int i=0; i<config.field_number; i++)
-		{
-			StreamFieldType tmp;
-			fin>>tmp;
-			config.field_iterative.push_back(tmp == 1);
-		}
-
-		/* read data */
-		for (int i=0; i<flows; i++)
-		{
-			TokenStream tmps;
-			for (int j=0; j<packets; j++)
-			{
-				FeatureVector tmpv;
-				for (int k=0; k<config.field_number; k++)
-				{
-					StreamFieldType tmpf;
-					fin>>tmpf;
-					tmpv.push_back(tmpf);
-				}
-				tmps.push_back(tmpv);
-			}
-			positive_token.push_back(tmps);
-		}
-		fin.close();
-		}
-
-		{
-		std::ifstream fin;
-		fin.open(negative_file);
-		int flows;
-		int packets;
-		fin>>flows>>packets>>config.field_number;
-		for (int i=0; i<config.field_number; i++)
-		{
-			StreamFieldType tmp;
-			fin>>tmp;
-//			config.field_iterative.push_back(tmp == 1);
-		}
-
-		/* read data */
-		for (int i=0; i<flows; i++)
-		{
-			TokenStream tmps;
-			for (int j=0; j<packets; j++)
-			{
-				FeatureVector tmpv;
-				for (int k=0; k<config.field_number; k++)
-				{
-					StreamFieldType tmpf;
-					fin>>tmpf;
-					tmpv.push_back(tmpf);
-				}
-				tmps.push_back(tmpv);
-			}
-			negative_token.push_back(tmps);
-		}
-		fin.close();
-		}
-
-	}
-
-	shared_ptr<NetqreExample> split()
-	{
-		auto suf = shared_ptr<NetqreExample>(new NetqreExample());
-		int mid_pos = positive_token.size()/2;
-		int mid_neg = negative_token.size()/2;
-		for (int i=mid_pos; i<positive_token.size(); i++)
-			suf->positive_token.push_back(positive_token[i]);
-		for (int i=mid_neg; i<negative_token.size(); i++)
-			suf->negative_token.push_back(negative_token[i]);
-		for (int i=mid_pos; i<positive_token.size(); i++)
-			positive_token.pop_back();
-		for (int i=mid_neg; i<negative_token.size(); i++)
-			negative_token.pop_back();
-		return suf;
-	}
-
-};
 
 class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
@@ -128,7 +33,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	}
 
 	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
-		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
+		auto e = std::static_pointer_cast<GeneralExampleHandle>(input);
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
 		GeneralTestResult res;
@@ -177,9 +82,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg ) {
-		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
+		auto e = std::static_pointer_cast<GeneralExampleHandle>(input);
 
-		std::pair< std::string, shared_ptr<NetqreExampleHandle> > key;
+		std::pair< std::string, shared_ptr<GeneralExampleHandle> > key;
 		key.first = code.pos;
 		key.second = e;
 //		if (cache.count(key) > 0)
@@ -371,7 +276,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	Netqre::Interpreter interpreter;
 	Netqre::NetqreParser parser;
 	Netqre::NetqreClientManager* manager;
-//	std::map< pair<std::string, shared_ptr<NetqreExample> >, GeneralMatchingResult > cache;
+//	std::map< pair<std::string, shared_ptr<GeneralExampleHandle> >, GeneralMatchingResult > cache;
 };
 
 
@@ -398,8 +303,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 /* ========================= out dated ========================= */
 #if false
 
-shared_ptr<NetqreExample> prepare_examples(ifstream& fin) {
-	auto res = shared_ptr<NetqreExample>(new NetqreExample());
+shared_ptr<GeneralExampleHandle> prepare_examples(ifstream& fin) {
+	auto res = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 	int pos_n, neg_n, width;
 	fin>>pos_n>>neg_n>>width;
 	for (int i=0; i<pos_n; i++)
@@ -445,7 +350,7 @@ shared_ptr<NetqreExample> prepare_examples(ifstream& fin) {
 	return res;
 }
 
-shared_ptr<NetqreExample> prepare_examples_old() {
+shared_ptr<GeneralExampleHandle> prepare_examples_old() {
 	TokenStream pos;
 	TokenStream neg1;
 	TokenStream neg2;
@@ -501,16 +406,16 @@ shared_ptr<NetqreExample> prepare_examples_old() {
 	neg2.push_back(v01);
 	neg2.push_back(v00);
 
-	auto ans = shared_ptr<NetqreExample>(new NetqreExample());
+	auto ans = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 	ans->positive_token.push_back(pos);
 	ans->negative_token.push_back(neg1);
 	ans->negative_token.push_back(neg2);
 	return ans;
 }
 
-shared_ptr<NetqreExample> prepare_test_set_from_pcap(string positive_file_name, string negative_file_name, int threshold, int flow_batch_size) {
+shared_ptr<GeneralExampleHandle> prepare_test_set_from_pcap(string positive_file_name, string negative_file_name, int threshold, int flow_batch_size) {
 	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
-	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
+	auto examples = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 
 	{
 		auto raw_stream = the_tcp_ip_parser->parse_pcap(negative_file_name, true);
@@ -732,8 +637,8 @@ void prepare_example_from_pcap_one(
 	string positive_file_name, 
 	string negative_file_name, 
 	int packet_batch_size, 
-	shared_ptr<NetqreExample> training_set,
-	shared_ptr<NetqreExample> testing_set) {
+	shared_ptr<GeneralExampleHandle> training_set,
+	shared_ptr<GeneralExampleHandle> testing_set) {
 		{
 		the_detection_parser = shared_ptr<DetectionParser>(new DetectionParser());
 		auto raw_stream = the_detection_parser->parse_pcap(negative_file_name, false, 100, 8);
@@ -828,14 +733,14 @@ void prepare_example_from_pcap_two(
 	string negative_file_name, 
 	int threshold, 
 	int flow_batch_size, 
-	shared_ptr<NetqreExample> training_set,
-	shared_ptr<NetqreExample> testing_set) {
+	shared_ptr<GeneralExampleHandle> training_set,
+	shared_ptr<GeneralExampleHandle> testing_set) {
 
 }
 
-shared_ptr<NetqreExample> prepare_training_set_from_pcap(string positive_file_name, string negative_file_name, int threshold, int flow_batch_size) {
+shared_ptr<GeneralExampleHandle> prepare_training_set_from_pcap(string positive_file_name, string negative_file_name, int threshold, int flow_batch_size) {
 	the_tcp_ip_parser = shared_ptr<TcpIpParser>(new TcpIpParser());
-	auto examples = shared_ptr<NetqreExample>(new NetqreExample());
+	auto examples = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 
 	{
 		auto raw_stream = the_tcp_ip_parser->parse_pcap(negative_file_name, true);

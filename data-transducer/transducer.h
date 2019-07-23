@@ -21,7 +21,7 @@ namespace DT
 			void add_epsilon_circuit(std::shared_ptr<Circuit> c);
 			void combine(std::shared_ptr<Transducer> dt, CombineType t, std::shared_ptr<PipelineOp> init_op, std::shared_ptr<PipelineOp> commit_op);
 
-			std::vector<int> get_signature();
+			vector<int> get_signature();
 			shared_ptr<Circuit> get_default_circuit();
 
 		/* ============================================= */
@@ -32,10 +32,10 @@ namespace DT
 
 			/* 	Input the initial values for init states. 
 				other states are assumed to be 0(or undef?) */
-			void reset(const std::vector< unique_ptr<DataValue> > &parameters); 
+			void reset(const vector< unique_ptr<DataValue> > &parameters); 
 
 			/* start/continue to process stream, return result so far */
-			std::vector< unique_ptr<DataValue> > process(std::vector<Word> &stream ); 
+			vector< unique_ptr<DataValue> > process(vector<Word> &stream ); 
 
 		/* ============================================= */
 
@@ -47,7 +47,7 @@ namespace DT
 		std::unique_ptr<Port> states;
 		std::shared_ptr<Circuit> epsilon_circuit;
 //		std::map< TagType, std::shared_ptr<Circuit> > circuits; // use this instead if TagType is not int
-		std::vector< std::shared_ptr<Circuit> > circuits; 
+		vector< std::shared_ptr<Circuit> > circuits; 
 		std::unique_ptr<Port> NullPort;
 
 	};

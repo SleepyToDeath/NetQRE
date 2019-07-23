@@ -1,7 +1,6 @@
 #ifndef NETQRE2DT_SYNTAX_H
 #define NETQRE2DT_SYNTAX_H
 
-#include <vector>
 #include <memory>
 #include "./network_tokenizer/feature_vector.hpp"
 #include "../data-transducer/op.h"

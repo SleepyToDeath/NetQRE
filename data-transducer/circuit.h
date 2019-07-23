@@ -22,9 +22,9 @@ namespace DT
 		Port(const std::unique_ptr<Port> &src);
 		void merge(const unique_ptr<Port> &src, shared_ptr<MergeParallelOp> op);
 
-		std::vector<std::unique_ptr<DataValue> > init;
-		std::vector<std::unique_ptr<DataValue> > media;
-		std::vector<std::unique_ptr<DataValue> > fin;
+		vector<std::unique_ptr<DataValue> > init;
+		vector<std::unique_ptr<DataValue> > media;
+		vector<std::unique_ptr<DataValue> > fin;
 	};
 
 	class Circuit

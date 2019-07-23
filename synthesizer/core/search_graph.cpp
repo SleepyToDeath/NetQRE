@@ -11,7 +11,6 @@
 using std::endl;
 using std::cout;
 using std::unordered_set;
-using std::vector;
 
 int total_programs_searched = 0;
 
@@ -32,7 +31,7 @@ SearchGraph::SearchGraph(int depth_threshold,
 	this->rp = rp;
 }
 
-std::vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(
+vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(
 	shared_ptr<IEExample> examples, 
 	vector<shared_ptr<IESyntaxTree> > seed = vector<shared_ptr<IESyntaxTree> >(),
 	unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate 
@@ -41,14 +40,14 @@ std::vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(
 	return enumerate_random_v2(examples, seed, eliminate);
 }
 
-std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
+vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 	shared_ptr<IEExample> examples, 
-	std::vector<shared_ptr<IESyntaxTree> > seed,
+	vector<shared_ptr<IESyntaxTree> > seed,
 	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate)
 {
-	std::vector<shared_ptr<IESyntaxTree> > this_round = seed;
-	std::vector<shared_ptr<IESyntaxTree> > buffer;
-	std::vector<shared_ptr<IESyntaxTree> > answer;
+	vector<shared_ptr<IESyntaxTree> > this_round = seed;
+	vector<shared_ptr<IESyntaxTree> > buffer;
+	vector<shared_ptr<IESyntaxTree> > answer;
 	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited = eliminate;
 
 	MeansOfProduction mop;
@@ -78,7 +77,7 @@ std::vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 		while (this_round.size()>0)
 		{
 			/* prepare this round */
-			std::vector<shared_ptr<IESyntaxTree> > candidate;
+			vector<shared_ptr<IESyntaxTree> > candidate;
 			auto tmp = shared_ptr<SyntaxTree::Queue>(new SyntaxTree::Queue());
 			int counter = 0;
 			int done = -1;

@@ -57,7 +57,7 @@ void Gate::posedge()
 {
 	if (ready_wires == cmb_wires)
 	{
-		std::vector<unique_ptr<DataValue> > param;
+		vector<unique_ptr<DataValue> > param;
 		bool flag = false;
 		{
 			for (int i=0; i<in.size(); i++)

@@ -2,7 +2,7 @@
 #include <iostream>
 
 using std::cout;
-using std::string;
+using Rubify::string;
 
 const int idle_wait_time = 2;
 

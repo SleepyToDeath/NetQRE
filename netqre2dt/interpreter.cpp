@@ -1,7 +1,6 @@
 #include "interpreter.h"
 #include "op.hpp"
 #include <algorithm>
-#include <map>
 #include <utility>
 #include <set>
 
@@ -11,11 +10,8 @@ using std::endl;
 
 using std::unique_ptr;
 using std::shared_ptr;
-using std::string;
-using std::vector;
 using std::static_pointer_cast;
 using std::move;
-using std::map;
 using std::for_each;
 using std::pair;
 using std::set;
@@ -638,7 +634,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<Netqre
 	}
 }
 
-void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, std::vector<shared_ptr<NetqreAST> > & predicates)
+void Interpreter::collect_predicates(std::shared_ptr<NetqreAST> ast, vector<shared_ptr<NetqreAST> > & predicates)
 {
 	/* [TODO] remove when filter is supported */
 	if (ast->type == NetqreExpType::FILTER)

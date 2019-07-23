@@ -1,9 +1,7 @@
 #ifndef REDUNDANCY_H
 #define REDUNDANCY_H
 
-#include "syntax_tree.h"
-#include "incomplete_execution.h"
-
+#include "../../general-lang/incomplete_execution.h"
 
 class UnconditionalRedundancyTemplate {
 	public:
@@ -22,8 +20,8 @@ class ConditionalRedundancyTemplate {
 
 class RedundancyPlan {
 	public:
-	std::vector<shared_ptr<UnconditionalRedundancyTemplate> > ucnd;
-	std::vector<shared_ptr<ConditionalRedundancyTemplate> > cnd;
+	vector<shared_ptr<UnconditionalRedundancyTemplate> > ucnd;
+	vector<shared_ptr<ConditionalRedundancyTemplate> > cnd;
 	/* If meet any condition, return null, which means drop it
 		Otherwise, return the original/simplified program */
 	/* Will first check all conditional redundancy.

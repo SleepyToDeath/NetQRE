@@ -1,5 +1,4 @@
 #include "parser.h"
-#include <string>
 #include <iostream>
 
 using std::cout;
@@ -7,7 +6,6 @@ using std::endl;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::string;
-using std::vector;
 using std::static_pointer_cast;
 
 namespace Netqre {

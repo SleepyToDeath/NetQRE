@@ -10,7 +10,7 @@ std::string IESyntaxTree::to_string() {
 	else
 	{
 		SyntaxRightHandSide* rhs = root->get_type()->option[root->get_option()];
-		std::vector<std::string> subs;
+		vector<std::string> subs;
 
 		for (int i=0; i<this->subtree.size(); i++)
 			subs.push_back(((IESyntaxTree*)(subtree[i]))->to_string());
@@ -58,7 +58,7 @@ IEProgram* IESyntaxTree::to_program() {
 	else
 	{
 //std::cout<<"IEProgram* IESyntaxTree::to_program branch 2\n";
-		std::vector<IEProgram*> subprograms;
+		vector<IEProgram*> subprograms;
 		for (int i=0; i<subtree.size(); i++)
 			subprograms.push_back(((IESyntaxTree*)(subtree[i]))->to_program());
 		p = ((IESyntaxRightHandSide*)(root->get_type()->option[root->get_option()]))->combine_subprograms(subprograms);

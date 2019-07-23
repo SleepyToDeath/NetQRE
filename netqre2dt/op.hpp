@@ -4,14 +4,15 @@
 #include "../data-transducer/op.h"
 #include "syntax.h"
 #include <sstream>
-#include <string>
+#include "rubify.hpp"
 
+using Rubify::string;
+using Rubify::vector;
+using Rubify::map;
 using std::getline;
 using std::stringstream;
 using std::unique_ptr;
 using std::shared_ptr;
-using std::string;
-using std::vector;
 using std::static_pointer_cast;
 
 #define copy_typed_data(T, x) std::unique_ptr<T>(new T((T*)(x.get())))

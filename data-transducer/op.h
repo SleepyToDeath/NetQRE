@@ -2,13 +2,13 @@
 #define _DT_OP_H
 
 #include <memory>
-#include <vector>
+#include "rubify.hpp"
 
 //#define DT_DEBUG
 
 using std::shared_ptr;
 using std::unique_ptr;
-using std::vector;
+using Rubify::vector;
 using std::move;
 
 /* syntactic sugar */
@@ -67,7 +67,7 @@ namespace DT
 			All circuits will be activated and receive their 
 			corresponding values.
 		*/
-		std::vector<unique_ptr<DataValue> > tag_bitmap;
+		vector<unique_ptr<DataValue> > tag_bitmap;
 
 		Word();
 		Word(const Word &src);

@@ -2,7 +2,9 @@
 #include <iostream>
 #include <string>
 #include "client.hpp"
-#include "../../synthesizer/lang/netqre/interface.hpp"
+#include "../interpreter.h"
+#include "../parser.h"
+//#include "../../synthesizer/lang/netqre/interface.hpp"
 
 std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter = nullptr;
 

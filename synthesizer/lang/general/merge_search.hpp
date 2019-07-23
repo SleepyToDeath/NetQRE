@@ -10,7 +10,7 @@ extern int total_programs_searched;
 class MergeSearch
 {
 	public:
-	std::vector<shared_ptr<GeneralSyntaxTree> > search(
+	vector<shared_ptr<GeneralSyntaxTree> > search(
 				int depth_threshold, 
 				int batch_size, 
 				int explore_rate, 
@@ -19,7 +19,7 @@ class MergeSearch
 				int minimal_example_size,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp,
-				shared_ptr<NetqreExampleHandle> e)
+				shared_ptr<GeneralExampleHandle> e)
 	{
 		this->depth_threshold = depth_threshold;
 		this->batch_size = batch_size;
@@ -47,10 +47,10 @@ class MergeSearch
 	int answer_count;
 	int threads;
 	int minimal_example_size;
-	shared_ptr<NetqreExampleHandle> top_example;
+	shared_ptr<GeneralExampleHandle> top_example;
 	shared_ptr<IESyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
-	vector< vector<shared_ptr<NetqreExampleHandle> > > e_tree; //example tree
+	vector< vector<shared_ptr<GeneralExampleHandle> > > e_tree; //example tree
 
 	void merge_tree(int layer)
 	{
@@ -62,7 +62,7 @@ class MergeSearch
 					last = i;
 				else
 				{
-					auto upper = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+					auto upper = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 					auto left = e_tree[layer][last];
 					auto right = e_tree[layer][i];
 					upper->informative = true;
@@ -82,15 +82,15 @@ class MergeSearch
 		cout<<e_tree[layer+1].size()<<" informative data points left in layer "<<layer+1<<endl;
 	}
 
-	int collect_tree(shared_ptr<NetqreExampleHandle> e)
+	int collect_tree(shared_ptr<GeneralExampleHandle> e)
 	{
 		int depth;
 		if (e->positive_token.size() <= minimal_example_size && e->negative_token.size() <= minimal_example_size)
 			depth = 1;
 		else
 		{
-			auto e_left = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
-			auto e_right = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+			auto e_left = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
+			auto e_right = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 
 			if (e->positive_token.size() <= minimal_example_size)
 			{
@@ -133,14 +133,14 @@ class MergeSearch
 		}
 
 		if (depth > e_tree.size())
-			e_tree.push_back(vector<shared_ptr<NetqreExampleHandle> >());
+			e_tree.push_back(vector<shared_ptr<GeneralExampleHandle> >());
 
 		e_tree[depth-1].push_back(e);
 
 		return depth;
 	}
 
-	std::vector<shared_ptr<GeneralSyntaxTree> > search_by_layer(vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
+	vector<shared_ptr<GeneralSyntaxTree> > search_by_layer(vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
 		vector<shared_ptr<GeneralSyntaxTree> > ans;
 		try
@@ -173,14 +173,14 @@ class MergeSearch
 				cout<<"Size of global pool: "<<global_pool.size()<<endl;
 			}
 		}
-		catch (std::vector<shared_ptr<GeneralSyntaxTree> > _ans)
+		catch (vector<shared_ptr<GeneralSyntaxTree> > _ans)
 		{
 			ans = _ans;
 		}
 		return ans;
 	}
 
-	std::vector<shared_ptr<GeneralSyntaxTree> > real_search_single(shared_ptr<NetqreExampleHandle> e, int local_answer_count, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
+	vector<shared_ptr<GeneralSyntaxTree> > real_search_single(shared_ptr<GeneralExampleHandle> e, int local_answer_count, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
 		cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<" "<<e->pos_offset<<" "<<e->neg_offset<<endl;
 
@@ -270,7 +270,7 @@ class MergeSearch
 
 /* ======================================================= Old Version Below ====================================================== */
 
-	std::vector<shared_ptr<GeneralSyntaxTree> > real_search(shared_ptr<NetqreExample> e, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
+	vector<shared_ptr<GeneralSyntaxTree> > real_search(shared_ptr<NetqreExample> e, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
 		if (e->positive_token.size() <= minimal_example_size && e->negative_token.size() <= minimal_example_size)
 		{
@@ -359,7 +359,7 @@ class MergeSearch
 			auto ans_right = real_search(e_right, global_pool);
 
 			/* conquer */
-			std::vector<shared_ptr<GeneralSyntaxTree> > ans;
+			vector<shared_ptr<GeneralSyntaxTree> > ans;
 			auto ans_wrong = ans;
 			auto ans_raw = ans_left;
 			for (int i=0; i<ans_right.size(); i++)

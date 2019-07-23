@@ -1,3 +1,6 @@
+
+CC = g++
+
 SRC = ./server.cpp
 SRC += ./client.hpp
 SRC += ../*pp
@@ -7,12 +10,13 @@ SRC += ../../synthesizer/lang/general/*.hpp
 SRC += ../../synthesizer/lang/general/json_wrapper.cpp
 SRC += ../../synthesizer/lang/general/json11/*pp
 SRC += ../network_tokenizer/feature_vector.hpp
+SRC += ../../general-lang/*pp
 
 all:
-	g++-8 -o netqre_server $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
+	$(CC) -I/home/sleepytodeath/other_projects/rubify/ -o netqre_server $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
 
 debug:
-	g++-8 -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
+	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
 
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &

@@ -1,51 +1,62 @@
 # What's this?
-This is going to be a synthesizer for NetQRE. At current stage, it only has a framework 
-and several versions of configurations for regualr expression.
+This is a synthesizer for NetQRE programs. It takes labeled network traces as inputs
 
-# Does it work currently?
-Yes
+# How to use?
 
-# How well does it work?
-Here are several examples:
+##Overview
+The synthesizer has 2 parts: the enumerator and the execution engine. Their functions are
+straightforward from the name. There will be an enumerator process and a number of 
+execution servers. Whenever enumerator want to check a program, it will be sent to the 
+least busy server for execution via RPC.
 
-## Example 1
-- Number of input strings: 100
-- Average string size: 30
-- Synthesized program size: about 10
-- Time used: 2s
+This directory contains only the code for enumerator. The execution server is located
+in `../netqre2dt/` and `../data-transducer/`. Its build directory is `../netqre2dt/rpc`.
 
-## Example 2
-- Number of input strings: 100
-- Average string size: 300
-- Synthesized program size: about 10
-- Time used: 20s
+##Dependency
+- Any g++ version that supports C++11 (C++14 is even better)
+- rpclib (may need manual installation; see `rpclib.net` for more detail; type `sudo make install` after the compile step)
+- libpcap, libpcap-dev
 
-## Example 3
-- Number of input strings: 100
-- Average string size: 300
-- Synthesized program size: about 15
-- Time used: 2min
+##Compile
+- `make` here
+- `make` in `../netqre2dt/rpc`
 
-## Example 4
-- Number of input strings: 100
-- Average string size: 300
-- Synthesized program size: about 20
-- Time used: 3min
+##Run
+You need quite some configuration files for running. Refer to `test` entry in `Makefile` for
+details. 
 
-## Example 5
-- Number of input strings: 5
-- Average string size: 1500
-- Synthesized program size: about 15
-- Time used: 20s
+If you only want to use the default NetQRE, then just do 3 things:
+- replace `./testbed/positive.ts` and `./testbed/negative.ts` with your own data
+- replace urls in 3 bash files under `../netqre2dt/rpc/` with your own machines'
+- adjust the number of server instances in `../netqre2dt/rpc/Makefile` and `./lang/netqre/netqre_server_list.txt`
 
-## Example 6
-- Number of input strings: 5
-- Average string size: 1500
-- Synthesized program size: about 20
-- Time used: 2min
+`ts` is short for `token stream`. They are actually plain text. Refer to `./testbed/pcap/` 
+for examples of tokenizing pcap files.
+
+A detailed document for all configurations is coming soon. If you really wonders, then
+`./lang/general/main.cc` is the source code that handles all these inputs, which is not very
+difficult to read.
+
+When config and data are ready, go to `../netqre2dt/rpc`:   
+`distribute.sh`    
+`./runall.sh`    
+Then in this directory:    
+`make test`   
+Then you can wait for the result.   
+
+If your task didn't end normally, e.g., was killed, then you may want to refresh servers by:
+`./killall.sh`   
+`./runall.sh`   
+in the server's directory before running a new task.
+
+Whenever you change the test data, run `distribute.sh` again and then
+refresh servers.
 
 
 # How does it work?
+
+Details of NetQRE can be found in our paper. Here I only introduce the intuition with regular
+expression.
 
 ## The naive way
 A naive way is to enumerate all programs in increasing order of size, and test every program
@@ -82,13 +93,13 @@ This idea comes from several Microsoft papers, which borrowed the idea from an a
 the name of which I can't remember. The general idea is that a program is the combination of 
 sub-programs, and each sub-program has an number of choices. So they use a DAG to represent the 
 process of composing a program. Each node in this DAG represent the set of all possible 
-sub-programs at some position and satisfying a specification, and its "children" are 
-sub-sub-programs that can be used to compose the sub-program itself. Gathering valid sub-programs 
+sub-programs at some position of the program and satisfying a sub-specification, and its "children" 
+are sub-sub-programs that can be used to compose the sub-program itself. Gathering valid sub-programs 
 in a divide-and-conquer way will eventually give you a valid program at the top level of the DAG.
 One observation here is that in many tasks, not only can we divide the program, but we can 
 also divide the specification (what I call "examples" here), and the set of valid programs is 
-defined by the specification. There may not be as many specification divisions as the number 
-of possible programs. Thus we can find some satisfying programs(or conclude there's no
+dependent only on the specification. There may not be as many ways to divide the specification as 
+the number of possible programs. Thus we can find some satisfying programs(or conclude there's no
 valid program) for each node in the DAG without costing too much time. Beware that this is
 exactly the information we want for deciding whether a subtree has at least one correct program.
 So we can use it for pruning.
@@ -99,32 +110,32 @@ of examples, the space of specifications explodes too. Second, it can not handle
 sub-programs, e.g. Kleene star, for loop, etc. There can be huge number of correct programs 
 (or even infinite) if you collect them bottom-up. Most of them have to be dropped middle-way. 
 This is not a problem if sub-programs are independent. However, when sub-programs are dependent, 
-you won't be able to tell which is correct until reaching the point you check all possible sub-programs 
-against each other. If you are unlucky, possibly the correct one is already dropped before that point,
-and you can never find it back. These two problems can be relatively easily solved if we use 
-VSA for pruning the search tree. Details won't be introduced here since I've found a better 
+you won't be able to tell which is correct until reaching the point you can verify the correctness
+of dependents. If you are unlucky, possibly the correct one is already dropped before that point,
+and you can never find it back. These two problems can be relatively easily solved with some 
+modifications to the algorithm. Details won't be introduced here since I've found a better 
 way and the detail is really tedious. This version is finished too (in `search_tree.h/c`) so
 you can read the code if you are curious.)
 
-### Incomplete Execution
-When handling regular expression, the VSA version has time complexity roughly (more than, actually)
+### Partial Execution
+When handling regular expression, my modified VSA version has time complexity roughly (more than, actually)
 `O(m*k*(n^4))` where m is number of examples, k is number of (complete or incomplete) programs tried, 
 and n is the average length of examples. It's not that bad. But still far from satisfactory.
 In practice, it can hardly handle examples of length 50, and consumes a lot of memory due to its dynamic
 programming nature.
 
-The better way is called Incomplete Execution. 
+The better way is called Partial Execution. 
 
 The reason we find pruning difficult is that we can not execute an incomplete program and let it 
 tell us if it can potentially accept an example directly. We have to somehow collect informations
 bottom up until reaching the point we try to prune. VSA greatly compressed the space and information
-we need to collect, yet it's still not super fast.
+we need to collect, yet it's still a lot.
 
 But is it really truth that we can not execute an incomplete program? As you may have guessed from
 the name, yes, we can ("Ass♂We♂Can!").
 
-We formally define the property "*Incompletely Executable*": 
-- A language L is incompletely executable if there's a super set of it L',
+We formally define the property "*Partially Executable*": 
+- A language L is partially executable if there's a super set of it L',
 so that,
 - there is a way to replace every non-terminal in L by a complete program in L'
 so that,
@@ -134,7 +145,7 @@ so that,
 
 The "if and only if" requirement can be loosen to "if". It won't harm correctness, only damage the performance.
 
-Regular expression is incompletely executable. The super set language is itself.
+Regular expression is partially executable. The super set language is itself.
 
 If we define its syntax like this:
 - `<re> :: concat(<clause>, <re>) | <clause>`
@@ -166,8 +177,4 @@ For this algorithm to prune well, there are some (reasonable) requirements on th
 	Second, the condition of pruning a branch is "it has zero correct program". Using the same non-terminal for multiple
 	purposes is like merging multiple subtrees, during which a subtree with correct program will "contaminate" other subtrees
 	with no correct program, which makes it difficult to prune at a high level.
-
-It is not known yet how this will work for other languages. Intuitively, the complexity should be the same for QRE
-if data transducer is used. And other tasks shouldn't be too difficult to handle since it only need to execute the
-program instead of exploring the whole state space.
 

@@ -2,7 +2,6 @@
 #define NETQRE2DT_PARSER_H
 
 #include <memory>
-#include <vector>
 #include "syntax.h"
 
 namespace Netqre {

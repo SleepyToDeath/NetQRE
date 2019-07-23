@@ -8,7 +8,7 @@ p: profile-regex
 
 test: test-netqre
 
-CC=g++-8
+CC=g++
 SRC = core/*pp
 #SRC += lang/network_tokenizer/*pp
 SRC += core/*h
@@ -29,10 +29,11 @@ SRC2 += ../netqre2dt/op.cpp
 SRC2 += ../netqre2dt/op.hpp
 SRC2 += ../netqre2dt/parser.cpp
 SRC2 += ../data-transducer/*pp
+SRC2 += ../general-lang/*pp
 
 
 netqre:
-	$(CC) -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -lrpc -pthread -lpcap
+	$(CC) -I/home/sleepytodeath/other_projects/rubify/ -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -lrpc -pthread -lpcap
 
 netqre-debug:
 	$(CC) -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -lrpc -pthread -lpcap
