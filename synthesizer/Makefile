@@ -8,6 +8,8 @@ p: profile-regex
 
 test: test-netqre
 
+INCLUDE_PATH = /home/sleepytodeath/other_projects/rubify
+
 CC=g++
 SRC = core/*pp
 #SRC += lang/network_tokenizer/*pp
@@ -22,7 +24,6 @@ SRC2 += lang/general/*pp
 SRC2 += lang/general/*cc
 SRC2 += lang/general/json11/json11.cpp
 SRC2 += lang/general/json11/json11.hpp
-SRC2 += lang/netqre/*pp
 SRC2 += ../netqre2dt/network_tokenizer/feature_vector.hpp
 SRC2 += ../netqre2dt/interpreter.cpp
 SRC2 += ../netqre2dt/op.cpp
@@ -30,13 +31,14 @@ SRC2 += ../netqre2dt/op.hpp
 SRC2 += ../netqre2dt/parser.cpp
 SRC2 += ../data-transducer/*pp
 SRC2 += ../general-lang/*pp
+SRC2 += $(INCLUDE_PATH)/rubify.cpp
 
 
 netqre:
-	$(CC) -I/home/sleepytodeath/other_projects/rubify/ -o ./testbed/synthesizer $(SRC2) -O2 --std=c++11 -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -O2 --std=c++14 -lrpc -pthread -lpcap
 
 netqre-debug:
-	$(CC) -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++11 -lrpc -pthread -lpcap
+	$(CC) -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++14 -lrpc -pthread -lpcap
 
 test-netqre:
 	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/negative.ts ./testbed/positive.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt

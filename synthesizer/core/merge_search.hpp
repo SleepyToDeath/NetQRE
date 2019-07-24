@@ -1,14 +1,14 @@
-#include "general.hpp"
-#include "../../core/search_graph.h"
-#include "../netqre/interface.hpp"
+#include "search_graph.h"
+#include "../../general-lang/general.hpp"
 #include <experimental/random>
 
 using std::shared_ptr;
+using std::cout;
+using std::endl;
 
 extern int total_programs_searched;
 
-class MergeSearch
-{
+class MergeSearch {
 	public:
 	vector<shared_ptr<GeneralSyntaxTree> > search(
 				int depth_threshold, 
@@ -17,6 +17,7 @@ class MergeSearch
 				int answer_count, 
 				int threads,
 				int minimal_example_size,
+				int force_search_factor,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp,
 				shared_ptr<GeneralExampleHandle> e)
@@ -37,7 +38,6 @@ class MergeSearch
 		return search_by_layer(global_pool);
 	}
 
-	static int force_search_factor;
 
 	private:
 	
@@ -47,6 +47,7 @@ class MergeSearch
 	int answer_count;
 	int threads;
 	int minimal_example_size;
+	int force_search_factor;
 	shared_ptr<GeneralExampleHandle> top_example;
 	shared_ptr<IESyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
@@ -256,179 +257,7 @@ class MergeSearch
 		return ans;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-/* ======================================================= Old Version Below ====================================================== */
-
-	vector<shared_ptr<GeneralSyntaxTree> > real_search(shared_ptr<NetqreExample> e, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
-	{
-		if (e->positive_token.size() <= minimal_example_size && e->negative_token.size() <= minimal_example_size)
-		{
-			/* base case */
-			cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-
-			vector<shared_ptr<GeneralSyntaxTree> > ans;
-
-			for (int i=0; i<global_pool.size(); i++)
-				if (global_pool[i]->to_program()->accept(e))
-					ans.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(global_pool[i])));
-
-			if (ans.size() < answer_count)
-			{
-				SearchGraph graph(depth_threshold, batch_size, explore_rate, answer_count, threads, starting_symbol, rp);
-				vector<shared_ptr<IESyntaxTree> > seed;
-				std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate;
-				auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
-				cout<<"Search done!!!\n";
-				for (int i=0; i<ans_tmp.size(); i++)
-				{
-					cout<<i<<endl;
-					bool exist = false;
-					for (int j=0; j<ans.size(); j++)
-					{
-						cout<<j<<endl;
-						if (ans[j]->equal(ans_tmp[i]))
-						{
-							exist = true;
-							break;
-						}
-					}
-					cout<<"#2"<<endl;
-					if (!exist)
-					{
-						ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_tmp[i]));
-						global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans.back())));
-						cout<<"#2.5"<<endl;
-						if (global_pool.back()->to_program()->accept(top_example))
-						{
-							cout<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-							cout<<"Size of global pool: "<<global_pool.size()<<endl;
-							cout<<"Total programs searched: "<<total_programs_searched<<endl;
-							throw string("Answer Found!\n");
-						}
-					}
-					cout<<"#3"<<endl;
-				}
-			}
-			cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-			return ans;
-		}
-		else
-		{
-			/* divide */
-			auto e_left = shared_ptr<NetqreExample>(new NetqreExample());
-			auto e_right = shared_ptr<NetqreExample>(new NetqreExample());
-
-			if (e->positive_token.size() <= minimal_example_size)
-			{
-				e_left->positive_token = e->positive_token;
-				e_right->positive_token = e->positive_token;
-			}
-			else
-			{
-				for (int i=0; i< e->positive_token.size()/2; i++)
-					e_left->positive_token.push_back(e->positive_token[i]);
-				for (int i=e->positive_token.size()/2; i< e->positive_token.size(); i++)
-					e_right->positive_token.push_back(e->positive_token[i]);
-			}
-
-			if (e->negative_token.size() <= minimal_example_size)
-			{
-				e_left->negative_token = e->negative_token;
-				e_right->negative_token = e->negative_token;
-			}
-			else
-			{
-				for (int i=0; i< e->negative_token.size()/2; i++)
-					e_left->negative_token.push_back(e->negative_token[i]);
-				for (int i=e->negative_token.size()/2; i< e->negative_token.size(); i++)
-					e_right->negative_token.push_back(e->negative_token[i]);
-			}
-
-			auto ans_left = real_search(e_left, global_pool);
-			auto ans_right = real_search(e_right, global_pool);
-
-			/* conquer */
-			vector<shared_ptr<GeneralSyntaxTree> > ans;
-			auto ans_wrong = ans;
-			auto ans_raw = ans_left;
-			for (int i=0; i<ans_right.size(); i++)
-			{
-				bool exist = false;
-				for (int j=0; j<ans_left.size(); j++)
-					if (ans_left[j]->equal(ans_right[i]))
-					{
-						exist = true;
-						break;
-					}
-				if (!exist)
-					ans_raw.push_back(ans_right[i]);
-			}
-
-			for (int i=0; i<ans_raw.size(); i++)
-				if (ans_raw[i]->to_program()->accept(e))
-					ans.push_back(ans_raw[i]);
-				else
-					ans_wrong.push_back(ans_raw[i]);
-
-			cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-
-			if (ans.size() < answer_count)
-			{
-				vector<shared_ptr<IESyntaxTree> > seed;
-				std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate;
-				for (int i=0; i<ans_wrong.size(); i++)
-				{
-					eliminate.insert(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans_wrong[i])));
-					seed.push_back(ans_wrong[i]);
-					ans_wrong[i]->prune(5);
-				}
-
-				SearchGraph graph(depth_threshold, batch_size, explore_rate, answer_count - ans.size(), threads, starting_symbol, rp);
-				auto ans_fixed = graph.search_top_level_v2(e, seed, eliminate);
-				for (int i=0; i<ans_fixed.size(); i++)
-					ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_fixed[i]));
-			}
-
-			for (int i=0; i<ans.size(); i++)
-			{
-				bool exist = false;
-				for (int j=0; j<global_pool.size(); j++)
-					if (ans[i]->equal(global_pool[j]))
-					{
-						exist = true;
-						break;
-					}
-				if (!exist)
-				{
-					global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans[i])));
-					if (global_pool.back()->to_program()->accept(top_example))
-					{
-						cout<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-						cout<<"Size of global pool: "<<global_pool.size()<<endl;
-						cout<<"Total programs searched: "<<total_programs_searched<<endl;
-						throw string("Answer Found!\n");
-					}
-				}
-			}
-
-
-			cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-			cout<<"Size of global pool: "<<global_pool.size()<<endl;
-			cout<<"Total programs searched: "<<total_programs_searched<<endl;
-
-			return ans;
-		}
-	}
 };
+
+
 

@@ -40,17 +40,32 @@ class AbstractCode {
 
 class GeneralInterpreter {
 	public:
-	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) = 0;
+	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) = 0;
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
 	virtual GeneralTestResult test(string code, shared_ptr<GeneralExample> input) 
 		{ GeneralTestResult res; res.pos_accuracy = 0; res.neg_accuracy = 0; return res; }
 };
 
+class GeneralExampleHandle;
+
 class GeneralExample: public IEExample {
 	public:
 	vector<string> positive;
 	vector<string> negative;
+	virtual shared_ptr<GeneralExampleHandle> to_handle() {
+		return nullptr;
+		/*
+		auto ret = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
+		ret->positive_token = positive.map<int>( [](int index, string& s)->int {
+			return index;
+		});
+		ret->negative_token = negative.map<int>( [](int index, string& s)->int {
+			return index;
+		});
+		return ret;
+		*/
+	}
 };
 
 /* used to save space/bandwidth when you 

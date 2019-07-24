@@ -1,8 +1,8 @@
+INCLUDE_PATH = /home/sleepytodeath/other_projects/rubify
 
 CC = g++
 
-SRC = ./server.cpp
-SRC += ./client.hpp
+SRC = ./client.hpp
 SRC += ../*pp
 SRC += ../../data-transducer/*pp
 SRC += ../../synthesizer/core/*pp
@@ -11,9 +11,11 @@ SRC += ../../synthesizer/lang/general/json_wrapper.cpp
 SRC += ../../synthesizer/lang/general/json11/*pp
 SRC += ../network_tokenizer/feature_vector.hpp
 SRC += ../../general-lang/*pp
+SRC += $(INCLUDE_PATH)/rubify.cpp
 
 all:
-	$(CC) -I/home/sleepytodeath/other_projects/rubify/ -o netqre_server $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
+	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
+	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
 
 debug:
 	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g --std=c++14

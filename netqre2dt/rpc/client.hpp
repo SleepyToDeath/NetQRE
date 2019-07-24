@@ -18,7 +18,10 @@ using std::cout;
 using std::endl;
 using std::mutex;
 using Rubify::map;
+using Rubify::string;
+using Rubify::vector;
 using std::pair;
+using std::getline;
 
 class NetqreExample: public GeneralExample{
 	public:
@@ -28,88 +31,65 @@ class NetqreExample: public GeneralExample{
 
 	void from_file(string negative_file, string positive_file)
 	{
+		auto read_example = [&](vector<TokenStream>& target, string file_name)
 		{
-		std::ifstream fin;
-		fin.open(positive_file);
-		int flows;
-		int packets;
-		fin>>flows>>packets>>config.field_number;
-		for (int i=0; i<config.field_number; i++)
-		{
-			StreamFieldType tmp;
-			fin>>tmp;
-			config.field_iterative.push_back(tmp == 1);
-		}
+			std::ifstream fin;
+			fin.open(file_name);
+			if (!fin.good())
+				return;
 
-		/* read data */
-		for (int i=0; i<flows; i++)
-		{
-			TokenStream tmps;
-			for (int j=0; j<packets; j++)
+			int traces;
+			fin>>traces>>config.field_number;
+			
+			string it_s;
+			getline(fin, it_s);
+			config.field_iterative = it_s.split(" ").map<bool>([](string t)->bool { return t == "1"; });
+
+			/* read data */
+			for (int i=0; i<traces; i++)
 			{
-				FeatureVector tmpv;
-				for (int k=0; k<config.field_number; k++)
+				TokenStream tmps;
+				for(;;)
 				{
-					StreamFieldType tmpf;
-					fin>>tmpf;
-					tmpv.push_back(tmpf);
+					string v_s;
+					getline(fin, v_s);
+					if (v_s == "")
+						break;
+					
+					tmps.push_back(v_s.split(" ").map<long long>([](string feature)->long long { feature.to_i(); }));
 				}
-				tmps.push_back(tmpv);
+				target.push_back(tmps);
 			}
-			positive_token.push_back(tmps);
-		}
-		fin.close();
-		}
+			fin.close();
+		};
 
-		{
-		std::ifstream fin;
-		fin.open(negative_file);
-		int flows;
-		int packets;
-		fin>>flows>>packets>>config.field_number;
-		for (int i=0; i<config.field_number; i++)
-		{
-			StreamFieldType tmp;
-			fin>>tmp;
-//			config.field_iterative.push_back(tmp == 1);
-		}
-
-		/* read data */
-		for (int i=0; i<flows; i++)
-		{
-			TokenStream tmps;
-			for (int j=0; j<packets; j++)
-			{
-				FeatureVector tmpv;
-				for (int k=0; k<config.field_number; k++)
-				{
-					StreamFieldType tmpf;
-					fin>>tmpf;
-					tmpv.push_back(tmpf);
-				}
-				tmps.push_back(tmpv);
-			}
-			negative_token.push_back(tmps);
-		}
-		fin.close();
-		}
-
+		read_example(positive_token, positive_file);
+		read_example(negative_token, negative_file);
 	}
 
 	shared_ptr<NetqreExample> split()
 	{
 		auto suf = shared_ptr<NetqreExample>(new NetqreExample());
+		suf->config = config;
 		int mid_pos = positive_token.size()/2;
 		int mid_neg = negative_token.size()/2;
-		for (int i=mid_pos; i<positive_token.size(); i++)
-			suf->positive_token.push_back(positive_token[i]);
-		for (int i=mid_neg; i<negative_token.size(); i++)
-			suf->negative_token.push_back(negative_token[i]);
-		for (int i=mid_pos; i<positive_token.size(); i++)
-			positive_token.pop_back();
-		for (int i=mid_neg; i<negative_token.size(); i++)
-			negative_token.pop_back();
+		suf->positive_token = positive_token.slice(mid_pos, positive_token.size()-mid_pos);
+		suf->negative_token = negative_token.slice(mid_neg, negative_token.size()-mid_neg);
+		positive_token = positive_token.slice(0, mid_pos);
+		negative_token = negative_token.slice(0, mid_neg);
 		return suf;
+	}
+
+
+	shared_ptr<GeneralExampleHandle> to_handle() {
+		auto ret = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
+		ret->positive_token = positive.map<int>( [](int index, auto s)->int {
+			return index;
+		});
+		ret->negative_token = negative.map<int>( [](int index, auto s)->int {
+			return index;
+		});
+		return ret;
 	}
 
 };

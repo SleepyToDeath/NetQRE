@@ -11,6 +11,27 @@ typedef long long StreamFieldType;
 
 typedef StreamFieldType FeatureSlot;
 
+typedef vector<FeatureSlot> FeatureVector;
+
+typedef vector<FeatureVector> TokenStream;
+
+class StreamConfig
+{
+	public:
+	/* number of fields in each vector */
+	int field_number;
+
+	/* in bits, aligned to lowest bit */
+	vector<size_t> field_size; 
+	
+	/* iterative: no specific value will appear in the program, 
+		only iterate through all values, e.g. src_ip; 
+		non-iterative: otherwise, e.g. ethernet type */
+	vector<bool> field_iterative; 
+};
+
+
+/* ============================ unnecessary ==================================  */
 /*
 class CmpFeatureVector: public DT::CmpTagValue
 {
@@ -34,6 +55,7 @@ class CmpFeatureVector: public DT::CmpTagValue
 };
 */
 
+/*
 class FeatureVector
 {
 	public:
@@ -81,20 +103,7 @@ class TokenStream
 	std::vector<FeatureVector> tokens;
 
 };
+*/
 
-class StreamConfig
-{
-	public:
-	/* number of fields in each vector */
-	int field_number;
 
-	/* in bits, aligned to lowest bit */
-	vector<size_t> field_size; 
-	
-	/* iterative: no specific value will appear in the program, 
-		only iterate through all values, e.g. src_ip; 
-		non-iterative: otherwise, e.g. ethernet type */
-	vector<bool> field_iterative; 
-};
 #endif
-
