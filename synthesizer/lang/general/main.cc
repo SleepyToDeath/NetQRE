@@ -39,18 +39,10 @@ int main(int argc, char *argv[]) {
 	e_train_->from_file(argv[2], argv[3]);
 	auto e_test_ = e_train_->split();
 	
-
-	auto e_train = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
-	auto e_test = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
-	e_test->pos_offset = e_train->positive_token.size();
-	e_test->neg_offset = e_train->negative_token.size();
-	e_train->positive_token = e_train_->positive_token.map<int>([] (int index, auto element)->int { return index; });
-	e_train->negative_token = e_train_->negative_token.map<int>([] (int index, auto element)->int { return index; });
-	e_test->positive_token = e_test_->positive_token.map<int>([&] (int index, auto element)->int { return index+e_test->pos_offset; });
-	e_test->negative_token = e_test_->negative_token.map<int>([&] (int index, auto element)->int { return index+e_test->neg_offset; });
+	auto e_train = e_train_->to_handle();
+	auto e_test = e_test_->to_handle(e_train->positive_token.size(), e_train->negative_token.size());
 
 	ifstream fin_g(argv[1]); // grammar
-//	ifstream fin_e(argv[2]); // example
 	ifstream fin_c(argv[4]); // config
 	ifstream fin_s(argv[5]); // server list
 

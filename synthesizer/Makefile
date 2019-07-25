@@ -41,10 +41,10 @@ netqre-debug:
 	$(CC) -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++14 -lrpc -pthread -lpcap
 
 test-netqre:
-	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/negative.ts ./testbed/positive.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
+	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
 test-netqre-debug:
-	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/negative.ts ./testbed/positive.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
+	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
 clean:
 	-rm testbed/regex

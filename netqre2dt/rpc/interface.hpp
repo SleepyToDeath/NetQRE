@@ -23,6 +23,84 @@ using std::pair;
 using std::shared_ptr;
 using std::unique_ptr;
 
+class NetqreExampleHandle: public GeneralExampleHandle {
+	public:
+	double threshold = 0;
+	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
+};
+
+class NetqreExample: public GeneralExample{
+	public:
+	vector<TokenStream> positive_token;
+	vector<TokenStream> negative_token;
+	StreamConfig config;
+
+	void from_file(string positive_file, string negative_file)
+	{
+		auto read_example = [&](vector<TokenStream>& target, string file_name)
+		{
+			std::ifstream fin;
+			fin.open(file_name);
+			if (!fin.good())
+				return;
+
+			int traces;
+			fin>>traces>>config.field_number;
+			
+			string it_s;
+			getline(fin, it_s);
+			config.field_iterative = it_s.split(" ").map<bool>([](string t)->bool { return t == "1"; });
+
+			/* read data */
+			for (int i=0; i<traces; i++)
+			{
+				TokenStream tmps;
+				for(;;)
+				{
+					string v_s;
+					getline(fin, v_s);
+					if (v_s == "")
+						break;
+					
+					tmps.push_back(v_s.split(" ").map<long long>([](string feature)->long long { feature.to_i(); }));
+				}
+				target.push_back(tmps);
+			}
+			fin.close();
+		};
+
+		read_example(positive_token, positive_file);
+		read_example(negative_token, negative_file);
+	}
+
+	shared_ptr<NetqreExample> split()
+	{
+		auto suf = shared_ptr<NetqreExample>(new NetqreExample());
+		suf->config = config;
+		int mid_pos = positive_token.size()/2;
+		int mid_neg = negative_token.size()/2;
+		suf->positive_token = positive_token.slice(mid_pos, positive_token.size()-mid_pos);
+		suf->negative_token = negative_token.slice(mid_neg, negative_token.size()-mid_neg);
+		positive_token = positive_token.slice(0, mid_pos);
+		negative_token = negative_token.slice(0, mid_neg);
+		return suf;
+	}
+
+	shared_ptr<NetqreExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) {
+		auto ret = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+		ret->positive_token = positive.map<int>( [](int index, auto s)->int {
+			return index + pos_offset;
+		});
+		ret->negative_token = negative.map<int>( [](int index, auto s)->int {
+			return index + neg_offset;
+		});
+		return ret;
+	}
+
+};
+
+
+
 class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
 	NetqreInterpreterInterface(vector<string> servers, vector<int> ports){
@@ -30,7 +108,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	}
 
 	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
-		auto e = std::static_pointer_cast<GeneralExampleHandle>(input);
+		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
 		GeneralTestResult res;
@@ -79,9 +157,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 
 	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) {
-		auto e = std::static_pointer_cast<GeneralExampleHandle>(input);
+		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
 
-		std::pair< std::string, shared_ptr<GeneralExampleHandle> > key;
+		std::pair< std::string, shared_ptr<NetqreExampleHandle> > key;
 		key.first = code.pos;
 		key.second = e;
 //		if (cache.count(key) > 0)
@@ -203,8 +281,44 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		return res;
 	}
 
-	double extra_complexity(AbstractCode code) {
-		return 0.0;
+	double extra_complexity(shared_ptr<GeneralSyntaxTree> code) {
+		double complexity = 0;
+		string name = code->root->get_type()->name;
+		auto option = code->root->get_option();
+		bool is_term = code->root->get_type()->is_term;
+		auto prune_count = code->prune_count;
+		if (is_term)
+		{
+//				complexity = -100.0;
+			if ( name == "_")
+				complexity = 300;
+		}
+		else if (option == SyntaxLeftHandSide::NoOption)
+		{
+			complexity = 300.0;
+			if (name == "#feature_set")
+				complexity = 500.0;
+			if (name == "#agg_op")
+				complexity = 500.0;
+			if (name == "#re")
+				complexity = 200.0;
+			complexity -= prune_count * 200;
+		}
+		else
+		{
+			complexity = 0;
+			for (int i=0; i<code->subtree.size(); i++)
+				complexity += extra_complexity(subtree[i]);
+
+			complexity += (subtree.size()-1) * 150.0;
+			complexity -= prune_count * 100;
+
+			if (name == "#predicate_set" && code->subtree.size() == 1)
+				complexity += 300;
+			if (name == "#predicate_set" && code->subtree.size() == 2)
+				complexity -= 600;
+		}
+		return complexity;
 	}
 
 	vector<string> get_range(int handle, shared_ptr<GeneralExample> input)
@@ -273,7 +387,6 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	Netqre::Interpreter interpreter;
 	Netqre::NetqreParser parser;
 	Netqre::NetqreClientManager* manager;
-//	std::map< pair<std::string, shared_ptr<GeneralExampleHandle> >, GeneralMatchingResult > cache;
 };
 
 

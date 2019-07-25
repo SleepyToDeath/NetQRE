@@ -17,11 +17,15 @@ using std::static_pointer_cast;
 class GeneralExample;
 class GeneralSyntaxRightHandSide;
 
+/*
 class GeneralMatchingResult {
 	public:
 	bool accept;
 	double utility_rate;
 };
+*/
+
+typedef bool GeneralMatchingResult;
 
 class GeneralTestResult {
 	public:
@@ -40,8 +44,10 @@ class AbstractCode {
 
 class GeneralInterpreter {
 	public:
-	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) = 0;
+	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
+	virtual GeneralMatchingResult accept(shared_ptr<GeneralSyntaxTree> code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
+	virtual double extra_complexity(shared_ptr<GeneralSyntaxTree> code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
 	virtual GeneralTestResult test(string code, shared_ptr<GeneralExample> input) 
 		{ GeneralTestResult res; res.pos_accuracy = 0; res.neg_accuracy = 0; return res; }
@@ -53,18 +59,15 @@ class GeneralExample: public IEExample {
 	public:
 	vector<string> positive;
 	vector<string> negative;
-	virtual shared_ptr<GeneralExampleHandle> to_handle() {
-		return nullptr;
-		/*
+	virtual shared_ptr<GeneralExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) {
 		auto ret = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
 		ret->positive_token = positive.map<int>( [](int index, string& s)->int {
-			return index;
+			return index + pos_offset;
 		});
 		ret->negative_token = negative.map<int>( [](int index, string& s)->int {
-			return index;
+			return index + neg_offset;
 		});
 		return ret;
-		*/
 	}
 };
 
@@ -74,11 +77,8 @@ class GeneralExampleHandle: public GeneralExample{
 	public:
 	vector<int> positive_token;
 	vector<int> negative_token;
-	int pos_offset = 0;
-	int neg_offset = 0;
-	bool informative;
-	double threshold = 0;
-	bool indistinguishable_is_negative = true; // indistinguishable == both bounds equals threshold
+
+	bool informative; /* used for synthesis */
 };
 
 
@@ -157,58 +157,8 @@ class GeneralSyntaxTree : public IESyntaxTree {
 
 	virtual double get_complexity() {
 		if (complexity == 0)
-		{
-			if (root->get_type()->is_term)
-			{
-//				complexity = -100.0;
-				if (root->get_type()->name == "_")
-					complexity = 300;
-			}
-			else if (root->get_option() == SyntaxLeftHandSide::NoOption)
-			{
-				complexity = 300.0;
-				if (root->get_type()->name == "#feature_set")
-					complexity = 500.0;
-				if (root->get_type()->name == "#agg_op")
-					complexity = 500.0;
-				if (root->get_type()->name == "#re")
-					complexity = 200.0;
-				complexity -= prune_count * 200;
-			}
-			else
-			{
-				complexity = 0;
-				for (int i=0; i<subtree.size(); i++)
-					complexity += subtree[i]->get_complexity();
-					/*
-				if (subtree.size() > 2)
-					complexity -= 200;
-	//				complexity -= (subtree.size()) * 200;
-				else
-					*/
-					complexity += (subtree.size()-1) * 150.0;
-					complexity -= prune_count * 100;
-//				complexity -= 20.0;
-				// [!] don't do this other than for experiment
-//				if (root->get_type()->name == "#qre_vs")
-//					complexity += 600.0;
-
-				if (root->get_type()->name == "#predicate_set" && subtree.size() == 1)
-					complexity += 300;
-				if (root->get_type()->name == "#predicate_set" && subtree.size() == 2)
-					complexity -= 600;
-			}
-			if (depth == 0)
-			{
-				complexity += GeneralProgram::interpreter->extra_complexity(to_code());
-			}
-		}
-		if (complexity == 0)
-			complexity = 0.01;
-//		if (program != nullptr)
-//			return complexity/program->utility_rate;
-//		else
-			return complexity;
+			complexity = GeneralProgram::interpreter->extra_complexity(shared_from_this());
+		return complexity;
 	}
 
 
