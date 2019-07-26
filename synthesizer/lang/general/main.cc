@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 	e_train_->from_file(argv[2], argv[3]);
 	auto e_test_ = e_train_->split();
 	
-	auto e_train = e_train_->to_handle();
-	auto e_test = e_test_->to_handle(e_train->positive_token.size(), e_train->negative_token.size());
+	auto e_train = static_pointer_cast<NetqreExampleHandle>(e_train_->to_handle());
+	auto e_test = static_pointer_cast<NetqreExampleHandle>(e_test_->to_handle(e_train->positive_token.size(), e_train->negative_token.size()));
 
 	ifstream fin_g(argv[1]); // grammar
 	ifstream fin_c(argv[4]); // config

@@ -7,20 +7,15 @@
 using std::shared_ptr;
 using std::unique_ptr;
 
-class IEExample {
+class IEExample: public std::enable_shared_from_this<IEExample> {
 };
 
 class IEConfig {
 	public:
-	bool pos_check;
-	bool pos_all;
-	bool pos_accept;
-	bool neg_check;
-	bool neg_all;
-	bool neg_accept;
+	double required_accuracy;
 };
 
-const IEConfig DEFAULT_IE_CONFIG = {true, true, true, true, true, .neg_accept = false};
+const IEConfig DEFAULT_IE_CONFIG = {.required_accuracy = 1.0};
 
 class IEProgram {
 	public:

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "client.hpp"
+#include "interface.hpp"
 #include "../interpreter.h"
 #include "../parser.h"
 
@@ -23,12 +24,12 @@ int main(int argc, char *argv[]) {
 		unique_ptr<Netqre::IntValue> ans;
 		if (example_positive)
 		{
-			auto s = e_train->positive_token[example_index];
+			auto s = example->positive_token[example_index];
 			ans = m->process(s);
 		}
 		else
 		{
-			auto s = e_train->negative_token[example_index];
+			auto s = example->negative_token[example_index];
 			ans = m->process(s);
 		}
 

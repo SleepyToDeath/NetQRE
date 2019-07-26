@@ -16,6 +16,7 @@ using std::static_pointer_cast;
 
 class GeneralExample;
 class GeneralSyntaxRightHandSide;
+class GeneralSyntaxTree;
 
 /*
 class GeneralMatchingResult {
@@ -53,22 +54,14 @@ class GeneralInterpreter {
 		{ GeneralTestResult res; res.pos_accuracy = 0; res.neg_accuracy = 0; return res; }
 };
 
+
 class GeneralExampleHandle;
 
 class GeneralExample: public IEExample {
 	public:
 	vector<string> positive;
 	vector<string> negative;
-	virtual shared_ptr<GeneralExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) {
-		auto ret = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
-		ret->positive_token = positive.map<int>( [](int index, string& s)->int {
-			return index + pos_offset;
-		});
-		ret->negative_token = negative.map<int>( [](int index, string& s)->int {
-			return index + neg_offset;
-		});
-		return ret;
-	}
+	virtual shared_ptr<GeneralExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) = 0;
 };
 
 /* used to save space/bandwidth when you 
@@ -79,7 +72,12 @@ class GeneralExampleHandle: public GeneralExample{
 	vector<int> negative_token;
 
 	bool informative; /* used for synthesis */
+
+	virtual shared_ptr<GeneralExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) {
+		return static_pointer_cast<GeneralExampleHandle>(shared_from_this());
+	}
 };
+
 
 
 /* somehow build source code when initializing
@@ -95,16 +93,16 @@ class GeneralProgram: public IEProgram {
 			return true;
 //		else
 //			cout<<"Completable Found!"<<endl;
-		auto r = interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
-		utility_rate = r.utility_rate;
-		return r.accept;
+		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
+//		utility_rate = r.utility_rate;
+//		return r.accept;
 	}
 
 	/* set this to the interpreter of your specific language */
 	static std::unique_ptr<GeneralInterpreter> interpreter;
 
 	bool complete;
-	double utility_rate = 0.0000000000001;
+//	double utility_rate = 0.0000000000001;
 	AbstractCode source_code;
 };
 
@@ -157,7 +155,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 
 	virtual double get_complexity() {
 		if (complexity == 0)
-			complexity = GeneralProgram::interpreter->extra_complexity(shared_from_this());
+			complexity = GeneralProgram::interpreter->extra_complexity(static_pointer_cast<GeneralSyntaxTree>(shared_from_this()));
 		return complexity;
 	}
 
