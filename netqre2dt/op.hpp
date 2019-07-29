@@ -112,6 +112,11 @@ class IntValue: public DataValue
 	StreamFieldType upper;
 	StreamFieldType lower;
 
+	string to_s()
+	{
+		return "[" S_(lower) " ~ " S_(upper) "]";
+	}
+
 	const static StreamFieldType MAXIMUM = 1<<20;
 };
 

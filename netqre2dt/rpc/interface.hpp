@@ -49,6 +49,7 @@ class NetqreExample: public GeneralExample{
 			fin>>traces>>config.field_number;
 			
 			string it_s;
+			getline(fin, it_s); //eat \n from last line
 			getline(fin, it_s);
 			config.field_iterative = it_s.split(" ").map<bool>([](string t)->bool { return t == "1"; });
 
@@ -89,10 +90,10 @@ class NetqreExample: public GeneralExample{
 
 	shared_ptr<GeneralExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) {
 		auto ret = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
-		ret->positive_token = positive.map<int>( [&](int index, auto s)->int {
+		ret->positive_token = positive_token.map<int>( [&](int index, auto s)->int {
 			return index + pos_offset;
 		});
-		ret->negative_token = negative.map<int>( [&](int index, auto s)->int {
+		ret->negative_token = negative_token.map<int>( [&](int index, auto s)->int {
 			return index + neg_offset;
 		});
 		return ret;
@@ -117,6 +118,10 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		int neg_counter = 0;
 
 		manager->exec(code, e, ans_pos, ans_neg);
+
+		puts(ans_pos.map<string>( [&](const std::unique_ptr<Netqre::IntValue>& ptr)->string {
+			return ptr->to_s();
+		}).to_s());
 
 		for (int i=0; i<ans_pos.size(); i++)
 		{
@@ -186,41 +191,49 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		StreamFieldType neg_max_upper = -1;
 		StreamFieldType neg_max_lower = -1;
 
-		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
-		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
+		vector<std::unique_ptr<Netqre::IntValue> > ans_pos_buf;
+		vector<std::unique_ptr<Netqre::IntValue> > ans_neg_buf;
 
-		manager->exec(code.pos, e, ans_pos, ans_neg);
+		manager->exec(code.pos, e, ans_pos_buf, ans_neg_buf);
+
+		/* remove unique_ptr for sorting */
+		auto ans_pos = ans_pos_buf.map<Netqre::IntValue>( [&](const unique_ptr<Netqre::IntValue>& ptr)->Netqre::IntValue {
+			return *ptr;
+		});
+		auto ans_neg = ans_neg_buf.map<Netqre::IntValue>( [&](const unique_ptr<Netqre::IntValue>& ptr)->Netqre::IntValue {
+			return *ptr;
+		});
 
 		if (complete)
 		{
 			/* pack with group_by to ensure stable sort */
-			ans_pos = ans_pos.sort_by( [](auto ans)->StreamFieldType {
-				return ans->upper;
-			}).group_by( [](auto ans)->StreamFieldType {
-				return ans->lower;
-			}).sort_by( [](auto ans_v)->StreamFieldType {
-				return ans[0]->lower;
+			ans_pos = ans_pos.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
+				return ans.upper;
+			}).group_by<StreamFieldType>( [](auto ans)->StreamFieldType {
+				return ans.lower;
+			}).sort_by<StreamFieldType>( [](auto ans_v)->StreamFieldType {
+				return ans_v[0].lower;
 			}).flatten();
 
-			ans_neg = ans_neg.sort_by( [](auto ans)->StreamFieldType {
-				return -(ans->lower);
-			}).group_by( [](auto ans)->StreamFieldType {
-				return ans->upper;
-			}).sort_by( [](auto ans_v)->StreamFieldType {
-				return -(ans[0]->upper);
+			ans_neg = ans_neg.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
+				return -(ans.lower);
+			}).group_by<StreamFieldType>( [](auto ans)->StreamFieldType {
+				return ans.upper;
+			}).sort_by<StreamFieldType>( [](auto ans_v)->StreamFieldType {
+				return -(ans_v[0].upper);
 			}).flatten();
 
 			int invalid_count = 0;
 			auto ans_both = ans_pos.norm_zip(ans_neg);
 
 			ans_both.each( [&](auto pair) {
-				if (pair[0]->lower < 0 || pair[1]->lower < 0) // not matched
+				if (pair[0].lower < 0 || pair[1].lower < 0) // not matched
 					invalid_count ++;
-				else if (pair[0]->lower < pair[1]->upper) // not satisfying
+				else if (pair[0].lower < pair[1].upper) // not satisfying
 					invalid_count ++;
-				else if (	pair[0]->lower == pair[0]->upper && // ambiguous
-							pair[0]->upper == pair[1]->lower && 
-							pair[1]->lower == pair[1]->upper )
+				else if (	pair[0].lower == pair[0].upper && // ambiguous
+							pair[0].upper == pair[1].lower && 
+							pair[1].lower == pair[1].upper )
 				invalid_count ++;
 			});
 
@@ -231,8 +244,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			{
 				auto pair = ans_both[invalid_count]; // the decisive pair
 
-				e->threshold = (pair[0]->lower + pair[1]->upper)/2;
-				if (pair[0]->lower != pair[0]->upper)
+				e->threshold = (pair[0].lower + pair[1].upper)/2;
+				if (pair[0].lower != pair[0].upper)
 					e->indistinguishable_is_negative = true;
 				else
 					e->indistinguishable_is_negative = false;
@@ -242,21 +255,21 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		}
 		else 
 		{
-			ans_pos = ans_pos.sort_by( [](auto ans)->StreamFieldType {
-				return ans->upper;
+			ans_pos = ans_pos.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
+				return ans.upper;
 			});
 
-			ans_neg = ans_neg.sort_by( [](auto ans)->StreamFieldType {
-				return -(ans->lower);
+			ans_neg = ans_neg.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
+				return -(ans.lower);
 			});
 
 			int invalid_count = 0;
 			auto ans_both = ans_pos.norm_zip(ans_neg);
 
 			ans_both.each( [&](auto pair) {
-				if (pair[0]->lower < 0 || pair[1]->lower < 0) // not matched
+				if (pair[0].lower < 0 || pair[1].lower < 0) // not matched
 					invalid_count ++;
-				else if (pair[0]->upper <= pair[1]->lower) // not satisfying
+				else if (pair[0].upper <= pair[1].lower) // not satisfying
 					invalid_count ++;
 			});
 

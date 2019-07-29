@@ -31,10 +31,12 @@ shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect
 
 		/* set all/exist acc/rej example flag */
 		IEConfig cfg;
+		/*
 		cfg.pos_check = true;
 		cfg.pos_accept = r->accept;
 		cfg.pos_all = r->all_example;
 		cfg.neg_check = false;
+		*/
 
 		/* check */
 		for (int j=0; j<checklist.size(); j++)

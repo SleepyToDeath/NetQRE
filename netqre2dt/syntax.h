@@ -140,7 +140,14 @@ class NetqreAST
 
 	NetqreExpType type;
 
-	std::vector< std::shared_ptr<NetqreAST> > subtree;
+	Rubify::vector< std::shared_ptr<NetqreAST> > subtree;
+
+	Rubify::string to_s()
+	{
+		return _S_((int)type) + "[ " + subtree.map<Rubify::string>([&](const std::shared_ptr<NetqreAST>& ptr )->Rubify::string {
+			return ptr->to_s();
+		}).to_s() + " ]";
+	}
 };
  
 }

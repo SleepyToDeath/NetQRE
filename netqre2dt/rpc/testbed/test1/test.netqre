@@ -1,0 +1,3 @@
+filter(_)qre(split(iter(/[0=0]/?1, sum),iter(/[0=1]/?1, sum),max))threshold(1) 1
+filter(_)qre(iter(/[0=0][0=1]/?1, sum))threshold(1) 1
+filter(_)qre(iter(/[0=0][0=0][0=1]/?1, sum))threshold(1) 1

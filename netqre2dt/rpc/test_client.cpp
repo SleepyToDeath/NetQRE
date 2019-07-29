@@ -7,13 +7,29 @@ using Rubify::string;
 
 std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter; 
 
+Netqre::NetqreParser parser;
+
 /* netqre_client program.netqre test_data.ts server_list.txt */
 int main(int argc, char *argv[]) 
 {
 	ifstream fin_p(argv[1]); // program
-	string program;
-	getline(fin_p, program);
-	AbstractCode code(program, program);
+	vector< vector<string> > codes;
+	while (fin_p.good())
+	{
+		string code_raw;
+		getline(fin_p, code_raw);
+		if (!code_raw.empty())
+		{
+			auto tmp = code_raw.split(" ");
+			string threshold = tmp[-1];
+			tmp.pop_back();
+			vector<string> code_parsed;
+			code_parsed.push_back(tmp.join(""));
+			code_parsed.push_back(threshold);
+			codes.push_back(code_parsed);
+			puts(parser.parse(code_parsed[0])->to_s());
+		}
+	}
 
 	ifstream fin_s(argv[3]); // server list
 	int server_count;
@@ -34,8 +50,15 @@ int main(int argc, char *argv[])
 	unique_ptr<GeneralInterpreter>& interpreter = GeneralProgram::interpreter;
 
 	NetqreExample test_data;
-	test_data.from_file("", argv[2]);
-	auto result = interpreter->accept(code, true, test_data.to_handle());
-	
+	test_data.from_file(argv[2], "");
+	puts(test_data.positive_token.size());
+	puts(test_data.negative_token.size());
+	auto test_handle = std::static_pointer_cast<NetqreExampleHandle>(test_data.to_handle());
+	codes.each( [&](auto code) {
+		puts(code[1]);
+		test_handle->threshold = code[1].to_i();
+		cout<< interpreter->test(code[0], test_handle).pos_accuracy << " ";
+	});
+	cout << endl;
 }
 
