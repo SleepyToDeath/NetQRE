@@ -13,6 +13,13 @@ SRC += ../network_tokenizer/feature_vector.hpp
 SRC += ../../general-lang/*pp
 SRC += $(INCLUDE_PATH)/rubify.cpp
 
+SAVING_PATH = ../../synthesizer/testbed/mode-P/
+CONFIG_PATH = ../../synthesizer/lang/netqre/
+SERVER_FILE = mode-P_server_list.txt
+QUERY_FILE = query.qre
+DATA_FILE = positive.ts
+RESULT_FILE = result_vector
+
 all:
 	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
 	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
@@ -23,9 +30,14 @@ debug:
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &
 
-test-local:
+run-server:
 	-killall netqre_server
-	./netqre_server ./testbed/test1/01.ts ./testbed/test1/01.ts 23333 &
+	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(DATA_FILE) 23333 &
+
+run: run-server
+	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)
+
+run-test: run-server
 	./netqre_client ./testbed/test1/test.netqre ./testbed/test1/01.ts ./testbed/test1/server_list.txt
 
 test1:

@@ -12,7 +12,7 @@
 	This file converts a json configuration into grammar.
 */
 
-using std::cout;
+using std::cerr;
 using std::endl;
 using std::static_pointer_cast;
 
@@ -44,7 +44,7 @@ class GeneralConfigParser {
 		auto t = shared_ptr<Token>(new Token());
 		int i = (*cursor);
 
-		cout<<code.length()<<endl;
+		cerr<<code.length()<<endl;
 
 		/* parse type */
 		while (i<code.length() && code[i] == ' ')
@@ -99,7 +99,7 @@ class GeneralConfigParser {
 			std::string name = syntax->get(i)->name();
 			if (state->name_list.count(name) == 0)
 			{
-				cout<<"new name: "<<name<<endl;
+				cerr<<"new name: "<<name<<endl;
 				state->name_list[name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 			}
 			state->name_list[name]->name = name;
@@ -120,7 +120,7 @@ class GeneralConfigParser {
 					/* add new LHS to list */
 					if (state->name_list.count(real_name2) == 0)
 					{
-						cout<<"new name: "<<real_name2<<endl;
+						cerr<<"new name: "<<real_name2<<endl;
 						state->name_list[real_name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
 						state->name_list[real_name2]->name = real_name2;
 						/* check input dependency */
@@ -146,15 +146,15 @@ class GeneralConfigParser {
 	}
 
 	shared_ptr<SyntaxTreeTemplate> parse_template_recursive(string code, shared_ptr<int> cursor) {
-		cout<<code.substr((*cursor), code.size()-(*cursor))<<endl;
+		cerr<<code.substr((*cursor), code.size()-(*cursor))<<endl;
 		shared_ptr<Token> t = tokenize_next(code, cursor);
-		cout<<t->variable<<" | "<<t->name<<endl;
+		cerr<<t->variable<<" | "<<t->name<<endl;
 		if (t->variable || t->lhs->is_term)
 		{
 			auto root = shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(t->lhs));
 			auto temp = shared_ptr<SyntaxTreeTemplate>(new SyntaxTreeTemplate(root));
 			temp->var_name = t->name;
-			cout<<"<< "<<t->variable<<" | "<<t->name<<endl;
+			cerr<<"<< "<<t->variable<<" | "<<t->name<<endl;
 			return temp;
 		}
 		else
@@ -191,18 +191,18 @@ class GeneralConfigParser {
 						}
 						temp->subtree = subexp;
 						/*
-						cout<<"name: "<<temp->root->get_type()->name<<endl;
-						cout<<"subtree size"<<temp->subtree.size()<<endl;
-						cout<<"full subtree size"<<subexp_full.size()<<endl;
+						cerr<<"name: "<<temp->root->get_type()->name<<endl;
+						cerr<<"subtree size"<<temp->subtree.size()<<endl;
+						cerr<<"full subtree size"<<subexp_full.size()<<endl;
 						*/
 						temp->root->set_option(i);
-						cout<<"<< "<<t->variable<<" | "<<t->name<<endl;
+						cerr<<"<< "<<t->variable<<" | "<<t->name<<endl;
 						return temp;
 					}
 				}
 			}
 		}
-		cout<<"<< "<<t->variable<<" | "<<t->name<<endl;
+		cerr<<"<< "<<t->variable<<" | "<<t->name<<endl;
 		throw string("Unable to parse template. Invalid program.\n");
 		return nullptr;
 	}
@@ -259,10 +259,10 @@ class GeneralConfigParser {
 			}
 
 			plan->cnd.push_back(temp);
-			cout<<"CTemplate: "<< endl<<temp->temp->to_string()<<endl;
+			cerr<<"CTemplate: "<< endl<<temp->temp->to_string()<<endl;
 			for (int i=0; i<temp->checklist.size(); i++)
-				cout<<temp->checklist[i]->to_string()<<" | ";
-			cout<<endl;
+				cerr<<temp->checklist[i]->to_string()<<" | ";
+			cerr<<endl;
 		}
 
 		/* parse unconditional */
@@ -274,8 +274,8 @@ class GeneralConfigParser {
 			temp->temp_dst = parse_template(temp_json->value()->name());
 
 			plan->ucnd.push_back(temp);
-			cout<<"UTemplate: " <<endl<<temp->temp_src->to_string()<<endl;
-			cout<<temp->temp_dst->to_string()<<endl;
+			cerr<<"UTemplate: " <<endl<<temp->temp_src->to_string()<<endl;
+			cerr<<temp->temp_dst->to_string()<<endl;
 		}
 
 		return plan;
@@ -313,7 +313,7 @@ class GeneralConfigParser {
 					string name = rhs_json->get(k)->name();
 					if (name[0] == '$')
 						name = name.substr(1, name.length()-1);
-//					cout<<lhs->name<<"-->"<<name<<endl;
+//					cerr<<lhs->name<<"-->"<<name<<endl;
 					std::shared_ptr<GeneralSyntaxLeftHandSide> sub_lhs = state->name_list[name];
 					if (sub_lhs->is_functional())
 					{

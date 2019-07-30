@@ -92,7 +92,7 @@ class GeneralProgram: public IEProgram {
 		if (!source_code.completable)
 			return true;
 //		else
-//			cout<<"Completable Found!"<<endl;
+//			cerr<<"Completable Found!"<<endl;
 		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
 //		utility_rate = r.utility_rate;
 //		return r.accept;

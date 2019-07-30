@@ -9,7 +9,7 @@
 #define USE_MULTITHREAD
 
 using std::endl;
-using std::cout;
+using std::cerr;
 using std::unordered_set;
 
 int total_programs_searched = 0;
@@ -91,7 +91,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				shared_ptr<IESyntaxTree> current = this_round[i];
 				/* explore new nodes */
 				#ifdef VERBOSE_MODE
-				std::cout<<"[Source!]"<<current->get_complexity()<<" | "<<current->to_string()<<std::endl;
+				std::cerr<<"[Source!]"<<current->get_complexity()<<" | "<<current->to_string()<<std::endl;
 				#endif
 				shared_ptr<SyntaxTree> place_holder = current;
 				if (current->multi_mutate(place_holder, current, depth, tmp))
@@ -101,7 +101,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					{
 						auto explored = std::static_pointer_cast<IESyntaxTree>(tmp->q[j]);
 						#ifdef VERBOSE_MODE
-						std::cout<<"[New!!!!]"<<explored->get_complexity()<<" | "<<explored->to_string()<<std::endl;
+						std::cerr<<"[New!!!!]"<<explored->get_complexity()<<" | "<<explored->to_string()<<std::endl;
 						#endif
 						search_counter++;
 						if ((explored != nullptr) && (visited.count(explored) == 0))
@@ -115,7 +115,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 								candidate.push_back(simplified);
 								helper_counter++;
 								#ifdef VERBOSE_MODE
-								std::cout<<"[New!]"<<simplified->to_string()<<std::endl;;
+								std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
 								#endif
 							}
 							else if ((simplified != nullptr) && (visited.count(simplified) == 0))
@@ -123,19 +123,19 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 								candidate.push_back(simplified);
 								visited.insert(simplified);
 								#ifdef VERBOSE_MODE
-								std::cout<<"[Simplified!]"<<simplified->get_complexity()<<" | "<<simplified->to_string()<<std::endl;
+								std::cerr<<"[Simplified!]"<<simplified->get_complexity()<<" | "<<simplified->to_string()<<std::endl;
 								#endif
 							}
 							else if (simplified != nullptr)
 							{
 								#ifdef VERBOSE_MODE
-								std::cout<<"[Repeated!]"<<endl;
+								std::cerr<<"[Repeated!]"<<endl;
 								#endif
 							}
 							else
 							{
 								#ifdef VERBOSE_MODE
-								std::cout<<"[Redundant!]"<<endl;
+								std::cerr<<"[Redundant!]"<<endl;
 								#endif
 							}
 						}
@@ -148,7 +148,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						if (!candidate[j]->to_program()->accept(examples))
 						{
 							#ifdef VERBOSE_MODE
-							std::cout<<"[Rejected]"<< candidate[j]->to_string()<<std::endl;
+							std::cerr<<"[Rejected]"<< candidate[j]->to_string()<<std::endl;
 							#endif
 							total_drop += 1.0;
 							if (candidate[j]->is_complete())
@@ -160,12 +160,12 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 							this_round.push_back(candidate[j]);
 							counter++;
 							#ifdef VERBOSE_MODE
-							std::cout<<"[Accepted]"<< candidate[j]->to_string()<< " [Updated Complexity] "<<candidate[j]->get_complexity()<<std::endl;
+							std::cerr<<"[Accepted]"<< candidate[j]->to_string()<< " [Updated Complexity] "<<candidate[j]->get_complexity()<<std::endl;
 							#endif
 							if (candidate[j]->is_complete())
 							{
 								answer_counter ++;
-								std::cout<<"ANSWER FOUND: "<<candidate[j]->to_string()<<" | "<<candidate[j]->get_complexity()<<std::endl;
+								std::cerr<<"ANSWER FOUND: "<<candidate[j]->to_string()<<" | "<<candidate[j]->get_complexity()<<std::endl;
 								answer.push_back(candidate[j]);
 								this_round.pop_back();
 								if (answer_counter == answer_count)
@@ -232,11 +232,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						auto simplified = msg.simplified;
 						auto explored = msg.candidate;
 						#ifdef VERBOSE_MODE
-						std::cout<<"[New!!!!]"<<explored->get_complexity()<<" | "<<explored->to_string()<<std::endl;
+						std::cerr<<"[New!!!!]"<<explored->get_complexity()<<" | "<<explored->to_string()<<std::endl;
 						#endif
 						#ifdef VERBOSE_MODE
 						if (simplified != nullptr)
-							std::cout<<"[New!]"<<simplified->to_string()<<std::endl;;
+							std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
 						#endif
 						/* not redundant and not repeating */
 						if (simplified == explored)
@@ -264,7 +264,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						{
 							/* drop */
 							#ifdef VERBOSE_MODE
-							std::cout<<"[Rejected]"<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
+							std::cerr<<"[Rejected]"<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
 							#endif
 							total_drop += 1.0;
 							if (candidate->is_complete())
@@ -281,7 +281,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 							if (candidate->is_complete())
 							{
 								answer_counter ++;
-								std::cout<<"ANSWER FOUND: "<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
+								std::cerr<<"ANSWER FOUND: "<<candidate->to_string()<<" | "<<candidate->get_complexity()<<std::endl;
 								answer.push_back(candidate);
 								this_round.pop_back();
 								if (answer_counter >= answer_count)
@@ -302,7 +302,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				/* if enough programs explored and all tasks submitted  */
 				if ((counter >= batch_size || i == this_round.size()) && thread_master->all_tasks_done())
 					break;
-//				cout<<"Loop going on "<<counter<<" "<<batch_size<<endl;
+//				cerr<<"Loop going on "<<counter<<" "<<batch_size<<endl;
 			}
 #endif
 
@@ -326,19 +326,19 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 #ifndef SILENCE_MODE
 			if (buffer.size()>0)
 			{
-				std::cout<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
-				std::cout<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
-				std::cout<<"Buffer size: "<<buffer.size()<<"   |   ";
-				std::cout<<"Answers found: "<<answer_counter<<std::endl;
+				std::cerr<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
+				std::cerr<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
+				std::cerr<<"Buffer size: "<<buffer.size()<<"   |   ";
+				std::cerr<<"Answers found: "<<answer_counter<<std::endl;
 				if (buffer.size()>2)
 				{
 					int index = std::experimental::randint(0,(int)buffer.size()-1);
-					std::cout<<"One current sample: "<<(buffer[index]->to_string())<<" | #"<<buffer[index]->get_complexity()<<std::endl;
+					std::cerr<<"One current sample: "<<(buffer[index]->to_string())<<" | #"<<buffer[index]->get_complexity()<<std::endl;
 				}
 				else
-					std::cout<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
-				std::cout<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
-				std::cout<<std::endl<<endl;;
+					std::cerr<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
+				std::cerr<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
+				std::cerr<<std::endl<<endl;;
 			}
 #endif
 
@@ -363,7 +363,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						double ratio = ((double)l) / ((double)buffer.size());
 						ratio = pow(ratio, 100);
 						l = buffer.size() * (1.0 - ratio);
-						std::cout<<"[RND]"<<buffer.size()-l<<std::endl;;
+						std::cerr<<"[RND]"<<buffer.size()-l<<std::endl;;
 						if (l>=buffer.size())
 							l = buffer.size()-1;
 						auto tmp = buffer.back();

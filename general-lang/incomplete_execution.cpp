@@ -52,12 +52,12 @@ IEProgram* IESyntaxTree::to_program() {
 		return p;
 	if ((root->get_type()->is_term) || (root->get_option() == SyntaxLeftHandSide::NoOption))
 	{
-//std::cout<<"IEProgram* IESyntaxTree::to_program branch 1\n";
+//std::cerr<<"IEProgram* IESyntaxTree::to_program branch 1\n";
 		p =((IESyntaxLeftHandSide*)(root->get_type()))->to_program();
 	}
 	else
 	{
-//std::cout<<"IEProgram* IESyntaxTree::to_program branch 2\n";
+//std::cerr<<"IEProgram* IESyntaxTree::to_program branch 2\n";
 		vector<IEProgram*> subprograms;
 		for (int i=0; i<subtree.size(); i++)
 			subprograms.push_back(((IESyntaxTree*)(subtree[i]))->to_program());

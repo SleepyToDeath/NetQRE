@@ -1,7 +1,7 @@
 #include "json_wrapper.h"
 #include <iostream>
 
-using std::cout;
+using std::cerr;
 using std::endl;
 
 GJson::GJson() {
@@ -11,7 +11,7 @@ GJson::GJson(string json_src) {
 	string err = "";
 	real_json = Json::parse(json_src, err);
 	if (err != "")
-		cout << err << endl;
+		cerr << err << endl;
 }
 
 GJson::GJson(Json real_json) {

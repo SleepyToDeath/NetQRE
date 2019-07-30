@@ -3,7 +3,7 @@
 #include <experimental/random>
 
 using std::shared_ptr;
-using std::cout;
+using std::cerr;
 using std::endl;
 
 extern int total_programs_searched;
@@ -52,6 +52,7 @@ class MergeSearch {
 	shared_ptr<IESyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
 	vector< vector<shared_ptr<GeneralExampleHandle> > > e_tree; //example tree
+	vector<shared_ptr<GeneralSyntaxTree> > global_answer;
 
 	void merge_tree(int layer)
 	{
@@ -80,7 +81,7 @@ class MergeSearch {
 				}
 		if (last != -1)
 			e_tree[layer+1].push_back(e_tree[layer][last]);
-		cout<<e_tree[layer+1].size()<<" informative data points left in layer "<<layer+1<<endl;
+		cerr<<e_tree[layer+1].size()<<" informative data points left in layer "<<layer+1<<endl;
 	}
 
 	int collect_tree(shared_ptr<GeneralExampleHandle> e)
@@ -148,10 +149,11 @@ class MergeSearch {
 		{
 			for (int i=0; i<e_tree.size(); i++)
 			{
-				cout<<"Size of global pool: "<<global_pool.size()<<endl;
+				cerr<<"Size of global pool: "<<global_pool.size()<<endl;
 				for (int j=0; j<e_tree[i].size(); j++)
 				{	
-					int local_answer_count = answer_count * (e_tree.size()-i) / e_tree.size();
+					/* [TODO] replace magic number with parameter */
+					int local_answer_count = answer_count * ((e_tree.size()-i) * 3 + e_tree.size()) / e_tree.size(); 
 					if (local_answer_count <= 0)
 						local_answer_count = 1;
 					real_search_single(e_tree[i][j], local_answer_count, global_pool);
@@ -159,7 +161,7 @@ class MergeSearch {
 
 //				merge_tree(i);
 
-				cout<<"Size of global pool: "<<global_pool.size()<<endl;
+				cerr<<"Size of global pool: "<<global_pool.size()<<endl;
 				vector<shared_ptr<GeneralSyntaxTree> > tmp;
 				for (int k=0; k<global_pool.size(); k++)
 				{
@@ -171,7 +173,7 @@ class MergeSearch {
 						tmp.push_back(global_pool[k]);
 				}
 				global_pool = tmp;
-				cout<<"Size of global pool: "<<global_pool.size()<<endl;
+				cerr<<"Size of global pool: "<<global_pool.size()<<endl;
 			}
 		}
 		catch (vector<shared_ptr<GeneralSyntaxTree> > _ans)
@@ -183,7 +185,7 @@ class MergeSearch {
 
 	vector<shared_ptr<GeneralSyntaxTree> > real_search_single(shared_ptr<GeneralExampleHandle> e, int local_answer_count, vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
-		cout<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+		cerr<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 
 		vector<shared_ptr<GeneralSyntaxTree> > ans;
 		vector<shared_ptr<GeneralSyntaxTree> > ans_wrong;
@@ -220,40 +222,42 @@ class MergeSearch {
 
 			SearchGraph graph(depth_threshold, batch_size, explore_rate, local_answer_count-ans.size(), threads, starting_symbol, rp);
 			auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
-			cout<<"Search done!!!\n";
-			cout<<"Size of global pool: "<<global_pool.size()<<endl;
+			cerr<<"Search done!!!\n";
+			cerr<<"Size of global pool: "<<global_pool.size()<<endl;
 			for (int i=0; i<ans_tmp.size(); i++)
 			{
-				cout<<i<<endl;
+				cerr<<i<<endl;
 				bool exist = false;
 				for (int j=0; j<ans.size(); j++)
 				{
-					cout<<j<<endl;
+					cerr<<j<<endl;
 					if (ans[j]->equal(ans_tmp[i]))
 					{
 						exist = true;
 						break;
 					}
 				}
-				cout<<"#2"<<endl;
+				cerr<<"#2"<<endl;
 				if (!exist)
 				{
 					ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_tmp[i]));
 					global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(ans.back())));
-					cout<<"#2.5"<<endl;
+					cerr<<"#2.5"<<endl;
 					if (global_pool.back()->to_program()->accept(top_example))
 					{
-						cout<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
-						cout<<"Size of global pool: "<<global_pool.size()<<endl;
-						cout<<"Total programs searched: "<<total_programs_searched<<endl;
-						cout<<global_pool.back()->to_string()<<endl;;
-						throw vector<shared_ptr<GeneralSyntaxTree> >(1, global_pool.back());
+						cerr<<"Answer found! Current task size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+						cerr<<"Size of global pool: "<<global_pool.size()<<endl;
+						cerr<<"Total programs searched: "<<total_programs_searched<<endl;
+						cerr<<global_pool.back()->to_string()<<endl;;
+						global_answer.push_back(global_pool.back());
+						if (global_answer.size() >= answer_count)
+							throw global_answer;
 					}
 				}
-				cout<<"#3"<<endl;
+				cerr<<"#3"<<endl;
 			}
 		}
-		cout<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+		cerr<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
 		return ans;
 	}
 
