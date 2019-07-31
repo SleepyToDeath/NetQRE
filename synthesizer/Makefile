@@ -34,7 +34,7 @@ SRC2 += ../general-lang/*pp
 SRC2 += $(INCLUDE_PATH)/rubify.cpp
 
 CONFIG_PATH = ./lang/netqre/
-GRAMMAR_FILE = netqre.json
+GRAMMAR_FILE = mode-P.json
 CONFIG_FILE = mode-P.config
 SERVER_FILE = mode-P_server_list.txt
 
@@ -49,7 +49,7 @@ netqre:
 	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -O2 --std=c++14 -lrpc -pthread -lpcap
 
 netqre-debug:
-	$(CC) -o ./testbed/synthesizer_debug $(SRC2) -g --std=c++14 -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -g --std=c++14 -lrpc -pthread -lpcap
 
 test-netqre:
 	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
@@ -58,8 +58,10 @@ test-netqre-debug:
 	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
 test-mode-P:
+	echo "running execution server"
 	cd $(EXECUTION_PATH) ; make run-server
-	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(QUERY_FILE)
+	echo "running enumerator"
+	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE)# > $(SAVING_PATH)$(QUERY_FILE)
 
 clean:
 	-rm testbed/regex

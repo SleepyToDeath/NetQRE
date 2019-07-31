@@ -23,6 +23,7 @@ using Rubify::continue_;
 using std::pair;
 using std::shared_ptr;
 using std::unique_ptr;
+using std::cerr;
 
 class NetqreExampleHandle: public GeneralExampleHandle {
 	public:
@@ -153,8 +154,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			}
 		}
 
-		cout<<"Threshold: "<<e->threshold<<endl;
-		cout<<"accurate predictions:"<<pos_counter<<" "<<neg_counter<<endl;
+		cerr<<"Threshold: "<<e->threshold<<endl;
+		cerr<<"accurate predictions:"<<pos_counter<<" "<<neg_counter<<endl;
 		res.pos_accuracy = (double)pos_counter / (double)ans_pos.size();
 		res.neg_accuracy = (double)neg_counter / (double)ans_neg.size();
 
@@ -394,7 +395,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	vector<string> get_range(int handle, shared_ptr<GeneralExample> input)
 	{
 		auto e = std::static_pointer_cast<NetqreExample>(input);
-		cout<<"Getting range for "<<handle<<endl;
+		cerr<<"Getting range for "<<handle<<endl;
 
 		if  (handle == 0)
 		{
@@ -445,7 +446,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			string tmp;
 			ss<<range[i];
 			ss>>tmp;
-			cout<<"range+= "<<tmp<<endl;
+			cerr<<"range+= "<<tmp<<endl;
 			ans.push_back(tmp);
 		}
 
