@@ -1,4 +1,4 @@
-INCLUDE_PATH = /home/sleepytodeath/other_projects/rubify
+INCLUDE_PATH = ../../../rubify
 
 CC = g++
 

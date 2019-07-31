@@ -65,7 +65,10 @@ class NetqreExample: public GeneralExample{
 					if (v_s == "")
 						break;
 					
-					tmps.push_back(v_s.split(" ").map<long long>([](string feature)->long long { feature.to_i(); }));
+					tmps.push_back(v_s.split(" ")
+						.map<long long>([](string feature)->long long { 
+							return feature.to_i(); 
+						}));
 				}
 				target.push_back(tmps);
 			}
