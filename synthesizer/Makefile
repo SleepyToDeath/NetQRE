@@ -57,9 +57,14 @@ test-netqre:
 test-netqre-debug:
 	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
 
+debug-mode-P:
+	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE)  
+	# > $(SAVING_PATH)$(QUERY_FILE)
+
 test-mode-P:
 	echo "running execution server"
 	cd $(EXECUTION_PATH) ; make run-server
+	sleep 10
 	echo "running enumerator"
 	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE)# > $(SAVING_PATH)$(QUERY_FILE)
 

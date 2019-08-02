@@ -17,6 +17,7 @@ int total_programs_searched = 0;
 SearchGraph::SearchGraph(int depth_threshold, 
 				int batch_size, 
 				int explore_rate,
+				double accuracy,
 				int answer_count, 
 				int threads,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
@@ -27,6 +28,7 @@ SearchGraph::SearchGraph(int depth_threshold,
 	this->depth_threshold = depth_threshold;
 	this->starting_symbol = starting_symbol;
 	this->explore_rate = explore_rate;
+	this->accuracy = accuracy;
 	this->threads = threads;
 	this->rp = rp;
 }
@@ -242,7 +244,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						if (simplified == explored)
 						{
 							/* send accept checking tasks to workers */
-							thread_master->do_accept(simplified, examples);
+							thread_master->do_accept(simplified, examples, {accuracy});
 							helper_counter++;
 							counter++;
 						}
@@ -250,7 +252,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						else if ((simplified != nullptr) && (visited.count(simplified) == 0))
 						{
 							/* send accept checking tasks to workers */
-							thread_master->do_accept(simplified, examples);
+							thread_master->do_accept(simplified, examples, {accuracy});
 							visited.insert(simplified);
 						}
 					}
@@ -324,22 +326,24 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 			/* print progress */
 #ifndef SILENCE_MODE
-			if (buffer.size()>0)
-			{
-				std::cerr<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
-				std::cerr<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
-				std::cerr<<"Buffer size: "<<buffer.size()<<"   |   ";
-				std::cerr<<"Answers found: "<<answer_counter<<std::endl;
-				if (buffer.size()>2)
+			Rubify::do_at_interval(0, 20, [&] () {
+				if (buffer.size()>0)
 				{
-					int index = std::experimental::randint(0,(int)buffer.size()-1);
-					std::cerr<<"One current sample: "<<(buffer[index]->to_string())<<" | #"<<buffer[index]->get_complexity()<<std::endl;
+					std::cerr<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
+					std::cerr<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
+					std::cerr<<"Buffer size: "<<buffer.size()<<"   |   ";
+					std::cerr<<"Answers found: "<<answer_counter<<std::endl;
+					if (buffer.size()>2)
+					{
+						int index = std::experimental::randint(0,(int)buffer.size()-1);
+						std::cerr<<"One current sample: "<<(buffer[index]->to_string())<<" | #"<<buffer[index]->get_complexity()<<std::endl;
+					}
+					else
+						std::cerr<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
+					std::cerr<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
+					std::cerr<<std::endl<<endl;;
 				}
-				else
-					std::cerr<<"One current sample: "<<(buffer[0]->to_string())<<" | #"<<buffer[0]->get_complexity()<<std::endl;
-				std::cerr<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
-				std::cerr<<std::endl<<endl;;
-			}
+			} );
 #endif
 
 			/* prepare next round */

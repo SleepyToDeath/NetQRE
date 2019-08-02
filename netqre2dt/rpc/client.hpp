@@ -134,6 +134,11 @@ class NetqreClientManager {
 	/* examples should be already shared with servers */
 	void exec(string code, shared_ptr<GeneralExampleHandle> e, vector<unique_ptr<IntValue> >& pos_ans, vector<unique_ptr<IntValue> >& neg_ans)
 	{
+
+//		puts("Start execution......");
+//		cout.flush();
+//		puts("Executing example size: " S_(e->positive_token.size()) "*" S_(e->negative_token.size()) "");
+
 		vector< RpcHandle > pos_handle;
 		vector< RpcHandle > neg_handle;
 		vector<int> pos_client;

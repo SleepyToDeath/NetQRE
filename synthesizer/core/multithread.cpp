@@ -35,11 +35,15 @@ void MasterThread::do_filter(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEEx
 	do_task(msg);
 }
 
-void MasterThread::do_accept(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEExample> examples) {
+void MasterThread::do_accept(shared_ptr<IESyntaxTree> candidate, 
+				shared_ptr<IEExample> examples, 
+				IEConfig cfg)
+{
 	Mailbox msg;
 	msg.type = ACCEPT;
 	msg.candidate = candidate;
 	msg.examples = examples;
+	msg.cfg = cfg;
 	do_task(msg);
 }
 
@@ -114,7 +118,7 @@ void WorkerThread::working_loop() {
 				break;
 
 				case ACCEPT:
-				msg.accept = msg.candidate->to_program()->accept(msg.examples);
+				msg.accept = msg.candidate->to_program()->accept(msg.examples, msg.cfg);
 				break;
 
 				case KILL:

@@ -23,6 +23,7 @@ class Mailbox {
 	TaskType type;
 	shared_ptr<IESyntaxTree> candidate;
 	shared_ptr<IEExample> examples;
+	IEConfig cfg;
 
 	bool finished_task; /* only used in snapshot returned by find_finished_task() */
 	bool accept;
@@ -36,8 +37,13 @@ class MasterThread : public std::enable_shared_from_this<MasterThread> {
 	~MasterThread();
 	void hire_workers();
 
-	void do_filter(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEExample> examples);
-	void do_accept(shared_ptr<IESyntaxTree> candidate, shared_ptr<IEExample> examples);
+	void do_filter(shared_ptr<IESyntaxTree> candidate, 
+					shared_ptr<IEExample> examples);
+
+	void do_accept(shared_ptr<IESyntaxTree> candidate, 
+					shared_ptr<IEExample> examples, 
+					IEConfig cfg = DEFAULT_IE_CONFIG);
+
 	void do_task(Mailbox msg);
 
 	/*	

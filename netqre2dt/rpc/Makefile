@@ -18,6 +18,7 @@ CONFIG_PATH = ../../synthesizer/lang/netqre/
 SERVER_FILE = mode-P_server_list.txt
 QUERY_FILE = query.qre
 DATA_FILE = positive.ts
+NEG_DATA_FILE = negative.ts
 RESULT_FILE = result_vector
 
 all:
@@ -32,9 +33,13 @@ test0:
 
 run-server:
 	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(DATA_FILE) 23333 &
+	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 > server_log
 
-run: run-server
+run-server-exec:
+	-killall netqre_server
+	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(DATA_FILE) 23333 > server_log
+
+run: run-server-exec
 	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)
 
 run-test: run-server

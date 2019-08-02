@@ -12,6 +12,7 @@ class SearchGraph {
 	SearchGraph(int depth_threshold, 
 				int batch_size, 
 				int explore_rate, 
+				double accuracy,
 				int answer_count, 
 				int threads,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
@@ -25,6 +26,7 @@ class SearchGraph {
 	int depth_threshold;
 	int batch_size;
 	int explore_rate;
+	double accuracy;
 	int answer_count;
 	int threads;
 	shared_ptr<SyntaxLeftHandSide> starting_symbol;

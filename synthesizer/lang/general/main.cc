@@ -31,7 +31,10 @@ int main(int argc, char *argv[]) {
 	
 	/*========== read server list =============*/
 	int server_count;
+	if (!fin_s.good())
+		throw "Failed to open server list\n";
 	fin_s >> server_count;
+	cerr<<"Server number: "<<server_count<<endl;
 	vector<string> servers;
 	vector<int> ports;
 	for (int i = 0; i<server_count; i++)
@@ -151,6 +154,7 @@ int main(int argc, char *argv[]) {
 				batch_size, 
 				explore_rate, 
 				answer_count, 
+				accuracy,
 				threads, 
 				minimal_example_size, 
 				force_search_factor, 
