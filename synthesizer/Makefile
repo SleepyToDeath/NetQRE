@@ -66,7 +66,7 @@ test-mode-P:
 	cd $(EXECUTION_PATH) ; make run-server
 	sleep 10
 	echo "running enumerator"
-	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE)# > $(SAVING_PATH)$(QUERY_FILE)
+	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(QUERY_FILE)
 
 clean:
 	-rm testbed/regex

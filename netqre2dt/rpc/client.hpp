@@ -14,7 +14,7 @@
 using std::unique_ptr;
 using std::shared_ptr;
 using std::future;
-using std::cout;
+using std::cerr;
 using std::endl;
 using std::mutex;
 using Rubify::map;
@@ -136,7 +136,7 @@ class NetqreClientManager {
 	{
 
 //		puts("Start execution......");
-//		cout.flush();
+//		cerr.flush();
 //		puts("Executing example size: " S_(e->positive_token.size()) "*" S_(e->negative_token.size()) "");
 
 		vector< RpcHandle > pos_handle;

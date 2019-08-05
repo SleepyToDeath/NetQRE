@@ -92,6 +92,18 @@ class NetqreExample: public GeneralExample{
 		return suf;
 	}
 
+	vector<shared_ptr<NetqreExample> > shatter()
+	{
+		return positive_token.map<shared_ptr<NetqreExample> >( 
+		[&] (auto ts) -> shared_ptr<NetqreExample> {
+			auto e = shared_ptr<NetqreExample> (new NetqreExample());
+			e->positive_token.push_back(ts);
+			e->negative_token.clear();
+			e->config = config;
+			return e;
+		});
+	}
+
 	shared_ptr<GeneralExampleHandle> to_handle(int pos_offset = 0, int neg_offset = 0) {
 		auto ret = shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
 		ret->positive_token = positive_token.map<int>( [&](int index, auto s)->int {
@@ -123,9 +135,11 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 		manager->exec(code, e, ans_pos, ans_neg);
 
-		puts(ans_pos.map<string>( [&](const std::unique_ptr<Netqre::IntValue>& ptr)->string {
+/*
+		cerr<< ans_pos.map<string>( [&](const std::unique_ptr<Netqre::IntValue>& ptr)->string {
 			return ptr->to_s();
-		}).to_s());
+		}).to_s() <<std::endl;
+		*/
 
 		for (int i=0; i<ans_pos.size(); i++)
 		{
@@ -157,8 +171,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			}
 		}
 
-		cerr<<"Threshold: "<<e->threshold<<endl;
-		cerr<<"accurate predictions:"<<pos_counter<<" "<<neg_counter<<endl;
+//		cerr<<"Threshold: "<<e->threshold<<endl;
+//		cerr<<"accurate predictions:"<<pos_counter<<" "<<neg_counter<<endl;
 		res.pos_accuracy = (double)pos_counter / (double)ans_pos.size();
 		res.neg_accuracy = (double)neg_counter / (double)ans_neg.size();
 
@@ -254,6 +268,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				else
 					e->indistinguishable_is_negative = false;
 
+				cerr<<"[Accuracy:"S_(((double)invalid_count) / ((double)(ans_both.size())))"]\n";
+				cerr<<"[Threshold:"S_(e->threshold)"]\n";
 				return true;
 			}
 		}

@@ -174,8 +174,10 @@ int main(int argc, char *argv[]) {
 		cerr<<"Not found!"<<endl;
 	for (int i=0; i<answer.size(); i++)
 	{
-		cout<<answer[i]->to_code().pos;
-		cerr<<answer[i]->to_program()->accept(e_train)<<endl;
+		cerr<<answer[i]->to_code().pos<<endl;
+		cerr<<answer[i]->to_program()->accept(e_train,{accuracy})<<endl;
+
+		cout<<answer[i]->to_code().pos<<" "<<e_train->threshold<<endl;
 
 		if (do_test)
 		{

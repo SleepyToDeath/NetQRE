@@ -17,13 +17,14 @@ SAVING_PATH = ../../synthesizer/testbed/mode-P/
 CONFIG_PATH = ../../synthesizer/lang/netqre/
 SERVER_FILE = mode-P_server_list.txt
 QUERY_FILE = query.qre
-DATA_FILE = positive.ts
+UNLABELED_DATA_FILE = unlabeled.ts
+POS_DATA_FILE = positive.ts
 NEG_DATA_FILE = negative.ts
 RESULT_FILE = result_vector
 
 all:
-	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
-	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
+#	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
+	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
 
 debug:
 	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
@@ -33,14 +34,17 @@ test0:
 
 run-server:
 	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 > server_log
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 > server_log &
+#	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 > server_log &
+#	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 > server_log &
+#	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 > server_log &
 
 run-server-exec:
 	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(DATA_FILE) 23333 > server_log
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23333 > server_log &
 
 run: run-server-exec
-	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)
+	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)
 
 run-test: run-server
 	./netqre_client ./testbed/test1/test.netqre ./testbed/test1/01.ts ./testbed/test1/server_list.txt

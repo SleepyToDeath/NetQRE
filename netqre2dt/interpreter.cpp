@@ -5,7 +5,7 @@
 #include <set>
 
 #include <iostream>
-using std::cout;
+using std::cerr;
 using std::endl;
 
 using std::unique_ptr;
@@ -176,7 +176,7 @@ vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 			StateValue* pred_tag = new StateValue();
 			pred_tag->active = satisfy(predicates[j], feature_stream[i]);
 #ifdef DT_DEBUG
-			cout<<"Satisfy:"<<pred_tag->to_string()<<endl;
+			cerr<<"Satisfy:"<<pred_tag->to_string()<<endl;
 #endif
 			DT::DataValue* tmp = nullptr;
 			/* [TODO] Not sure if it's compiler's bug or some bufferoverflow
@@ -266,7 +266,7 @@ shared_ptr<Machine> Interpreter::interpret(std::shared_ptr<NetqreAST> ast)
 void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine)
 {
 #ifdef DT_DEBUG
-	cout<< "Top "<<(int)ast->type <<endl;
+	cerr<< "Top "<<(int)ast->type <<endl;
 #endif
 	switch(ast->type)
 	{
@@ -301,7 +301,7 @@ void Interpreter::real_interpret(shared_ptr<NetqreAST> ast, shared_ptr<Machine> 
 std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
 #ifdef DT_DEBUG
-	cout<< "Num "<<(int)ast->type <<endl;
+	cerr<< "Num "<<(int)ast->type <<endl;
 #endif
 	auto tree = shared_ptr<NumericalTree>(new NumericalTree());
 	switch(ast->type)
@@ -349,7 +349,7 @@ std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<N
 std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
 #ifdef DT_DEBUG
-	cout<< "Agg "<<(int)ast->type <<endl;
+	cerr<< "Agg "<<(int)ast->type <<endl;
 #endif
 	shared_ptr<NetqreAST> cur = ast;
 	auto leaf = shared_ptr<QRELeaf>(new QRELeaf());
@@ -408,7 +408,7 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<NetqreAST> ast, std::shared_ptr<Machine> machine)
 {
 #ifdef DT_DEBUG
-	cout<< "QRE "<<(int)ast->type <<endl;
+	cerr<< "QRE "<<(int)ast->type <<endl;
 #endif
 	auto parse_agg_commit_op = [](shared_ptr<NetqreAST> ast) -> shared_ptr<PopStackOp> {
 		switch(ast->agg_type)
@@ -461,7 +461,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 		case NetqreExpType::QRE_PS:
 		{
 #ifdef DT_DEBUG
-			cout<< "QRE type"<<(int)ast->reg_type <<endl;
+			cerr<< "QRE type"<<(int)ast->reg_type <<endl;
 #endif
 			switch(ast->reg_type)
 			{
@@ -510,7 +510,7 @@ shared_ptr<DT::Transducer> Interpreter::real_interpret_qre(std::shared_ptr<Netqr
 shared_ptr<DT::Transducer> Interpreter::real_interpret_re(std::shared_ptr<NetqreAST> ast, shared_ptr<Machine> machine)
 {
 #ifdef DT_DEBUG
-	cout<< "RE "<<(int)ast->type <<endl;
+	cerr<< "RE "<<(int)ast->type <<endl;
 #endif
 	switch(ast->type)
 	{

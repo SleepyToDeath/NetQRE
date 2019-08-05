@@ -1,7 +1,7 @@
 #include "parser.h"
 #include <iostream>
 
-using std::cout;
+using std::cerr;
 using std::endl;
 using std::unique_ptr;
 using std::shared_ptr;
@@ -22,8 +22,8 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
 
 #ifdef DT_DEBUG
-	cout<< (int)context->type <<endl;
-	cout<< code.substr(cursor, code.length()-cursor) <<endl;
+	cerr<< (int)context->type <<endl;
+	cerr<< code.substr(cursor, code.length()-cursor) <<endl;
 #endif
 
 	auto skip_name = [&]()
@@ -319,7 +319,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			}
 
 #ifdef DT_DEBUG
-			cout<<"QRE type "<< (int)context->reg_type<<endl;;
+			cerr<<"QRE type "<< (int)context->reg_type<<endl;;
 #endif
 
 			break;

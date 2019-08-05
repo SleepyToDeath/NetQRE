@@ -4,6 +4,7 @@
 
 using std::getline;
 using Rubify::string;
+using std::cout;
 
 std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter; 
 
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
 			code_parsed.push_back(tmp.join(""));
 			code_parsed.push_back(threshold);
 			codes.push_back(code_parsed);
-			puts(parser.parse(code_parsed[0])->to_s());
+//			puts(parser.parse(code_parsed[0])->to_s());
 		}
 	}
 
@@ -51,14 +52,17 @@ int main(int argc, char *argv[])
 
 	NetqreExample test_data;
 	test_data.from_file(argv[2], "");
-	puts(test_data.positive_token.size());
-	puts(test_data.negative_token.size());
-	auto test_handle = std::static_pointer_cast<NetqreExampleHandle>(test_data.to_handle());
-	codes.each( [&](auto code) {
-		puts(code[1]);
-		test_handle->threshold = code[1].to_i();
-		cout<< interpreter->test(code[0], test_handle).pos_accuracy << " ";
+//	puts(test_data.positive_token.size());
+//	puts(test_data.negative_token.size());
+
+	test_data.shatter().each( [&] (int index, auto e) {
+		auto test_handle = std::static_pointer_cast<NetqreExampleHandle>(e->to_handle(index));
+		codes.each( [&](auto code) {
+	//		puts(code[1]);
+			test_handle->threshold = code[1].to_i();
+			cout<< interpreter->test(code[0], test_handle).pos_accuracy << " ";
+		});
+		cout << endl;
 	});
-	cout << endl;
 }
 

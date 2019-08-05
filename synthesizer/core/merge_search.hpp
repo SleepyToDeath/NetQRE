@@ -35,7 +35,7 @@ class MergeSearch {
 		this->rp = rp;
 		this->top_example = e;
 
-		std::cerr<<"Start searching! Example size:" +_S_(e->positive_token.size()) + _S_(e->negative_token.size())<<endl;
+		std::cerr<<"Start searching! Example size:" +_S_(e->positive_token.size()) + " " +  _S_(e->negative_token.size())<<endl;
 		vector<shared_ptr<GeneralSyntaxTree> > global_pool;
 		collect_tree(e);
 		return search_by_layer(global_pool);
@@ -164,8 +164,8 @@ class MergeSearch {
 					double local_accuracy = std::min(local_accuracy_pos, local_accuracy_neg);
 					if (local_accuracy < 0.01)
 						local_accuracy = 0;
-					puts("Accuracy requirement:"+_S_(local_accuracy));
-					puts("Answer requirement:"+_S_(local_answer_count));
+					cerr<<("Accuracy requirement:"+_S_(local_accuracy));
+					cerr<<("Answer requirement:"+_S_(local_answer_count));
 					real_search_single(e_tree[i][j], local_answer_count, local_accuracy, global_pool);
 				}
 
