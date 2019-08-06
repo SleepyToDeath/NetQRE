@@ -179,8 +179,20 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		return res;
 	}
 
+	class HandleNAnswer {
+		public:
+		Netqre::IntValue answer;
+		int handle;
+	};
 
-	GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg) {
+
+	GeneralMatchingResult accept(
+					AbstractCode code, 
+					bool complete,  
+					shared_ptr<GeneralExample> input, 
+					IEConfig cfg, 
+					shared_ptr<GeneralSolutionGroupConstraint> constraint ) 
+	{
 
 		/* trivial request */
 		if (cfg.required_accuracy <= 0)
@@ -215,55 +227,82 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		manager->exec(code.pos, e, ans_pos_buf, ans_neg_buf);
 
 		/* remove unique_ptr for sorting */
-		auto ans_pos = ans_pos_buf.map<Netqre::IntValue>( [&](const unique_ptr<Netqre::IntValue>& ptr)->Netqre::IntValue {
-			return *ptr;
+		auto ans_pos = ans_pos_buf.map<HandleNAnswer>( [&](int index, const unique_ptr<Netqre::IntValue>& ptr)->HandleNAnswer {
+			return {*ptr, e->positive_token[index]};
 		});
-		auto ans_neg = ans_neg_buf.map<Netqre::IntValue>( [&](const unique_ptr<Netqre::IntValue>& ptr)->Netqre::IntValue {
-			return *ptr;
+		auto ans_neg = ans_neg_buf.map<HandleNAnswer>( [&](int index, const unique_ptr<Netqre::IntValue>& ptr)->HandleNAnswer {
+			return {*ptr, e->negative_token[index]};
 		});
 
 		if (complete)
 		{
 			/* pack with group_by to ensure stable sort */
 			ans_pos = ans_pos.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
-				return ans.upper;
+				return ans.answer.upper;
 			}).group_by<StreamFieldType>( [](auto ans)->StreamFieldType {
-				return ans.lower;
+				return ans.answer.lower;
 			}).sort_by<StreamFieldType>( [](auto ans_v)->StreamFieldType {
-				return ans_v[0].lower;
+				return ans_v[0].answer.lower;
 			}).flatten();
 
 			ans_neg = ans_neg.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
-				return -(ans.lower);
+				return -(ans.answer.lower);
 			}).group_by<StreamFieldType>( [](auto ans)->StreamFieldType {
-				return ans.upper;
+				return ans.answer.upper;
 			}).sort_by<StreamFieldType>( [](auto ans_v)->StreamFieldType {
-				return -(ans_v[0].upper);
+				return -(ans_v[0].answer.upper);
 			}).flatten();
 
 			int invalid_count = 0;
+			vector<int> valid_pos_handle;
+			vector<int> valid_neg_handle;
 			auto ans_both = ans_pos.norm_zip(ans_neg);
 
 			ans_both.each( [&](auto pair) {
-				if (pair[0].lower < 0 || pair[1].lower < 0) // not matched
+				if (pair[0].answer.lower < 0 || pair[1].answer.lower < 0) // not matched
 					invalid_count ++;
-				else if (pair[0].lower < pair[1].upper) // not satisfying
+				else if (pair[0].answer.lower < pair[1].answer.upper) // not satisfying
 					invalid_count ++;
-				else if (	pair[0].lower == pair[0].upper && // ambiguous
-							pair[0].upper == pair[1].lower && 
-							pair[1].lower == pair[1].upper )
-				invalid_count ++;
+				else if (	pair[0].answer.lower == pair[0].answer.upper && // ambiguous
+							pair[0].answer.upper == pair[1].answer.lower && 
+							pair[1].answer.lower == pair[1].answer.upper )
+					invalid_count ++;
+				else
+				{
+					valid_pos_handle.push_back(pair[0].handle);
+					valid_neg_handle.push_back(pair[1].handle);
+				}
+			});
+
+			double valid_value = 0;
+			valid_pos_handle.zip(valid_neg_handle).each( [&](auto pair) {
+				if (constraint == nullptr)
+					valid_value += 1.0;
+				else
+					valid_value += (constraint->pos_weight[pair[0]] + constraint->neg_weight[pair[1]]) / 2.0;
 			});
 
 			/* too many invalid */
-			if (((double)invalid_count) / ((double)(ans_both.size())) > (1.0 - cfg.required_accuracy))
+			if (valid_value / ((double)(ans_both.size())) < cfg.required_accuracy)
 				return false;
 			else
 			{
+				if (constraint != nullptr)
+				{
+					valid_pos_handle.each( [&](auto handle) {
+						double& w = constraint->pos_weight[handle];
+						w = constraint->updater(w);
+					});
+					valid_neg_handle.each( [&](auto handle) {
+						double& w = constraint->neg_weight[handle];
+						w = constraint->updater(w);
+					});
+				}
+
 				auto pair = ans_both[invalid_count]; // the decisive pair
 
-				e->threshold = (pair[0].lower + pair[1].upper)/2;
-				if (pair[0].lower != pair[0].upper)
+				e->threshold = (pair[0].answer.lower + pair[1].answer.upper)/2;
+				if (pair[0].answer.lower != pair[0].answer.upper)
 					e->indistinguishable_is_negative = true;
 				else
 					e->indistinguishable_is_negative = false;
@@ -276,20 +315,20 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		else 
 		{
 			ans_pos = ans_pos.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
-				return ans.upper;
+				return ans.answer.upper;
 			});
 
 			ans_neg = ans_neg.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
-				return -(ans.lower);
+				return -(ans.answer.lower);
 			});
 
 			int invalid_count = 0;
 			auto ans_both = ans_pos.norm_zip(ans_neg);
 
 			ans_both.each( [&](auto pair) {
-				if (pair[0].lower < 0 || pair[1].lower < 0) // not matched
+				if (pair[0].answer.lower < 0 || pair[1].answer.lower < 0) // not matched
 					invalid_count ++;
-				else if (pair[0].upper <= pair[1].lower) // not satisfying
+				else if (pair[0].answer.upper <= pair[1].answer.lower) // not satisfying
 					invalid_count ++;
 			});
 

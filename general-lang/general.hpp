@@ -43,10 +43,25 @@ class AbstractCode {
 	bool completable;
 };
 
+class GeneralSolutionGroupConstraint {
+	public:
+	vector<double> pos_weight;
+	vector<double> neg_weight;
+
+	/* (previous_value) -> new_value */
+	std::function<double(double)> updater; 
+};
+
 class GeneralInterpreter {
 	public:
-	virtual GeneralMatchingResult accept(AbstractCode code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
-	virtual GeneralMatchingResult accept(shared_ptr<GeneralSyntaxTree> code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
+	virtual GeneralMatchingResult accept(
+					AbstractCode code, 
+					bool complete,  
+					shared_ptr<GeneralExample> input, 
+					IEConfig cfg = IEConfig(), 
+					shared_ptr<GeneralSolutionGroupConstraint> constraint = nullptr) 
+					{ return !complete; }
+//	virtual GeneralMatchingResult accept(shared_ptr<GeneralSyntaxTree> code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 	virtual double extra_complexity(shared_ptr<GeneralSyntaxTree> code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }

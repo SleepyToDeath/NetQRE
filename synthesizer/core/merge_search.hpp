@@ -35,6 +35,24 @@ class MergeSearch {
 		this->rp = rp;
 		this->top_example = e;
 
+		if (accuracy < 1.0)
+		{
+			global_constraint = shared_ptr<GeneralSolutionGroupConstraint>(new GeneralSolutionGroupConstraint());
+			global_constraint->pos_weight = vector<double>(e->positive_token.size(), 1.0);
+			global_constraint->neg_weight = vector<double>(e->negative_token.size(), 1.0);
+			global_constraint->updater = [&](double w)->double {
+				if (w == 1.0)
+					return (accuracy + 1.0) / 2.0;
+				else
+					return w;
+			};
+		}
+		else
+		{
+			global_constraint = nullptr;
+		}
+
+
 		std::cerr<<"Start searching! Example size:" +_S_(e->positive_token.size()) + " " +  _S_(e->negative_token.size())<<endl;
 		vector<shared_ptr<GeneralSyntaxTree> > global_pool;
 		collect_tree(e);
@@ -57,6 +75,7 @@ class MergeSearch {
 	shared_ptr<RedundancyPlan> rp;
 	vector< vector<shared_ptr<GeneralExampleHandle> > > e_tree; //example tree
 	vector<shared_ptr<GeneralSyntaxTree> > global_answer;
+	shared_ptr<GeneralSolutionGroupConstraint> global_constraint;
 
 /*
 	void merge_tree(int layer)
