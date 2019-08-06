@@ -35,13 +35,17 @@ test0:
 run-server:
 	-killall netqre_server
 	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 > server_log &
-#	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 > server_log &
-#	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 > server_log &
-#	./netqre_server $(SAVING_PATH)$(DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 > server_log &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 > server_log2 &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 > server_log3 &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 > server_log4 &
 
 run-server-exec:
 	-killall netqre_server
 	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23333 > server_log &
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23334 > server_log2 &
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23335 > server_log3 &
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23336 > server_log4 &
+	sleep 3
 
 run: run-server-exec
 	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)

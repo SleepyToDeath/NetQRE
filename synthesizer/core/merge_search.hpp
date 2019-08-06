@@ -291,7 +291,7 @@ class MergeSearch {
 					global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(
 									SyntaxTree::factory->get_new(ans.back())));
 					cerr<<"#2.5"<<endl;
-					if (global_pool.back()->to_program()->accept(top_example, {accuracy}))
+					if (static_pointer_cast<GeneralProgram>(global_pool.back()->to_program())->accept(top_example, {accuracy}, global_constraint))
 					{
 						cerr<<"Answer found! Current task size: "<<
 										e->positive_token.size()<<" "<<

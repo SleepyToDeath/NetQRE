@@ -103,6 +103,12 @@ class GeneralProgram: public IEProgram {
 	source_code(_src), complete(_complete) {
 	}
 
+	bool accept( shared_ptr<IEExample> input, IEConfig cfg, shared_ptr<GeneralSolutionGroupConstraint> constraint) {
+		if (!source_code.completable)
+			return true;
+		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg, constraint);
+	}
+
 	bool accept( shared_ptr<IEExample> input, IEConfig cfg = DEFAULT_IE_CONFIG) {
 		if (!source_code.completable)
 			return true;
