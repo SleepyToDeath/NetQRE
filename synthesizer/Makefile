@@ -10,7 +10,9 @@ test: test-netqre
 
 INCLUDE_PATH = ../../rubify
 
-CC=g++
+CC=g++-9
+STD=--std=c++2a
+
 SRC = core/*pp
 #SRC += lang/network_tokenizer/*pp
 SRC += core/*h
@@ -46,10 +48,10 @@ NEG_FILE = negative.ts
 EXECUTION_PATH = ../netqre2dt/rpc
 
 netqre:
-	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -O2 --std=c++14 -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -O2 $(STD) -lrpc -pthread -lpcap
 
 netqre-debug:
-	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -g --std=c++14 -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -g $(STD) -lrpc -pthread -lpcap
 
 test-netqre:
 	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt

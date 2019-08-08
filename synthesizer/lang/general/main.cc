@@ -59,15 +59,8 @@ int main(int argc, char *argv[]) {
 
 
 	/*========== read config =============*/
-	int do_test;
-	int search_depth;
-	int batch_size;
-	int answer_count;
-	int explore_rate;
-	int threads;
-	int minimal_example_size;
-	int force_search_factor;
-	double accuracy;
+	map<string, int> int_config;
+	map<string, double> float_config;
 
 	auto read_int_parameter = [](ifstream& fin, int& param) {
 		string s;
@@ -83,15 +76,24 @@ int main(int argc, char *argv[]) {
 		ss >> param;
 	};
 
-	read_int_parameter(fin_c, do_test);
-	read_int_parameter(fin_c, search_depth);
-	read_int_parameter(fin_c, batch_size);
-	read_int_parameter(fin_c, explore_rate);
-	read_int_parameter(fin_c, answer_count);
-	read_int_parameter(fin_c, threads);
-	read_int_parameter(fin_c, minimal_example_size);
-	read_int_parameter(fin_c, force_search_factor);
-	read_float_parameter(fin_c, accuracy);
+	read_int_parameter(fin_c, int_config["do_test"]);
+	read_int_parameter(fin_c, int_config["search_depth"]);
+	read_int_parameter(fin_c, int_config["batch_size"]);
+	read_int_parameter(fin_c, int_config["explore_rate"]);
+	read_int_parameter(fin_c, int_config["answer_count"]);
+	read_int_parameter(fin_c, int_config["threads"]);
+	read_int_parameter(fin_c, int_config["minimal_example_size"]);
+	read_int_parameter(fin_c, int_config["force_search_factor"]);
+	read_float_parameter(fin_c, float_config["accuracy"]);
+
+	provide_([&](string name)->int {
+		return int_config[name];
+	});
+
+	provide_([&](string name)->double {
+		return float_config[name];
+	});
+
 	/*=============================================*/
 
 
@@ -104,12 +106,12 @@ int main(int argc, char *argv[]) {
 	auto e_train_ = shared_ptr<NetqreExample>(new NetqreExample());
 	e_train_->from_file(argv[2], argv[3]);
 	auto e_test_ = e_train_;
-	if (do_test)
+	if (require_(int, "do_test"))
 		e_test_ = e_train_->split();
 	
 	auto e_train = static_pointer_cast<NetqreExampleHandle>(e_train_->to_handle());
 	auto e_test = e_train;
-	if (do_test)
+	if (require_(int, "do_test"))
 		e_test = static_pointer_cast<NetqreExampleHandle>(e_test_->to_handle(
 					e_train->positive_token.size(), 
 					e_train->negative_token.size()));
@@ -149,18 +151,7 @@ int main(int argc, char *argv[]) {
 	/*========== do searching =============*/
 	vector<shared_ptr<GeneralSyntaxTree> > answer;
 	MergeSearch search_engine;
-	answer = search_engine.search(
-				search_depth, 
-				batch_size, 
-				explore_rate, 
-				answer_count, 
-				accuracy,
-				threads, 
-				minimal_example_size, 
-				force_search_factor, 
-				parser->root, 
-				parser->rp, 
-				e_train);
+	answer = search_engine.search(parser->root, parser->rp, e_train);
 	/*=============================================*/
 
 
@@ -175,11 +166,11 @@ int main(int argc, char *argv[]) {
 	for (int i=0; i<answer.size(); i++)
 	{
 		cerr<<answer[i]->to_code().pos<<endl;
-		cerr<<answer[i]->to_program()->accept(e_train,{accuracy})<<endl;
+		cerr<<answer[i]->to_program()->accept(e_train,{require_(double, "accuracy")})<<endl;
 
 		cout<<answer[i]->to_code().pos<<" "<<e_train->threshold<<endl;
 
-		if (do_test)
+		if (require_(int, "do_test"))
 		{
 			e_test->threshold = e_train->threshold;
 			e_test->indistinguishable_is_negative = e_train->indistinguishable_is_negative;

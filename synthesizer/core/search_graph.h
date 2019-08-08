@@ -9,12 +9,8 @@ class SearchGraph {
 	public:
 
 	/* incomplete execution version */
-	SearchGraph(int depth_threshold, 
-				int batch_size, 
-				int explore_rate, 
-				double accuracy,
+	SearchGraph(
 				int answer_count, 
-				int threads,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp );
 	vector<shared_ptr<IESyntaxTree> > search_top_level_v2(
@@ -23,7 +19,7 @@ class SearchGraph {
 		std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate);
 
 	private:
-	int depth_threshold;
+	int search_depth;
 	int batch_size;
 	int explore_rate;
 	double accuracy;

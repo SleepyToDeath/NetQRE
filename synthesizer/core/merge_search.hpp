@@ -12,25 +12,14 @@ extern int total_programs_searched;
 class MergeSearch {
 	public:
 	vector<shared_ptr<GeneralSyntaxTree> > search(
-				int depth_threshold, 
-				int batch_size, 
-				int explore_rate, 
-				int answer_count, 
-				double accuracy,
-				int threads,
-				int minimal_example_size,
-				int force_search_factor,
 				shared_ptr<IESyntaxLeftHandSide> starting_symbol, 
 				shared_ptr<RedundancyPlan> rp,
 				shared_ptr<GeneralExampleHandle> e)
 	{
-		this->depth_threshold = depth_threshold;
-		this->batch_size = batch_size;
-		this->explore_rate = explore_rate;
-		this->answer_count = answer_count;
-		this->accuracy = accuracy;
-		this->threads = threads;
-		this->minimal_example_size = minimal_example_size;
+		this->answer_count = require_(int, "answer_count");
+		this->accuracy = require_(double, "accuracy");
+		this->minimal_example_size = require_(int, "minimal_example_size");
+		this->force_search_factor = require_(int, "force_search_factor");
 		this->starting_symbol = starting_symbol;
 		this->rp = rp;
 		this->top_example = e;
@@ -62,12 +51,8 @@ class MergeSearch {
 
 	private:
 	
-	int depth_threshold;
-	int batch_size;
-	int explore_rate;
 	int answer_count;
 	double accuracy;
-	int threads;
 	int minimal_example_size;
 	int force_search_factor;
 	shared_ptr<GeneralExampleHandle> top_example;
@@ -259,12 +244,8 @@ class MergeSearch {
 				}
 			}
 
-			SearchGraph graph(depth_threshold, 
-							batch_size, 
-							explore_rate, 
-							accuracy,
+			SearchGraph graph(
 							local_answer_count-ans.size(), 
-							threads, 
 							starting_symbol, 
 							rp);
 
