@@ -425,12 +425,12 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		else if (option == SyntaxLeftHandSide::NoOption)
 		{
 			complexity = 300.0;
-			if (name == "#feature_set")
-				complexity = 500.0;
-			if (name == "#agg_op")
-				complexity = 500.0;
-			if (name == "#re")
-				complexity = 200.0;
+//			if (name == "#feature_set")
+//				complexity = 500.0;
+//			if (name == "#agg_op")
+//				complexity = 500.0;
+//			if (name == "#re")
+//				complexity = 200.0;
 			complexity -= prune_count * 200;
 		}
 		else
@@ -442,10 +442,12 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			complexity += (code->subtree.size()-1) * 150.0;
 			complexity -= prune_count * 100;
 
+/*
 			if (name == "#predicate_set" && code->subtree.size() == 1)
 				complexity += 300;
 			if (name == "#predicate_set" && code->subtree.size() == 2)
 				complexity -= 600;
+				*/
 		}
 		return complexity;
 	}

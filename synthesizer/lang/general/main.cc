@@ -32,7 +32,10 @@ int main(int argc, char *argv[]) {
 	/*========== read server list =============*/
 	int server_count;
 	if (!fin_s.good())
-		throw "Failed to open server list\n";
+	{
+		cerr<< "Failed to open server list\n";
+		throw "wtf";
+	}
 	fin_s >> server_count;
 	cerr<<"Server number: "<<server_count<<endl;
 	vector<string> servers;
@@ -151,7 +154,14 @@ int main(int argc, char *argv[]) {
 	/*========== do searching =============*/
 	vector<shared_ptr<GeneralSyntaxTree> > answer;
 	MergeSearch search_engine;
-	answer = search_engine.search(parser->root, parser->rp, e_train);
+	try{
+		answer = search_engine.search(parser->root, parser->rp, e_train);
+	}
+	catch(char const* name)
+	{
+		cerr<<name<<endl;
+		throw name;
+	}
 	/*=============================================*/
 
 

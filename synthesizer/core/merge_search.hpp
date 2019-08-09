@@ -165,7 +165,8 @@ class MergeSearch {
 
 					double local_accuracy_pos = accuracy * (double)e_tree[i][0]->positive_token.size() / (double)e_tree.back()[0]->positive_token.size();
 					double local_accuracy_neg = accuracy * (double)e_tree[i][0]->negative_token.size() / (double)e_tree.back()[0]->negative_token.size();
-					double local_accuracy = std::min(local_accuracy_pos, local_accuracy_neg);
+//					double local_accuracy = std::min(local_accuracy_pos, local_accuracy_neg);
+					double local_accuracy = accuracy;
 					if (local_accuracy < 0.01)
 						local_accuracy = 0;
 					cerr<<("Accuracy requirement:"+_S_(local_accuracy));

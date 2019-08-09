@@ -1,6 +1,7 @@
 INCLUDE_PATH = ../../../rubify
 
-CC = g++
+CC = g++-9
+STD = --std=c++2a
 
 SRC = ./client.hpp
 SRC += ../*pp
@@ -23,28 +24,27 @@ NEG_DATA_FILE = negative.ts
 RESULT_FILE = result_vector
 
 all:
-#	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
-	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 --std=c++14
+	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 debug:
-	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g --std=c++14
+	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g $(STD)
 
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &
 
+LAST_SERVER = 7
+
 run-server:
-	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 > server_log &
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 > server_log2 &
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 > server_log3 &
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 > server_log4 &
+	./killall.sh $(LAST_SERVER)
+	./distribute.sh $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(LAST_SERVER)
+	./runall.sh $(LAST_SERVER)
+	sleep 3
 
 run-server-exec:
-	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23333 > server_log &
-	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23334 > server_log2 &
-	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23335 > server_log3 &
-	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23336 > server_log4 &
+	./killall.sh $(LAST_SERVER)
+	./distribute.sh $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(LAST_SERVER)
+	./runall.sh $(LAST_SERVER)
 	sleep 3
 
 run: run-server-exec
@@ -72,41 +72,73 @@ test1:
 	./netqre_server ./positive.ts ./negative.ts 23348 &
                                                 
 test:                                           
-	./netqre_server ./positive.ts ./negative.ts 23333 &
-	./netqre_server ./positive.ts ./negative.ts 23334 &
-	./netqre_server ./positive.ts ./negative.ts 23335 &
-	./netqre_server ./positive.ts ./negative.ts 23336 &
-	./netqre_server ./positive.ts ./negative.ts 23337 &
-	./netqre_server ./positive.ts ./negative.ts 23338 &
-	./netqre_server ./positive.ts ./negative.ts 23339 &
-	./netqre_server ./positive.ts ./negative.ts 23340 &
-	./netqre_server ./positive.ts ./negative.ts 23341 &
-	./netqre_server ./positive.ts ./negative.ts 23342 &
-	./netqre_server ./positive.ts ./negative.ts 23343 &
-	./netqre_server ./positive.ts ./negative.ts 23344 &
-	./netqre_server ./positive.ts ./negative.ts 23345 &
-	./netqre_server ./positive.ts ./negative.ts 23346 &
-	./netqre_server ./positive.ts ./negative.ts 23347 &
-	./netqre_server ./positive.ts ./negative.ts 23348 &
-	./netqre_server ./positive.ts ./negative.ts 23349 &
-	./netqre_server ./positive.ts ./negative.ts 23351 &
-	./netqre_server ./positive.ts ./negative.ts 23352 &
-	./netqre_server ./positive.ts ./negative.ts 23353 &
-	./netqre_server ./positive.ts ./negative.ts 23354 &
-	./netqre_server ./positive.ts ./negative.ts 23355 &
-	./netqre_server ./positive.ts ./negative.ts 23356 &
-	./netqre_server ./positive.ts ./negative.ts 23357 &
-	./netqre_server ./positive.ts ./negative.ts 23358 &
-	./netqre_server ./positive.ts ./negative.ts 23359 &
-	./netqre_server ./positive.ts ./negative.ts 23360 &
-	./netqre_server ./positive.ts ./negative.ts 23361 &
-	./netqre_server ./positive.ts ./negative.ts 23362 &
-	./netqre_server ./positive.ts ./negative.ts 23363 &
-	./netqre_server ./positive.ts ./negative.ts 23364 &
-	./netqre_server ./positive.ts ./negative.ts 23365 &
+	./netqre_server ./positive.ts ./negative.ts 23333 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23334 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23335 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23336 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23337 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23338 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23339 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23340 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23341 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23342 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23343 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23344 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23345 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23346 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23347 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23348 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23349 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23350 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23351 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23352 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23353 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23354 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23355 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23356 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23357 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23358 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23359 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23360 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23361 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23362 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23363 >> server_log &
+	sleep 0.1
+	./netqre_server ./positive.ts ./negative.ts 23364 >> server_log &
+	sleep 0.1
 
 dtest:
 	gdb -ex run --args ./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap
 
 kill:
-	killall -9 netqre_server
+	-killall -9 netqre_server

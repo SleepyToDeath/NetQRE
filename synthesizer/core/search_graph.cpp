@@ -243,7 +243,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 			auto print_progress = [&]() {
 				/* print progress */
 				#ifndef SILENCE_MODE
-				Rubify::do_at_interval(0, 20, [&] () {
+				Rubify::do_at_interval(0, 1, [&] () {
 					if (buffer.size()>0)
 					{
 	//					std::cerr<<"Progress: "<<progress*100.0<<"%"<<"   |   ";

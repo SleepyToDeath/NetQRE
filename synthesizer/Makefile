@@ -66,7 +66,7 @@ debug-mode-P:
 test-mode-P:
 	echo "running execution server"
 	cd $(EXECUTION_PATH) ; make run-server
-	sleep 10
+	sleep 3
 	echo "running enumerator"
 	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(QUERY_FILE)
 

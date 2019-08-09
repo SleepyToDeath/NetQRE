@@ -1,5 +1,6 @@
+#!/bin/bash
 make kill
-ssh n2 "cd rpc; make kill"
-ssh n3 "cd rpc; make kill"
-ssh n4 "cd rpc; make kill"
-ssh n5 "cd rpc; make kill"
+for ((i=2; i<=$1; i++))
+do
+	ssh n$i "cd rpc; make kill" & 
+done

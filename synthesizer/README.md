@@ -13,9 +13,19 @@ This directory contains only the code for enumerator. The execution server is lo
 in `../netqre2dt/` and `../data-transducer/`. Its build directory is `../netqre2dt/rpc`.
 
 ##Dependency
-- Any g++ version that supports C++11 (C++14 is even better)
+- A compiler that supports full feature of c++20
+(   
+You can install g++-9 on older version of Ubuntu:  
+`sudo add-apt-repository ppa:ubuntu-toolchain-r/test`  
+`sudo apt-get update`  
+`sudo apt-get install g++-9`  
+)   
+
 - rpclib (may need manual installation; see `rpclib.net` for more detail; type `sudo make install` after the compile step)
+
 - libpcap, libpcap-dev
+
+- Rubify (SleepyToDeath/rubify) (if you see strange grammar in the code, it's probably from this library)
 
 ##Compile
 - `make` here
@@ -53,10 +63,11 @@ Whenever you change the test data, run `distribute.sh` again and then
 refresh servers.
 
 
-# How does it work?
+# How the synthesis work?
 
-Details of NetQRE can be found in our paper. Here I only introduce the intuition with regular
-expression.
+The synthesis method should work generally for many languages.
+Details of synthesizing NetQRE can be found in our paper. Here I only introduce the 
+intuition with regular expression.
 
 ## The naive way
 A naive way is to enumerate all programs in increasing order of size, and test every program

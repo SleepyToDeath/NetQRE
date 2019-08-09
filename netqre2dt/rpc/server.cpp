@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 		Netqre::IntValueMsg ret;
 		ret.lower = ans->lower;
 		ret.upper = ans->upper;
+		puts("Reply:"+_S_(ret.lower)+" "+_S_(ret.upper));
 		return ret;
 	});
 
