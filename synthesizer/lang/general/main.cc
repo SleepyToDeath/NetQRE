@@ -23,6 +23,7 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter;
 /*
 */
 int main(int argc, char *argv[]) {
+	{
 
 	ifstream fin_g(argv[1]); // grammar
 	ifstream fin_c(argv[4]); // config
@@ -88,6 +89,7 @@ int main(int argc, char *argv[]) {
 	read_int_parameter(fin_c, int_config["minimal_example_size"]);
 	read_int_parameter(fin_c, int_config["force_search_factor"]);
 	read_float_parameter(fin_c, float_config["accuracy"]);
+	read_float_parameter(fin_c, float_config["accuracy_exp"]);
 
 	provide_([&](string name)->int {
 		return int_config[name];
@@ -178,7 +180,9 @@ int main(int argc, char *argv[]) {
 		cerr<<answer[i]->to_code().pos<<endl;
 		cerr<<answer[i]->to_program()->accept(e_train,{require_(double, "accuracy")})<<endl;
 
-		cout<<answer[i]->to_code().pos<<" "<<e_train->threshold<<endl;
+		cout<<answer[i]->to_code().pos<<" "<<std::fixed
+						<<static_cast<int>(e_train->threshold)<<" "
+						<<static_cast<int>(e_train->indistinguishable_is_negative)<<endl;
 
 		if (require_(int, "do_test"))
 		{
@@ -191,4 +195,5 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	/*=============================================*/
+	}
 }

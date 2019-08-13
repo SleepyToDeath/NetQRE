@@ -307,8 +307,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				else
 					e->indistinguishable_is_negative = false;
 
-				cerr<<"[Accuracy:"S_(((double)invalid_count) / ((double)(ans_both.size())))"]\n";
-				cerr<<"[Threshold:"S_(e->threshold)"]\n";
+//				cerr<<"[Accuracy:" S_(((double)invalid_count) / ((double)(ans_both.size()))) "]\n";
+//				cerr<<"[Threshold:" S_(e->threshold) "]\n";
 				return true;
 			}
 		}
@@ -418,29 +418,31 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		auto prune_count = code->prune_count;
 		if (is_term)
 		{
-//				complexity = -100.0;
-			if ( name == "_")
-				complexity = 300;
+//			complexity = 100.0;
+//			if ( name == "_")
+//				complexity = 300;
 		}
 		else if (option == SyntaxLeftHandSide::NoOption)
 		{
-			complexity = 300.0;
+//			complexity = 200.0;
 //			if (name == "#feature_set")
 //				complexity = 500.0;
 //			if (name == "#agg_op")
 //				complexity = 500.0;
 //			if (name == "#re")
 //				complexity = 200.0;
-			complexity -= prune_count * 200;
+//			complexity -= prune_count * 200;
 		}
 		else
 		{
+			if (name == "#predicate_entry" )
+				return 150;
 			complexity = 0;
 			for (int i=0; i<code->subtree.size(); i++)
 				complexity += extra_complexity(static_pointer_cast<GeneralSyntaxTree>(code->subtree[i]));
 
 			complexity += (code->subtree.size()-1) * 150.0;
-			complexity -= prune_count * 100;
+//			complexity -= prune_count * 100;
 
 /*
 			if (name == "#predicate_set" && code->subtree.size() == 1)

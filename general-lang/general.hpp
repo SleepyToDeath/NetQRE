@@ -50,6 +50,20 @@ class GeneralSolutionGroupConstraint {
 
 	/* (previous_value) -> new_value */
 	std::function<double(double)> updater; 
+
+	double total_weight_pos()
+	{
+		double sum = 0;
+		pos_weight.each([&](double& w) { sum += w; });
+		return sum / (double)pos_weight.size();
+	}
+
+	double total_weight_neg()
+	{
+		double sum = 0;
+		neg_weight.each([&](double& w) { sum += w; });
+		return sum / (double)neg_weight.size();
+	}
 };
 
 class GeneralInterpreter {

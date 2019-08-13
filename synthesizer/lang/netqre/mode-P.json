@@ -15,8 +15,7 @@
 		] },
 		{ "#qre_vs": [
 			[ "#agg_op","$(", "#qre_vs", "$,", "#feature_set", "$)" ],
-			[ "$split(","#qre_ps",", /*(_)/?1, sum)" ],
-			[ "$split( split(/*(_)/?1,","#qre_ps",",sum), /*(_)/?1, sum)" ]
+			[ "#qre_ps" ]
 		] },
 		{ "#agg_op": [
 			[ "max" ],
@@ -34,6 +33,7 @@
 		{ "#re": [
 			[ "#re", "#re" ],
 			[ "_" ],
+			[ "*(_)" ],
 			[ "#predicate_set" ]
 		]},
 		{ "#predicate_set": [

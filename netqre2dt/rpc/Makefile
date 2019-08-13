@@ -24,7 +24,7 @@ NEG_DATA_FILE = negative.ts
 RESULT_FILE = result_vector
 
 all:
-	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
+#	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 debug:
@@ -36,16 +36,18 @@ test0:
 LAST_SERVER = 7
 
 run-server:
+	echo "Staring QRE Servers"
 	./killall.sh $(LAST_SERVER)
 	./distribute.sh $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(LAST_SERVER)
 	./runall.sh $(LAST_SERVER)
-	sleep 3
+	sleep 5
 
 run-server-exec:
+	echo "Staring QRE Servers"
 	./killall.sh $(LAST_SERVER)
 	./distribute.sh $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(LAST_SERVER)
 	./runall.sh $(LAST_SERVER)
-	sleep 3
+	sleep 5
 
 run: run-server-exec
 	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)

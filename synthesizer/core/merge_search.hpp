@@ -18,6 +18,7 @@ class MergeSearch {
 	{
 		this->answer_count = require_(int, "answer_count");
 		this->accuracy = require_(double, "accuracy");
+		this->accuracy_exp = require_(double, "accuracy_exp");
 		this->minimal_example_size = require_(int, "minimal_example_size");
 		this->force_search_factor = require_(int, "force_search_factor");
 		this->starting_symbol = starting_symbol;
@@ -30,10 +31,7 @@ class MergeSearch {
 			global_constraint->pos_weight = vector<double>(e->positive_token.size(), 1.0);
 			global_constraint->neg_weight = vector<double>(e->negative_token.size(), 1.0);
 			global_constraint->updater = [&](double w)->double {
-				if (w == 1.0)
-					return (accuracy + 1.0) / 2.0;
-				else
-					return w;
+				return (accuracy/accuracy_exp + w) / 2;
 			};
 		}
 		else
@@ -53,6 +51,7 @@ class MergeSearch {
 	
 	int answer_count;
 	double accuracy;
+	double accuracy_exp;
 	int minimal_example_size;
 	int force_search_factor;
 	shared_ptr<GeneralExampleHandle> top_example;
@@ -157,9 +156,8 @@ class MergeSearch {
 				for (int j=0; j<e_tree[i].size(); j++)
 				{	
 					/* [TODO] replace magic number with parameter */
-					int local_answer_count = answer_count * 
-									((e_tree.size()-i) + e_tree.size()) / 
-									e_tree.size(); 
+					int local_answer_count = answer_count;
+//									* (i+1) / e_tree.size(); 
 					if (local_answer_count <= 0)
 						local_answer_count = 1;
 
@@ -169,8 +167,8 @@ class MergeSearch {
 					double local_accuracy = accuracy;
 					if (local_accuracy < 0.01)
 						local_accuracy = 0;
-					cerr<<("Accuracy requirement:"+_S_(local_accuracy));
-					cerr<<("Answer requirement:"+_S_(local_answer_count));
+					cerr<<("Accuracy requirement:"+_S_(local_accuracy))+" ";
+					cerr<<("Answer requirement:"+_S_(local_answer_count))+" ";
 					real_search_single(e_tree[i][j], local_answer_count, local_accuracy, global_pool);
 				}
 
@@ -182,7 +180,7 @@ class MergeSearch {
 				{
 					int acc_count =0;
 					for (int j=0; j<e_tree[i].size(); j++)
-						if (global_pool[k]->to_program()->accept(e_tree[i][j]))
+						if (global_pool[k]->to_program()->accept(e_tree[i][j], {accuracy}))
 							acc_count ++;
 					if (acc_count >= e_tree[i].size() / 2)
 						tmp.push_back(global_pool[k]);
@@ -253,26 +251,28 @@ class MergeSearch {
 			auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
 			cerr<<"Search done!!!\n";
 			cerr<<"Size of global pool: "<<global_pool.size()<<endl;
+			cerr<<"Answers found so far: "<<global_answer.size()<<endl;
+			cerr<<"Weight remain: "<<global_constraint->total_weight_pos()<<" "<<global_constraint->total_weight_neg()<<endl;
 			for (int i=0; i<ans_tmp.size(); i++)
 			{
-				cerr<<i<<endl;
+//				cerr<<i<<endl;
 				bool exist = false;
 				for (int j=0; j<ans.size(); j++)
 				{
-					cerr<<j<<endl;
+//					cerr<<j<<endl;
 					if (ans[j]->equal(ans_tmp[i]))
 					{
 						exist = true;
 						break;
 					}
 				}
-				cerr<<"#2"<<endl;
+//				cerr<<"#2"<<endl;
 				if (!exist)
 				{
 					ans.push_back(static_pointer_cast<GeneralSyntaxTree>(ans_tmp[i]));
 					global_pool.push_back(static_pointer_cast<GeneralSyntaxTree>(
 									SyntaxTree::factory->get_new(ans.back())));
-					cerr<<"#2.5"<<endl;
+//					cerr<<"#2.5"<<endl;
 					if (static_pointer_cast<GeneralProgram>(global_pool.back()->to_program())->accept(top_example, {accuracy}, global_constraint))
 					{
 						cerr<<"Answer found! Current task size: "<<
@@ -286,10 +286,10 @@ class MergeSearch {
 							throw global_answer;
 					}
 				}
-				cerr<<"#3"<<endl;
+//				cerr<<"#3"<<endl;
 			}
 		}
-		cerr<<"Done! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+		cerr<<"Done! Size: "<<e->positive_token[0]<<"~"<<e->positive_token.size()<<" "<<e->negative_token[0]<<"~"<<e->negative_token.size()<<endl;
 		return ans;
 	}
 
