@@ -12,7 +12,7 @@ def ip2int (ip)
 end
 
 def row2flow_signature(row)
-  return [ip2int(row[1]), row[2].to_i, ip2int(row[3]), row[4].to_i, row[5]]
+  return [ip2int(row[1]), row[2].to_i, ip2int(row[3]), row[4].to_i, row[5].to_i]
 end
 
 def row2time(row)
@@ -34,22 +34,22 @@ class PPacket
 
     @valid = true
     @time = time
-    @pkt = pkt
-    if @pkt.is_ipv6?
-      @src_ip = @pkt.ipv6_src
-      @dst_ip = @pkt.ipv6_dst
+    pkt = pkt
+    if pkt.is_ipv6?
+      @src_ip = pkt.ipv6_src
+      @dst_ip = pkt.ipv6_dst
     else
-      @src_ip = @pkt.ip_src
-      @dst_ip = @pkt.ip_dst
+      @src_ip = pkt.ip_src
+      @dst_ip = pkt.ip_dst
     end
     @protocol = 0
-    if @pkt.is_tcp?
-      @src_port = @pkt.tcp_src
-      @dst_port = @pkt.tcp_dst
+    if pkt.is_tcp?
+      @src_port = pkt.tcp_src
+      @dst_port = pkt.tcp_dst
       @protocol = 6
     elsif pkt.is_udp?
-      @src_port = @pkt.udp_sport
-      @dst_port = @pkt.udp_dport
+      @src_port = pkt.udp_sport
+      @dst_port = pkt.udp_dport
       @protocol = 17
     end
   end
@@ -79,11 +79,12 @@ class FFlowSeq
 end
 
 class TTrafic
-  attr_accessor :csv, :traffic, :timeout, :flows, :abnormal_count, :crazy_count
+  attr_accessor :csv, :traffic, :timeout, :flows, :negative_count, :abnormal_count, :crazy_count
   def initialize(csv, traffic, timeout)
     @csv = csv
     @traffic = traffic
     @timeout = timeout
+    @negative_count = 0
     @abnormal_count = 0
     @crazy_count = 0
     @flows = {}
@@ -130,7 +131,7 @@ class TTrafic
           next
         else
           fs.ptr += 1
-          while fs.ptr <= fs.seq.size and fs.seq[fs.ptr].est_time - pkt.time >= @timeout
+          while fs.ptr < fs.seq.size and fs.seq[fs.ptr].est_time - pkt.time >= @timeout
             @crazy_count += 1
             fs.ptr += 1
           end
@@ -146,6 +147,8 @@ class TTrafic
             pkt.label = 1
           end
         end
+      else
+        @negative_count += 1
       end
     end
   end
@@ -164,9 +167,9 @@ def write_pos_file(pos, file_name)
   end
 end
 
-def parse_time(csv)
+def parse_time(csv, is_afternoon)
   csv.each do |row|
-    row[6] = Time.parse(row[6]).to_i
+    row[6] = Time.parse(row[6]).to_i + (is_afternoon ? (3600*11) : 0)
   end
 end
 
@@ -178,11 +181,17 @@ end
 
 def parse_packets(cap)
   traffic = []
+  counter = 0
   cap.each_packet do |raw|
-      time = Time.at(raw.time).to_i
-      pkt = PacketFu::Packet.parse raw.data
-      pp = (pkt.is_ip? or pkt.is_ipv6?) ? PPacket.new(time, pkt) : PPacket.new(time)
-      traffic << pp
+    counter += 1
+    time = Time.at(raw.time)
+    pkt = PacketFu::Packet.parse raw.data
+    pp = (pkt.is_ip? or pkt.is_ipv6?) ? PPacket.new(time.to_i, pkt) : PPacket.new(time.to_i)
+    traffic << pp
+    if counter % 10000 == 0
+      puts counter
+      puts time.to_i
+    end
   end
   return traffic
 end
@@ -190,15 +199,44 @@ end
 def main
   csv = CSV.read(ARGV[0])
   pos = get_pos(csv)
-  parse_time(pos)
+  parse_time(pos, (ARGV[0].include? "Afternoon"))
+  puts "label starting time: #{pos.min{|row| row[6]}[6]}"
+  puts "label ending time: #{pos.max{|row| row[6]}[6]}"
   write_pos_file(pos, ARGV[0])
   puts "Positive: #{pos.size}/#{csv.size}"
 
-  cap = PCAPRUB::Pcap.open_offline(ARGV[1])
-  traffic = parse_packets(cap)
-  tt = TTrafic(pos, traffic, 600)
-  puts "#{tt.abnormal_count}/#{pos.size}/#{traffic.size} abnormal packets"
-  puts "#{tt.crazy_count} missing vectors"
+  traffic = []
+  threads = []
+  combine_lock = Mutex.new
+  caps = []
+  for file_name in ARGV[1..-1] do
+    caps << PCAPRUB::Pcap.open_offline(file_name)
+  end
+  caps.each do |cap|
+    threads << Thread.new do
+      this_traffic = parse_packets(cap)
+      combine_lock.synchronize do
+        traffic += this_traffic
+      end
+    end
+  end
+  threads.each {|t| t.join}
+  traffic.sort_by! { |p| p.time }
+  tt = TTrafic.new(pos, traffic, 1200)
+
+  uncovered = 0
+  tt.flows.each do |_, fs|
+    fs.seq.each do |ff|
+      if ff.pkts.empty?
+        uncovered += 1
+      end
+    end
+  end
+
+  puts "#{tt.negative_count}/#{traffic.size} negative packets"
+  puts "#{tt.abnormal_count}/#{traffic.size} abnormal packets"
+  puts "#{tt.crazy_count}/#{pos.size} missing vectors"
+  puts "#{uncovered - tt.crazy_count}/#{pos.size} uncovered vectors"
 end
 
 
