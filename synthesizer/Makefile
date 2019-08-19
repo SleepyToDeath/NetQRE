@@ -10,7 +10,7 @@ test: test-netqre
 
 INCLUDE_PATH = ../../rubify
 
-CC=g++-9
+CC=g++
 STD=--std=c++2a
 
 SRC = core/*pp
@@ -39,6 +39,7 @@ CONFIG_PATH = ./lang/netqre/
 GRAMMAR_FILE = mode-P.json
 CONFIG_FILE = mode-P.config
 SERVER_FILE = mode-P_server_list.txt
+SERVER_FILE_LOCAL = local_server_list.txt
 
 SAVING_PATH = ./testbed/mode-P/
 QUERY_FILE = query.qre
@@ -62,6 +63,14 @@ test-netqre-debug:
 debug-mode-P:
 	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE)  
 	# > $(SAVING_PATH)$(QUERY_FILE)
+
+test-mode-P-local:
+	echo "running execution server"
+	cd $(EXECUTION_PATH) ; make run-server-local
+	sleep 3
+	echo "running enumerator"
+	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) > $(SAVING_PATH)$(QUERY_FILE)
+
 
 test-mode-P:
 	echo "running execution server"

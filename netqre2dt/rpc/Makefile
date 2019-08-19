@@ -17,6 +17,7 @@ SRC += $(INCLUDE_PATH)/rubify.cpp
 SAVING_PATH = ../../synthesizer/testbed/mode-P/
 CONFIG_PATH = ../../synthesizer/lang/netqre/
 SERVER_FILE = mode-P_server_list.txt
+SERVER_FILE_LOCAL = local_server_list.txt
 QUERY_FILE = query.qre
 UNLABELED_DATA_FILE = unlabeled.ts
 POS_DATA_FILE = positive.ts
@@ -33,6 +34,30 @@ debug:
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &
 
+run-server-local:
+	echo "Staring QRE Servers Locally"
+	-killall netqre_server
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 >> server_log &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 >> server_log &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 >> server_log &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 >> server_log &
+	sleep 5
+
+run-server-exec-local:
+	echo "Staring QRE Servers Locally"
+	-killall netqre_server
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23333 >> server_log &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23334 >> server_log &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23335 >> server_log &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) 23336 >> server_log &
+	sleep 5
+
 LAST_SERVER = 7
 
 run-server:
@@ -48,6 +73,9 @@ run-server-exec:
 	./distribute.sh $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(LAST_SERVER)
 	./runall.sh $(LAST_SERVER)
 	sleep 5
+
+run-local: run-server-exec-local
+	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) > $(SAVING_PATH)$(RESULT_FILE)
 
 run: run-server-exec
 	./netqre_client $(SAVING_PATH)$(QUERY_FILE) $(SAVING_PATH)$(UNLABELED_DATA_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(RESULT_FILE)

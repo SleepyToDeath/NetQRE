@@ -57,6 +57,12 @@ int main(int argc, char *argv[]) {
 	/*========== netqre implementation =============*/
 	GeneralProgram::interpreter = unique_ptr<GeneralInterpreter>(
 				new NetqreInterpreterInterface(servers, ports));
+	provide_( [](string name) -> shared_ptr<GeneralExampleHandle> {
+		if (name == "new_example_handle")
+			return shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
+		else
+			throw name;
+	});
 	/*=============================================*/
 
 

@@ -101,8 +101,8 @@ class MergeSearch {
 			depth = 1;
 		else
 		{
-			auto e_left = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
-			auto e_right = shared_ptr<GeneralExampleHandle>(new GeneralExampleHandle());
+			auto e_left = require_(shared_ptr<GeneralExampleHandle>, "new_example_handle");
+			auto e_right = require_(shared_ptr<GeneralExampleHandle>, "new_example_handle");
 
 			if (e->positive_token.size() <= minimal_example_size)
 			{
