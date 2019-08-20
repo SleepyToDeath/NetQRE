@@ -10,6 +10,7 @@
 
 using std::endl;
 using std::cerr;
+using std::min;
 using std::unordered_set;
 
 int total_programs_searched = 0;
@@ -46,6 +47,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 	vector<shared_ptr<IESyntaxTree> > this_round = seed;
 	vector<shared_ptr<IESyntaxTree> > buffer;
 	vector<shared_ptr<IESyntaxTree> > answer;
+	vector<shared_ptr<IESyntaxTree> > pending_answer;
 	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited = eliminate;
 
 	MeansOfProduction mop;
@@ -82,6 +84,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 			int done = -1;
 			int i=0;
 			Mailbox msg;
+			double this_round_complexity = 0;
 			
 			/* ==================== Definition ===================== */
 			auto explore_new = [&]() {
@@ -103,6 +106,10 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 							search_counter++;
 							if ((explored != nullptr) && (visited.count(explored) == 0))
 							{
+								if (this_round_complexity == 0)
+									this_round_complexity = explored->get_complexity();
+								else
+									this_round_complexity = min(this_round_complexity, explored->get_complexity());
 								visited.insert(explored);
 								/* send redundancy filtering tasks to workers */
 								thread_master->do_filter(explored, examples);
@@ -174,17 +181,8 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						/* if answer found */
 						if (candidate->is_complete())
 						{
-							std::cerr<<"ANSWER FOUND: "<<candidate->to_string()
-											<<" | "<<candidate->get_complexity()<<std::endl;
-							answer.push_back(candidate);
+							pending_answer.push_back(candidate);
 							this_round.pop_back();
-							if (answer.size() >= answer_count)
-							{
-								while(!thread_master->all_tasks_done())
-									thread_master->find_finished_task();
-								total_programs_searched += search_counter;
-								throw answer;
-							}
 						}
 					}
 				}
@@ -234,7 +232,29 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				}
 		
 				/* sort by complexity */
-				std::sort(buffer.begin(), buffer.end(), compare_syntax_tree_complexity);
+				buffer.sort_by_<double>( [](const shared_ptr<IESyntaxTree>& e)->double {
+					return (- e->get_complexity());
+				});
+
+				pending_answer.select_( [&] (const shared_ptr<IESyntaxTree>& papapa)->bool {
+					double threshold = (buffer.size() > 0) ? this_round_complexity : 0;
+					if (papapa->get_complexity() <= threshold)
+					{
+						std::cerr<<"ANSWER FOUND: "<<papapa->to_string()
+										<<" | "<<papapa->get_complexity()<<std::endl;
+						answer.push_back(papapa);
+						if (answer.size() >= answer_count)
+						{
+							while(!thread_master->all_tasks_done())
+								thread_master->find_finished_task();
+							total_programs_searched += search_counter;
+							throw answer;
+						}
+						return false;
+					}
+					else
+						return true;
+				});
 			};
 
 

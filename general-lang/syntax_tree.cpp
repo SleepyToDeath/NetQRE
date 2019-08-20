@@ -7,9 +7,11 @@ using std::cout;
 using std::endl;
 using std::string;
 
+/*
 bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
 }
+*/
 
 size_t HashSyntaxTree::operator()(const shared_ptr<SyntaxTree> a) const {
 	return a->hash();

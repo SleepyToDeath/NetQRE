@@ -10,7 +10,7 @@ test: test-netqre
 
 INCLUDE_PATH = ../../rubify
 
-CC=g++
+CC=g++-9
 STD=--std=c++2a
 
 SRC = core/*pp
