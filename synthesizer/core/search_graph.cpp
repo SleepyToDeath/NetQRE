@@ -48,7 +48,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 	vector<shared_ptr<IESyntaxTree> > buffer;
 	vector<shared_ptr<IESyntaxTree> > answer;
 	vector<shared_ptr<IESyntaxTree> > pending_answer;
-	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited = eliminate;
+	typedef std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > VisitPool;
+	auto visited = shared_ptr<VisitPool>(new VisitPool(eliminate));
+	rp->visited = visited;
+
+	cerr<<visited->size()<<" eliminated answers at beginning\n";
 
 	MeansOfProduction mop;
 	mop.rp = rp;
@@ -65,14 +69,14 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 	try
 	{
-		if (seed.empty())
+//		if (seed.empty())
 		{
 			shared_ptr<IESyntaxTree> s = std::static_pointer_cast<IESyntaxTree>(
 				SyntaxTree::factory->get_new(
 					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(starting_symbol))));
 			s->weight = 1;
 			this_round.push_back(s);
-			visited.insert(s);
+			visited->insert(s);
 		}
 
 		while (this_round.size()>0)
@@ -84,7 +88,6 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 			int done = -1;
 			int i=0;
 			Mailbox msg;
-			double this_round_complexity = 0;
 			
 			/* ==================== Definition ===================== */
 			auto explore_new = [&]() {
@@ -104,13 +107,8 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						{
 							auto explored = std::static_pointer_cast<IESyntaxTree>(tmp->q[j]);
 							search_counter++;
-							if ((explored != nullptr) && (visited.count(explored) == 0))
+							if (explored != nullptr)
 							{
-								if (this_round_complexity == 0)
-									this_round_complexity = explored->get_complexity();
-								else
-									this_round_complexity = min(this_round_complexity, explored->get_complexity());
-								visited.insert(explored);
 								/* send redundancy filtering tasks to workers */
 								thread_master->do_filter(explored, examples);
 							}
@@ -132,10 +130,14 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					std::cerr<<"[New!!!!]"<<explored->get_complexity()<<
 									" | "<<explored->to_string()<<std::endl;
 					#endif
-					#ifdef VERBOSE_MODE
+
 					if (simplified != nullptr)
+					{
+						#ifdef VERBOSE_MODE
 						std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
-					#endif
+						#endif
+						visited->insert(explored);
+					}
 					/* not redundant and not repeating */
 					if (simplified == explored)
 					{
@@ -145,11 +147,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						counter++;
 					}
 					/* redundant but not repeating */
-					else if ((simplified != nullptr) && (visited.count(simplified) == 0))
+					else if ((simplified != nullptr) && (visited->count(simplified) == 0))
 					{
 						/* send accept checking tasks to workers */
 						thread_master->do_accept(simplified, examples, {accuracy});
-						visited.insert(simplified);
+						visited->insert(simplified);
 					}
 				}
 			};
@@ -237,7 +239,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				});
 
 				pending_answer.select_( [&] (const shared_ptr<IESyntaxTree>& papapa)->bool {
-					double threshold = (buffer.size() > 0) ? this_round_complexity : 0;
+					double threshold = (buffer.size() > 0) ? (buffer[buffer.size()/2]->get_complexity()) : 0;
 					if (papapa->get_complexity() <= threshold)
 					{
 						std::cerr<<"ANSWER FOUND: "<<papapa->to_string()
@@ -267,7 +269,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					if (buffer.size()>0)
 					{
 	//					std::cerr<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
-						std::cerr<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
+						std::cerr<<"Early prune rate: "<<((total_drop-complete_drop)/total_drop)*100.0<<"%"<<"   |   ";
 						std::cerr<<"Buffer size: "<<buffer.size()<<"   |   ";
 						std::cerr<<"Answers found: "<<answer.size()<<std::endl;
 						if (buffer.size()>2)
@@ -279,7 +281,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						else
 							std::cerr<<"One current sample: "<<(buffer[0]->to_string())
 											<<" | #"<<buffer[0]->get_complexity()<<std::endl;
-						std::cerr<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
+						std::cerr<<"Programs searched: "<<search_counter<<" | "<<visited->size()<<" | "<<helper_counter<<std::endl;
 						std::cerr<<std::endl<<endl;;
 					}
 				} );

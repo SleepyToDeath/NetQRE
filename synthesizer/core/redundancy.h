@@ -2,6 +2,7 @@
 #define REDUNDANCY_H
 
 #include "../../general-lang/incomplete_execution.h"
+#include <unordered_set>
 
 class UnconditionalRedundancyTemplate {
 	public:
@@ -22,6 +23,7 @@ class RedundancyPlan {
 	public:
 	vector<shared_ptr<UnconditionalRedundancyTemplate> > ucnd;
 	vector<shared_ptr<ConditionalRedundancyTemplate> > cnd;
+	shared_ptr<std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > > visited;
 	/* If meet any condition, return null, which means drop it
 		Otherwise, return the original/simplified program */
 	/* Will first check all conditional redundancy.

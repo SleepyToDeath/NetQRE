@@ -183,7 +183,14 @@ class MergeSearch {
 						if (global_pool[k]->to_program()->accept(e_tree[i][j], {accuracy}))
 							acc_count ++;
 					if (acc_count >= e_tree[i].size() / 2)
+					{
 						tmp.push_back(global_pool[k]);
+						for (int j=3; j<=7; j++)
+						{
+							auto candi = static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(global_pool[k]));
+							candi->prune(j);
+						}
+					}
 				}
 				global_pool = tmp;
 				cerr<<"Size of global pool: "<<global_pool.size()<<endl;
@@ -235,12 +242,14 @@ class MergeSearch {
 			{
 				eliminate.insert(static_pointer_cast<GeneralSyntaxTree>(
 								SyntaxTree::factory->get_new(ans_wrong[i])));
+				/*
 				for (int j=3; j<=7; j++)
 				{
 					seed.push_back(static_pointer_cast<GeneralSyntaxTree>(
 									SyntaxTree::factory->get_new(ans_wrong[i])));
 					static_pointer_cast<GeneralSyntaxTree>(seed.back())->prune(j);
 				}
+				*/
 			}
 
 			SearchGraph graph(
