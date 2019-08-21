@@ -25,6 +25,7 @@ SearchGraph::SearchGraph(
 	this->explore_rate = require_(int, "explore_rate");
 	this->accuracy = require_(double, "accuracy");
 	this->threads = require_(int, "threads");
+	this->give_up_count = require_(int, "give_up_count");
 	this->starting_symbol = starting_symbol;
 	this->answer_count = answer_count;
 	this->rp = rp;
@@ -225,13 +226,17 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				{
 					buffer.push_back(this_round[k]);
 
+/*
 					{
 						int l = std::experimental::randint(0,(int)buffer.size()-1);
 						auto tmp = buffer.back();
 						buffer.back() = buffer[l];
 						buffer[l] = tmp;
 					}
+					*/
 				}
+
+				buffer += this_round.slice(done, this_round.size() - done);
 		
 				/* sort by complexity */
 				buffer.sort_by_<double>( [](const shared_ptr<IESyntaxTree>& e)->double {
@@ -293,6 +298,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 			auto prepare_next_round = [&]() {
 				/* prepare next round */
+				if (search_counter > give_up_count && answer.empty())
+					throw pending_answer;
+				if (buffer.size() > give_up_count)
+					throw (answer + pending_answer);
+
 				this_round.clear();
 				if (buffer.size() <= batch_size/explore_rate)
 				{

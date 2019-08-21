@@ -464,7 +464,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			vector<string> ans;
 			for(int i=0; i<e->config.field_number; i++)
 			{
-				if (e->config.field_iterative[i])
+//				if (e->config.field_iterative[i])
 				{
 					stringstream ss;
 					string tmp;

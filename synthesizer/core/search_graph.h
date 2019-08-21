@@ -25,6 +25,7 @@ class SearchGraph {
 	double accuracy;
 	int answer_count;
 	int threads;
+	int give_up_count;
 	shared_ptr<SyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
 

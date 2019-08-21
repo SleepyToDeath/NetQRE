@@ -25,6 +25,7 @@ SyntaxTree::SyntaxTree(shared_ptr<SyntaxTreeNode> r, int depth) {
 	root = r;
 	complete = UNKNOWN;
 	complexity = 0;
+	hash_value = 0;
 	this->depth = depth;
 }
 
@@ -35,6 +36,7 @@ SyntaxTree::SyntaxTree(shared_ptr<SyntaxTree> t) {
 	this->depth = t->depth;
 	complete = UNKNOWN;
 	complexity = 0;
+	hash_value = 0;
 	/* to be overridden */
 	copy_initializer(t);
 }
