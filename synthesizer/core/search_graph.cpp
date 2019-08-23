@@ -10,6 +10,7 @@
 
 using std::endl;
 using std::cerr;
+using std::min;
 using std::unordered_set;
 
 int total_programs_searched = 0;
@@ -24,6 +25,7 @@ SearchGraph::SearchGraph(
 	this->explore_rate = require_(int, "explore_rate");
 	this->accuracy = require_(double, "accuracy");
 	this->threads = require_(int, "threads");
+	this->give_up_count = require_(int, "give_up_count");
 	this->starting_symbol = starting_symbol;
 	this->answer_count = answer_count;
 	this->rp = rp;
@@ -46,7 +48,12 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 	vector<shared_ptr<IESyntaxTree> > this_round = seed;
 	vector<shared_ptr<IESyntaxTree> > buffer;
 	vector<shared_ptr<IESyntaxTree> > answer;
-	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > visited = eliminate;
+	vector<shared_ptr<IESyntaxTree> > pending_answer;
+	typedef std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > VisitPool;
+	auto visited = shared_ptr<VisitPool>(new VisitPool(eliminate));
+	rp->visited = visited;
+
+	cerr<<visited->size()<<" eliminated answers at beginning\n";
 
 	MeansOfProduction mop;
 	mop.rp = rp;
@@ -63,14 +70,14 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 	try
 	{
-		if (seed.empty())
+//		if (seed.empty())
 		{
 			shared_ptr<IESyntaxTree> s = std::static_pointer_cast<IESyntaxTree>(
 				SyntaxTree::factory->get_new(
 					shared_ptr<SyntaxTreeNode>(new SyntaxTreeNode(starting_symbol))));
 			s->weight = 1;
 			this_round.push_back(s);
-			visited.insert(s);
+			visited->insert(s);
 		}
 
 		while (this_round.size()>0)
@@ -101,9 +108,8 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						{
 							auto explored = std::static_pointer_cast<IESyntaxTree>(tmp->q[j]);
 							search_counter++;
-							if ((explored != nullptr) && (visited.count(explored) == 0))
+							if (explored != nullptr)
 							{
-								visited.insert(explored);
 								/* send redundancy filtering tasks to workers */
 								thread_master->do_filter(explored, examples);
 							}
@@ -125,10 +131,14 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					std::cerr<<"[New!!!!]"<<explored->get_complexity()<<
 									" | "<<explored->to_string()<<std::endl;
 					#endif
-					#ifdef VERBOSE_MODE
+
 					if (simplified != nullptr)
+					{
+						#ifdef VERBOSE_MODE
 						std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
-					#endif
+						#endif
+						visited->insert(explored);
+					}
 					/* not redundant and not repeating */
 					if (simplified == explored)
 					{
@@ -138,11 +148,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						counter++;
 					}
 					/* redundant but not repeating */
-					else if ((simplified != nullptr) && (visited.count(simplified) == 0))
+					else if ((simplified != nullptr) && (visited->count(simplified) == 0))
 					{
 						/* send accept checking tasks to workers */
 						thread_master->do_accept(simplified, examples, {accuracy});
-						visited.insert(simplified);
+						visited->insert(simplified);
 					}
 				}
 			};
@@ -174,17 +184,8 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						/* if answer found */
 						if (candidate->is_complete())
 						{
-							std::cerr<<"ANSWER FOUND: "<<candidate->to_string()
-											<<" | "<<candidate->get_complexity()<<std::endl;
-							answer.push_back(candidate);
+							pending_answer.push_back(candidate);
 							this_round.pop_back();
-							if (answer.size() >= answer_count)
-							{
-								while(!thread_master->all_tasks_done())
-									thread_master->find_finished_task();
-								total_programs_searched += search_counter;
-								throw answer;
-							}
 						}
 					}
 				}
@@ -225,16 +226,42 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				{
 					buffer.push_back(this_round[k]);
 
+/*
 					{
 						int l = std::experimental::randint(0,(int)buffer.size()-1);
 						auto tmp = buffer.back();
 						buffer.back() = buffer[l];
 						buffer[l] = tmp;
 					}
+					*/
 				}
+
+				buffer += this_round.slice(done, this_round.size() - done);
 		
 				/* sort by complexity */
-				std::sort(buffer.begin(), buffer.end(), compare_syntax_tree_complexity);
+				buffer.sort_by_<double>( [](const shared_ptr<IESyntaxTree>& e)->double {
+					return (- e->get_complexity());
+				});
+
+				pending_answer.select_( [&] (const shared_ptr<IESyntaxTree>& papapa)->bool {
+					double threshold = (buffer.size() > 0) ? (buffer[buffer.size()/2]->get_complexity()) : 0;
+					if (papapa->get_complexity() <= threshold)
+					{
+						std::cerr<<"ANSWER FOUND: "<<papapa->to_string()
+										<<" | "<<papapa->get_complexity()<<std::endl;
+						answer.push_back(papapa);
+						if (answer.size() >= answer_count)
+						{
+							while(!thread_master->all_tasks_done())
+								thread_master->find_finished_task();
+							total_programs_searched += search_counter;
+							throw answer;
+						}
+						return false;
+					}
+					else
+						return true;
+				});
 			};
 
 
@@ -247,7 +274,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					if (buffer.size()>0)
 					{
 	//					std::cerr<<"Progress: "<<progress*100.0<<"%"<<"   |   ";
-						std::cerr<<"Ending drop rate: "<<(complete_drop/total_drop)*100.0<<"%"<<"   |   ";
+						std::cerr<<"Early prune rate: "<<((total_drop-complete_drop)/total_drop)*100.0<<"%"<<"   |   ";
 						std::cerr<<"Buffer size: "<<buffer.size()<<"   |   ";
 						std::cerr<<"Answers found: "<<answer.size()<<std::endl;
 						if (buffer.size()>2)
@@ -259,7 +286,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						else
 							std::cerr<<"One current sample: "<<(buffer[0]->to_string())
 											<<" | #"<<buffer[0]->get_complexity()<<std::endl;
-						std::cerr<<"Programs searched: "<<search_counter<<" | "<<helper_counter<<std::endl;
+						std::cerr<<"Programs searched: "<<search_counter<<" | "<<visited->size()<<" | "<<helper_counter<<std::endl;
 						std::cerr<<std::endl<<endl;;
 					}
 				} );
@@ -271,6 +298,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 			auto prepare_next_round = [&]() {
 				/* prepare next round */
+				if (search_counter > give_up_count && answer.empty())
+					throw pending_answer;
+				if (buffer.size() > give_up_count)
+					throw (answer + pending_answer);
+
 				this_round.clear();
 				if (buffer.size() <= batch_size/explore_rate)
 				{

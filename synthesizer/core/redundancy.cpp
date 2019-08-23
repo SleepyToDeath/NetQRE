@@ -2,6 +2,10 @@
 #include <iostream>
 
 shared_ptr<IESyntaxTree> RedundancyPlan::filter(shared_ptr<IESyntaxTree> suspect, shared_ptr<IEExample> examples) {
+	/* check repeating */
+	if (visited->count(suspect) > 0)
+		return nullptr;
+
 	/* check conditional */
 	for (int i=0; i<cnd.size(); i++)
 	{

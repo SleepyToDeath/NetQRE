@@ -7,9 +7,11 @@ using std::cout;
 using std::endl;
 using std::string;
 
+/*
 bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
 	return a->get_complexity() > b->get_complexity();
 }
+*/
 
 size_t HashSyntaxTree::operator()(const shared_ptr<SyntaxTree> a) const {
 	return a->hash();
@@ -23,6 +25,7 @@ SyntaxTree::SyntaxTree(shared_ptr<SyntaxTreeNode> r, int depth) {
 	root = r;
 	complete = UNKNOWN;
 	complexity = 0;
+	hash_value = 0;
 	this->depth = depth;
 }
 
@@ -33,6 +36,7 @@ SyntaxTree::SyntaxTree(shared_ptr<SyntaxTree> t) {
 	this->depth = t->depth;
 	complete = UNKNOWN;
 	complexity = 0;
+	hash_value = 0;
 	/* to be overridden */
 	copy_initializer(t);
 }

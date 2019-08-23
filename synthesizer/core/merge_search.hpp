@@ -167,8 +167,6 @@ class MergeSearch {
 					double local_accuracy = accuracy;
 					if (local_accuracy < 0.01)
 						local_accuracy = 0;
-					cerr<<("Accuracy requirement:"+_S_(local_accuracy))+" ";
-					cerr<<("Answer requirement:"+_S_(local_answer_count))+" ";
 					real_search_single(e_tree[i][j], local_answer_count, local_accuracy, global_pool);
 				}
 
@@ -183,7 +181,14 @@ class MergeSearch {
 						if (global_pool[k]->to_program()->accept(e_tree[i][j], {accuracy}))
 							acc_count ++;
 					if (acc_count >= e_tree[i].size() / 2)
+					{
 						tmp.push_back(global_pool[k]);
+						for (int j=3; j<=7; j++)
+						{
+							auto candi = static_pointer_cast<GeneralSyntaxTree>(SyntaxTree::factory->get_new(global_pool[k]));
+							candi->prune(j);
+						}
+					}
 				}
 				global_pool = tmp;
 				cerr<<"Size of global pool: "<<global_pool.size()<<endl;
@@ -193,7 +198,7 @@ class MergeSearch {
 		{
 			ans = _ans;
 		}
-		return ans;
+		return global_answer;
 	}
 
 	vector<shared_ptr<GeneralSyntaxTree> > real_search_single(
@@ -202,13 +207,13 @@ class MergeSearch {
 					double local_accuracy,
 					vector<shared_ptr<GeneralSyntaxTree> >& global_pool)
 	{
-		cerr<<"Searching! Size: "<<e->positive_token.size()<<" "<<e->negative_token.size()<<endl;
+		cerr<<"Searching! Size: "<<e->positive_token[0]<<"~"<<e->positive_token.size()<<" "<<e->negative_token[0]<<"~"<<e->negative_token.size()<<endl;
 
 		vector<shared_ptr<GeneralSyntaxTree> > ans;
 		vector<shared_ptr<GeneralSyntaxTree> > ans_wrong;
 
 		for (int i=0; i<global_pool.size(); i++)
-			if (global_pool[i]->to_program()->accept(e))
+			if (global_pool[i]->to_program()->accept(e, {accuracy}))
 				ans.push_back(static_pointer_cast<GeneralSyntaxTree>(
 								SyntaxTree::factory->get_new(global_pool[i])));
 			else
@@ -235,12 +240,14 @@ class MergeSearch {
 			{
 				eliminate.insert(static_pointer_cast<GeneralSyntaxTree>(
 								SyntaxTree::factory->get_new(ans_wrong[i])));
+				/*
 				for (int j=3; j<=7; j++)
 				{
 					seed.push_back(static_pointer_cast<GeneralSyntaxTree>(
 									SyntaxTree::factory->get_new(ans_wrong[i])));
 					static_pointer_cast<GeneralSyntaxTree>(seed.back())->prune(j);
 				}
+				*/
 			}
 
 			SearchGraph graph(
@@ -248,7 +255,11 @@ class MergeSearch {
 							starting_symbol, 
 							rp);
 
+			cerr<<("Accuracy requirement:"+_S_(local_accuracy))+" ";
+			cerr<<("Answer requirement:"+_S_(local_answer_count-ans.size()))+" ";
+
 			auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
+
 			cerr<<"Search done!!!\n";
 			cerr<<"Size of global pool: "<<global_pool.size()<<endl;
 			cerr<<"Answers found so far: "<<global_answer.size()<<endl;

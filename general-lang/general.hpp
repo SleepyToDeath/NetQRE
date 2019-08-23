@@ -158,6 +158,9 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 
 	/* dummy initializer */
 	GeneralSyntaxLeftHandSide() {
+		static int counter = 0;
+		counter ++;
+		id = counter;
 		is_term = true;
 	}
 
