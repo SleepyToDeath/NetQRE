@@ -15,6 +15,10 @@ typedef vector<FeatureSlot> FeatureVector;
 
 typedef vector<FeatureVector> TokenStream;
 
+enum class StreamFieldProperty {
+	SCALAR, RANGED, DISCRETE
+};
+
 class StreamConfig
 {
 	public:
@@ -27,7 +31,7 @@ class StreamConfig
 	/* iterative: no specific value will appear in the program, 
 		only iterate through all values, e.g. src_ip; 
 		non-iterative: otherwise, e.g. ethernet type */
-	vector<bool> field_iterative; 
+	vector<StreamFieldProperty> field_property;
 };
 
 

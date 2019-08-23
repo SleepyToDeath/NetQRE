@@ -154,7 +154,8 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 
 		case NetqreExpType::PREDICATE:
 
-			context->bool_type = BoolOpType::NONE;
+			/* [TODO] parse '>', '<', '=' and prefix */
+			context->pred_type = PredOpType::NONE;
 			skip_head();
 			if (code[cursor] == '_')
 				parse_it(NetqreExpType::UNKNOWN);
@@ -184,19 +185,19 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			switch(code[cursor])
 			{
 				case '+':
-					context->num_type = NumOpType::ADD;
+					context->arith_type = ArithOpType::ADD;
 					parse_ns();
 					break;
 				case '-':
-					context->num_type = NumOpType::SUB;
+					context->arith_type = ArithOpType::SUB;
 					parse_ns();
 					break;
 				case '*':
-					context->num_type = NumOpType::MUL;
+					context->arith_type = ArithOpType::MUL;
 					parse_ns();
 					break;
 				case '%':
-					context->num_type = NumOpType::DIV;
+					context->arith_type = ArithOpType::DIV;
 					parse_ns();
 					break;
 				default:

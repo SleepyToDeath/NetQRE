@@ -113,7 +113,7 @@ enum class AggOpType {
 	MAX, MIN, SUM, AVG, NONE
 };
 
-enum class NumOpType {
+enum class ArithOpType {
 	ADD, SUB, MUL, DIV, NONE
 };
 
@@ -125,15 +125,20 @@ enum class RegularOpType {
 	STAR, CONCAT, NONE
 };
 
+enum class PredOpType {
+	BIGGER, SMALLER, IN
+};
+
 class NetqreAST
 {
 	public:
 	union {
 		AggOpType agg_type;
-		NumOpType num_type;
+		ArithOpType arith_type;
 		BoolOpType bool_type;
 		RegularOpType reg_type;
 		StreamFieldType value;
+		PredOpType pred_type;
 	};
 
 	TagType tag;

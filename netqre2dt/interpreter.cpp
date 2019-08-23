@@ -202,48 +202,57 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 		return true_ans;
 	}
 
-	switch(predicate->bool_type)
+	switch(predicate->type)
 	{
-		case BoolOpType::OR:
-		return OrOp::eval(satisfy(predicate->subtree[0], fv).get(), satisfy(predicate->subtree[1], fv).get());
-
-		case BoolOpType::AND:
-		return AndOp::eval(satisfy(predicate->subtree[0], fv).get(), satisfy(predicate->subtree[1], fv).get());
-
-		case BoolOpType::NONE:
-		switch(predicate->type)
+		case NetqreExpType::UNKNOWN:
 		{
-			case NetqreExpType::PREDICATE_SET:
-			return satisfy(predicate->subtree[0], fv);
+			auto unknown = unique_ptr<BoolValue> (new BoolValue());
+			unknown->unknown = true;
+			unknown->val = true;
+			return unknown;
+		}
 
-			case NetqreExpType::UNKNOWN:
+		case NetqreExpType::PREDICATE:
+		{
+			if (predicate->subtree.size() == 1)
+				return satisfy(predicate->subtree[0], fv);
+			auto l = predicate->subtree[0];
+			auto r = predicate->subtree[1];
+			int index = l->value;
+			StreamFieldType value = r->value;
+			auto sat = unique_ptr<BoolValue> (new BoolValue());
+			sat->unknown = false;
+			/* TODO implement in and comparison */
+			switch(predicate->pred_type)
 			{
-				auto unknown = unique_ptr<BoolValue> (new BoolValue());
-				unknown->unknown = true;
-				unknown->val = true;
-				return unknown;
-			}
-
-			case NetqreExpType::PREDICATE:
-			{
-				if (predicate->subtree.size() == 1)
-					return satisfy(predicate->subtree[0], fv);
-				auto l = predicate->subtree[0];
-				auto r = predicate->subtree[1];
-				int index = l->value;
-				StreamFieldType value = r->value;
-				auto sat = unique_ptr<BoolValue> (new BoolValue());
-				sat->unknown = false;
+				case PredOpType::BIGGER:
+				break;
+				case PredOpType::SMALLER:
+				break;
+				case PredOpType::EQUAL:
 				sat->val = (fv[index] == value);
-				return sat;
+				break;
 			}
+			return sat;
+		}
 
+		case NetqreExpType::PREDICATE_SET:
+		switch(predicate->bool_type)
+		{
+			case BoolOpType::OR:
+			return OrOp::eval(satisfy(predicate->subtree[0], fv).get(), satisfy(predicate->subtree[1], fv).get());
+
+			case BoolOpType::AND:
+			return AndOp::eval(satisfy(predicate->subtree[0], fv).get(), satisfy(predicate->subtree[1], fv).get());
+
+			case BoolOpType::NONE:
+			{
+				return satisfy(predicate->subtree[0], fv);
+			}
+			
 			default:
 			throw string("Impossible predicate type!\n");
 		}
-		
-		default:
-		throw string("Impossible predicate type!\n");
 	}
 }
 
@@ -312,21 +321,21 @@ std::shared_ptr<NumericalTree> Interpreter::real_interpret_num(std::shared_ptr<N
 		tree->is_leaf = false;
 		tree->left = real_interpret_num(ast->subtree[0], machine);
 		tree->right = real_interpret_num(ast->subtree[1], machine);
-		switch(ast->num_type)
+		switch(ast->arith_type)
 		{
-			case NumOpType::ADD:
+			case ArithOpType::ADD:
 			tree->op = shared_ptr<AddOp>(new AddOp());
 			break;
 
-			case NumOpType::SUB:
+			case ArithOpType::SUB:
 			tree->op = shared_ptr<SubOp>(new SubOp());
 			break;
 
-			case NumOpType::MUL:
+			case ArithOpType::MUL:
 			tree->op = shared_ptr<MulOp>(new MulOp());
 			break;
 
-			case NumOpType::DIV:
+			case ArithOpType::DIV:
 			tree->op = shared_ptr<DivOp>(new DivOp());
 			break;
 
