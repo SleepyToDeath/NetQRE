@@ -42,7 +42,9 @@
 			[ "$[", "#predicate_entry", "$]" ]		] },
 		{ "#predicate_entry": [
 			[ "\\r1", "$==", "$1","#index" ],
-			[ "\\r2", "$->", "$1","#prefix" ]
+			[ "\\r2", "$->", "$1","#prefix" ],
+			[ "\\r3", "$>=", "$1","#cap_index" ],
+			[ "\\r4", "$<=", "$1","#bottom_index" ]
 		] },
 		{ "#index": [
 			[ "0", "#index"],
