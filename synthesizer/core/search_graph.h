@@ -26,6 +26,7 @@ class SearchGraph {
 	int answer_count;
 	int threads;
 	int give_up_count;
+	int VERBOSE_MODE;
 	shared_ptr<SyntaxLeftHandSide> starting_symbol;
 	shared_ptr<RedundancyPlan> rp;
 

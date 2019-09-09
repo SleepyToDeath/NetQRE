@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
 	read_float_parameter(fin_c, float_config["accuracy"]);
 	read_float_parameter(fin_c, float_config["accuracy_exp"]);
 	read_int_parameter(fin_c, int_config["give_up_count"]);
+	read_int_parameter(fin_c, int_config["VERBOSE_MODE"]);
 
 	provide_([&](string name)->int {
 		return int_config[name];

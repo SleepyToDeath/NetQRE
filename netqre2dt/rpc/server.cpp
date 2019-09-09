@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
 	srv.bind(Netqre::SERVICE_NAME, [&](std::string code, bool example_positive, int example_index) {
 
-		puts("Request:"+code+"["+_S_(example_index)+"]");
+		puts("Request:"+code+"["+_S_(example_positive)+","+_S_(example_index)+"]");
 		auto ast = parser.parse(code);
 		auto m = interpreter.interpret(ast);
 		m->bind_context(example);

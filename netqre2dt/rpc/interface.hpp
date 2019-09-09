@@ -105,7 +105,7 @@ class NetqreExample: public GeneralExample{
 						break;
 					
 					tmps.push_back(v_s.split(" ")
-						.map<long long>([](string feature)->long long { 
+						.map<StreamFieldType>([](string feature)->StreamFieldType { 
 							return feature.to_i(); 
 						}));
 				}
@@ -283,10 +283,10 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			return res;
 		}
 
-		StreamFieldType pos_min_upper = -1;
-		StreamFieldType pos_min_lower = -1;
-		StreamFieldType neg_max_upper = -1;
-		StreamFieldType neg_max_lower = -1;
+//		StreamFieldType pos_min_upper = -1;
+//		StreamFieldType pos_min_lower = -1;
+//		StreamFieldType neg_max_upper = -1;
+//		StreamFieldType neg_max_lower = -1;
 
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos_buf;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg_buf;
@@ -484,14 +484,20 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		bool missing_non_predicate = false;
 	};
 
+	constexpr static double UNIT = 100.0;
+	constexpr static double INCOMPLETE_PENALTY = 1.5;
+	constexpr static double INVALID_PANELTY = 100.0;
+	constexpr static double PREFER_REWARD = 0.2;
+
 	double extra_complexity(shared_ptr<GeneralSyntaxTree> code) {
 		ComplexityContext ctxt;
-		return real_extra_complexity(code, ctxt);
+		double ret = real_extra_complexity(code, ctxt);
+		if (ctxt.missing_predicate)
+			ret -= UNIT * PREFER_REWARD;
+		return ret;
 	}
 
 	double real_extra_complexity(shared_ptr<GeneralSyntaxTree> code, ComplexityContext& ctxt) {
-		const static double UNIT = 100.0;
-		const static double PANELTY = 10.0;
 
 		double complexity = 0;
 		string name = code->root->get_type()->name;
@@ -501,6 +507,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		if (is_term)
 		{
 			complexity = UNIT;
+			if ((name == "_")
+			 	||(name == "*(_)"))
+				complexity += INCOMPLETE_PENALTY * UNIT;
 		}
 		else if (option == SyntaxLeftHandSide::NoOption)
 		{
@@ -513,9 +522,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				ctxt.missing_predicate = true;
 
 			if (ctxt.missing_predicate && ctxt.missing_non_predicate)
-				complexity = UNIT * PANELTY;
+				complexity = UNIT * INVALID_PANELTY;
 			else
-				complexity = UNIT * 1.5;
+				complexity = UNIT * INCOMPLETE_PENALTY;
 		}
 		else
 		{
@@ -524,6 +533,11 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				complexity += real_extra_complexity(static_pointer_cast<GeneralSyntaxTree>(code->subtree[i]), ctxt);
 
 			complexity += (code->subtree.size()-1) * UNIT;
+
+			if ((name == "#re")
+				|| (name == "#predicate_set")
+				|| (name == "#predicate_entry"))
+				complexity -= UNIT * PREFER_REWARD;
 //			complexity -= prune_count * 100;
 		}
 		return complexity;

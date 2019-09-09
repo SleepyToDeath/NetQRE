@@ -26,6 +26,7 @@ SearchGraph::SearchGraph(
 	this->accuracy = require_(double, "accuracy");
 	this->threads = require_(int, "threads");
 	this->give_up_count = require_(int, "give_up_count");
+	this->VERBOSE_MODE = require_(int, "VERBOSE_MODE");
 	this->starting_symbol = starting_symbol;
 	this->answer_count = answer_count;
 	this->rp = rp;
@@ -127,16 +128,14 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				{
 					auto simplified = msg.simplified;
 					auto explored = msg.candidate;
-					#ifdef VERBOSE_MODE
-					std::cerr<<"[New!!!!]"<<explored->get_complexity()<<
-									" | "<<explored->to_string()<<std::endl;
-					#endif
+					if (VERBOSE_MODE)
+						std::cerr<<"[New!!!!]"<<explored->get_complexity()<<
+										" | "<<explored->to_string()<<std::endl;
 
 					if (simplified != nullptr)
 					{
-						#ifdef VERBOSE_MODE
-						std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
-						#endif
+						if (VERBOSE_MODE)
+							std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
 						visited->insert(explored);
 					}
 					/* not redundant and not repeating */
@@ -166,10 +165,9 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					if (!msg.accept)
 					{
 						/* drop */
-						#ifdef VERBOSE_MODE
+						if (VERBOSE_MODE)
 						std::cerr<<"[Rejected]"<<candidate->to_string()
 										<<" | "<<candidate->get_complexity()<<std::endl;
-						#endif
 						total_drop += 1.0;
 						if (candidate->is_complete())
 							complete_drop += 1.0;
@@ -239,13 +237,17 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				buffer += this_round.slice(done, this_round.size() - done);
 		
 				/* sort by complexity */
-				buffer.sort_by_<double>( [](const shared_ptr<IESyntaxTree>& e)->double {
+				buffer.select_( [](const shared_ptr<IESyntaxTree>& e)->bool {
+					return e->get_complexity() < 10000;
+				}).sort_by_<double>( [](const shared_ptr<IESyntaxTree>& e)->double {
 					return (- e->get_complexity());
 				});
 
+				errputs( _S_(buffer[0]->get_complexity()) + " ~ " + _S_(buffer[-1]->get_complexity()) );
+
 				pending_answer.select_( [&] (const shared_ptr<IESyntaxTree>& papapa)->bool {
 //					double threshold = (buffer.size() > 0) ? (buffer[buffer.size()/2]->get_complexity()) : 0;
-					double threshold = 9999999;
+					double threshold = 10000;
 					if (papapa->get_complexity() <= threshold)
 					{
 						std::cerr<<"ANSWER FOUND: "<<papapa->to_string()
@@ -280,7 +282,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						std::cerr<<"Answers found: "<<answer.size()<<std::endl;
 						if (buffer.size()>2)
 						{
-							int index = std::experimental::randint(0,(int)buffer.size()-1);
+							int index = std::experimental::randint(0,(int)buffer.size()/2);
 							std::cerr<<"One current sample: "<<(buffer[index]->to_string())
 											<<" | #"<<buffer[index]->get_complexity()<<std::endl;
 						}

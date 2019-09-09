@@ -29,7 +29,22 @@ auto high_one_bit = [](StreamFieldType num)->StreamFieldType {
 	return ans;
 };
 
+auto high_zero_bit = [](StreamFieldType num)->StreamFieldType {
+	StreamFieldType mark = (num == 0) ? 0 : 1;
+	StreamFieldType ans = 0;
+	StreamFieldType tmp = num;
+	while (tmp > 1)
+	{
+		if ((mark & num) == 0)
+			ans = mark;
+		tmp = tmp >> 1;
+		mark = mark << 1;
+	}
+	return ans;
+};
+
 /* [!] assume a leading guard bit in src */
+/* [!] no leading guard bit in return value */
 auto align_n_floor = [](StreamFieldType src, StreamFieldType target)->StreamFieldType {
 	StreamFieldType mask = high_one_bit(target) << 1;
 	if (src < (target | mask)) 
@@ -42,6 +57,7 @@ auto align_n_floor = [](StreamFieldType src, StreamFieldType target)->StreamFiel
 };
 
 /* [!] assume a leading guard bit in src */
+/* [!] no leading guard bit in return value */
 auto align_n_celling = [](StreamFieldType src, StreamFieldType target)->StreamFieldType {
 	StreamFieldType mask = high_one_bit(target) << 1;
 	if (src < (target | mask))
@@ -49,16 +65,24 @@ auto align_n_celling = [](StreamFieldType src, StreamFieldType target)->StreamFi
 		StreamFieldType low_one_bit = 1;
 		while (!(src & mask)) {
 			src = src << 1;
-			low_one_bit << 1;
+			low_one_bit = low_one_bit << 1;
 		}
 		src = (src ^ mask) + low_one_bit - 1 ;
 	}
 	return (src > target) ? target : src;
 };
 
+/* [!] assume NO leading guard bit in inputs */
+auto common_prefix = [](StreamFieldType a, StreamFieldType b)->StreamFieldType {
+	StreamFieldType mask = a & b;
+	StreamFieldType high_one_a = high_one_bit(a);
+	StreamFieldType high_one_b = high_one_bit(b);
+	StreamFieldType high_zero = high_zero_bit(mask);
+	if (high_one_a != high_one_b)
+		return 0;
+	return mask & (~((high_zero << 1) - 1));
+};
 
-/* [TODO] modify parser, remove threshold */
-/* [?] what threshold? */
 
 std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
 
@@ -108,22 +132,10 @@ bool check_predicate(int &last_feature, shared_ptr<NetqreAST> pred, vector< vect
 			case PredOpType::EQUAL:
 			case PredOpType::BIGGER:
 			case PredOpType::SMALLER:
+			case PredOpType::IN:
 			{
 				int bottom_index = align_n_floor(value, range[index].size()-1);
 				if (bottom_index >= range[index].size())
-					return false;
-				break;
-			}
-
-			case PredOpType::IN:
-			{
-				StreamFieldType cap = align_n_celling(value, range[index][-1]);
-				StreamFieldType bottom = align_n_floor(value, range[index][-1]);
-				if (cap < range[index][0] || bottom > range[index][-1])
-					return false;
-				/* check if some value in range */
-				int maybe = range[index].locate( [&](const StreamFieldType& e) { return e < bottom; } );
-				if (maybe >= range[index].size() || range[index][maybe] > cap)
 					return false;
 				break;
 			}
@@ -311,7 +323,7 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 					int cap_index = align_n_celling(value, range[index].size()-1);
 					int bottom_index = align_n_floor(value, range[index].size()-1);
 					StreamFieldType cap = range[index][cap_index];
-					StreamFieldType bottom = range[index][cap_index];
+					StreamFieldType bottom = range[index][bottom_index];
 					sat->val = (fv[index] >= bottom && fv[index] <= cap);
 					break;
 				}
@@ -334,8 +346,15 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 
 				case PredOpType::IN:
 				{
-					StreamFieldType cap = align_n_celling(value, range[index][-1]);
-					StreamFieldType bottom = align_n_floor(value, range[index][-1]);
+					int cap_index = align_n_celling(value, range[index].size()-1);
+					int bottom_index = align_n_floor(value, range[index].size()-1);
+					StreamFieldType cap = range[index][cap_index];
+					StreamFieldType bottom = range[index][bottom_index];
+//					StreamFieldType prefix1 = common_prefix(cap, bottom);
+//					StreamFieldType prefix2 = common_prefix(prefix1, fv[index]);
+//					sat->val = (prefix1 != 0 && prefix1 == prefix2);
+//					errputs("index:" S_(index) " feature:" S_(fv[index]) " value:" S_(value) " cap_index:" S_(cap_index) " cap:" S_(cap) " bottom_index:" S_(bottom_index) " bottom:" S_(bottom) "");
+//					errputs(range[index].to_s());
 					sat->val = (fv[index] >= bottom && fv[index] <= cap);
 					break;
 				}

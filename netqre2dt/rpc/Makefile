@@ -40,13 +40,13 @@ test0:
 run-server-local:
 	echo "Staring QRE Servers Locally"
 	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 >> server_log &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 >> server_log_1 2>&1 &
 	sleep 0.1
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 >> server_log &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 >> server_log_2 2>&1 &
 	sleep 0.1
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 >> server_log &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 >> server_log_3 2>&1 &
 	sleep 0.1
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 >> server_log &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 >> server_log_4 2>&1 &
 	sleep 5
 
 run-server-exec-local:
