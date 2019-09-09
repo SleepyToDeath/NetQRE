@@ -5,6 +5,8 @@
 #include "../data-transducer/transducer.h"
 #include <unordered_set>
 
+class NetqreExample;
+
 namespace Netqre {
 
 class ValueSpace;
@@ -19,6 +21,7 @@ class Machine {
 	std::unique_ptr<IntValue> process(TokenStream &feature_stream);
 
 	bool valid();
+	void bind_context(shared_ptr<NetqreExample> global_example);
 
 	/* constant, won't change after construction */
 	vector< std::shared_ptr<QRELeaf> > qre_list;
@@ -30,9 +33,11 @@ class Machine {
 	private:
 	/* runtime info, initialize for each execution */
 	vector<ValueSpace> value_space;
+	std::shared_ptr<NetqreExample> global_example;
 
 	void reset();
 	void collect_value_space(TokenStream &stream);
+
 	unique_ptr<IntValue> aggregate(shared_ptr<QRELeaf> qre, int lvl, TokenStream& feature_stream, vector<DT::Word>& tag_stream);
 	vector<DT::Word> generate_tags(TokenStream &feature_stream);
 	std::unique_ptr<BoolValue> satisfy(shared_ptr<NetqreAST> predicate, FeatureVector & fv);

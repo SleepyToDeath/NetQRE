@@ -261,9 +261,7 @@ class MergeSearch {
 			auto ans_tmp = graph.search_top_level_v2(e, seed, eliminate);
 
 			cerr<<"Search done!!!\n";
-			cerr<<"Size of global pool: "<<global_pool.size()<<endl;
-			cerr<<"Answers found so far: "<<global_answer.size()<<endl;
-			cerr<<"Weight remain: "<<global_constraint->total_weight_pos()<<" "<<global_constraint->total_weight_neg()<<endl;
+
 			for (int i=0; i<ans_tmp.size(); i++)
 			{
 //				cerr<<i<<endl;
@@ -299,6 +297,9 @@ class MergeSearch {
 				}
 //				cerr<<"#3"<<endl;
 			}
+			cerr<<"Size of global pool: "<<global_pool.size()<<endl;
+			cerr<<"Answers found so far: "<<global_answer.size()<<endl;
+			cerr<<"Weight remain: "<<global_constraint->total_weight_pos()<<" "<<global_constraint->total_weight_neg()<<endl;
 		}
 		cerr<<"Done! Size: "<<e->positive_token[0]<<"~"<<e->positive_token.size()<<" "<<e->negative_token[0]<<"~"<<e->negative_token.size()<<endl;
 		return ans;

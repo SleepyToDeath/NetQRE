@@ -1,6 +1,6 @@
 INCLUDE_PATH = ../../../rubify
 
-CC = g++-9
+CC = g++
 STD = --std=c++2a
 
 SRC = ./client.hpp
@@ -14,7 +14,7 @@ SRC += ../network_tokenizer/feature_vector.hpp
 SRC += ../../general-lang/*pp
 SRC += $(INCLUDE_PATH)/rubify.cpp
 
-SAVING_PATH = ../../synthesizer/testbed/mode-P/
+#SAVING_PATH = ../../synthesizer/testbed/mode-P/
 CONFIG_PATH = ../../synthesizer/lang/netqre/
 SERVER_FILE = mode-P_server_list.txt
 SERVER_FILE_LOCAL = local_server_list.txt
@@ -25,14 +25,17 @@ NEG_DATA_FILE = negative.ts
 RESULT_FILE = result_vector
 
 all:
-#	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
-	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
+#	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 debug:
 	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g $(STD)
 
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &
+
+
+
 
 run-server-local:
 	echo "Staring QRE Servers Locally"

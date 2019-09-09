@@ -9,6 +9,7 @@ const int idle_wait_time = 2;
 MasterThread::MasterThread(int population, MeansOfProduction m) {
 	this->population = population;
 	this->m = m;
+	this->m.master_id = std::this_thread::get_id();
 	buzy_workers = 0;
 }
 
@@ -101,6 +102,19 @@ WorkerThread::WorkerThread(shared_ptr<MasterThread> master, MeansOfProduction m)
 }
 
 void WorkerThread::working_loop() {
+
+	provide_( [&](Rubify::string name)->std::thread::id {
+		if (name == "master_id")
+			return this->m.master_id;
+		else
+			return require_(std::thread::id, name);
+	});
+
+	errputs("Master thread id:" + _S_(m.master_id));
+
+	try
+	{
+
 	while(true)
 	{
 		bool idle = false;
@@ -140,5 +154,12 @@ void WorkerThread::working_loop() {
 
 		if (idle)
 			std::this_thread::sleep_for(std::chrono::milliseconds(idle_wait_time));
+	}
+
+	}
+	catch(Rubify::string name)
+	{
+		errputs("Missing Requirement:" + name);
+		exit(1);
 	}
 }

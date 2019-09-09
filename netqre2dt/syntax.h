@@ -18,13 +18,14 @@
 		| <predicate>
 	
 	<predicate>::=
-		[<feature-ni> = <value>]
+		[<feature-ni> <pred-op> <value>]
 		| [<unknown>]
 
 	<unknown> = _
 	
 	<feature-ni>::= <ranged-int> (index in feature vector, must be non-iterative)
 	<value>::= <ranged-int> (range of value)
+	<pred-op>:= == | -> | <= | >=
 
 	<qre>::=
 		qre(<qre-ns>)
@@ -126,7 +127,7 @@ enum class RegularOpType {
 };
 
 enum class PredOpType {
-	BIGGER, SMALLER, IN
+	NONE, BIGGER, SMALLER, IN, EQUAL
 };
 
 class NetqreAST

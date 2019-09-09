@@ -10,7 +10,7 @@ test: test-netqre
 
 INCLUDE_PATH = ../../rubify
 
-CC=g++-9
+CC=g++
 STD=--std=c++2a
 
 SRC = core/*pp
@@ -33,20 +33,29 @@ SRC2 += ../netqre2dt/op.hpp
 SRC2 += ../netqre2dt/parser.cpp
 SRC2 += ../data-transducer/*pp
 SRC2 += ../general-lang/*pp
+SRC2 += ../netqre2dt/rpc/client.cpp
 SRC2 += $(INCLUDE_PATH)/rubify.cpp
 
+#shared parameter
+EXECUTION_PATH = ../netqre2dt/rpc/
 CONFIG_PATH = ./lang/netqre/
+POS_FILE = positive.ts
+NEG_FILE = negative.ts
+SERVER_FILE_LOCAL = local_server_list.txt
+
+#mode-p only
 GRAMMAR_FILE = mode-P.json
 CONFIG_FILE = mode-P.config
 SERVER_FILE = mode-P_server_list.txt
-SERVER_FILE_LOCAL = local_server_list.txt
-
 SAVING_PATH = ./testbed/mode-P/
 QUERY_FILE = query.qre
-POS_FILE = positive.ts
-NEG_FILE = negative.ts
 
-EXECUTION_PATH = ../netqre2dt/rpc
+#general netqre only
+SAVING_PATH_0 = ./testbed/
+GRAMMAR_FILE_0 = netqre.json
+CONFIG_FILE_0 = netqre.config
+SERVER_FILE_0 = netqre_server_list.txt
+
 
 netqre:
 	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -O2 $(STD) -lrpc -pthread -lpcap
@@ -55,7 +64,8 @@ netqre-debug:
 	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -g $(STD) -lrpc -pthread -lpcap
 
 test-netqre:
-	./testbed/synthesizer ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
+	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server-local
+	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) 
 
 test-netqre-debug:
 	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt

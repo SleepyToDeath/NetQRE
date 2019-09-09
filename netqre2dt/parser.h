@@ -3,16 +3,17 @@
 
 #include <memory>
 #include "syntax.h"
+#include "rubify.hpp"
 
 namespace Netqre {
 
 class NetqreParser
 {
 	public:
-	std::shared_ptr<NetqreAST> parse(std::string code);
+	std::shared_ptr<NetqreAST> parse(Rubify::string code);
 
 	private:
-	void real_parse(std::string &code, int &cursor, std::shared_ptr<NetqreAST> context);
+	void real_parse(Rubify::string &code, int &cursor, std::shared_ptr<NetqreAST> context);
 
 };
 

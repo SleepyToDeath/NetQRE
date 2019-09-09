@@ -37,6 +37,43 @@ class NetqreExample: public GeneralExample{
 	vector<TokenStream> negative_token;
 	StreamConfig config;
 
+	vector< vector<StreamFieldType> > range;
+
+	string to_s()
+	{
+		string ret = "";
+		for (int handle = 0; handle < config.field_number; handle++)
+			ret = ret + "Handle" +  _S_(handle) + ": " + range[handle].to_s() + "\n";
+		return ret;
+	}
+
+	void collect_range() 
+	{
+		range.clear();
+
+		for (int handle = 0; handle < config.field_number; handle++)
+		{
+			vector<StreamFieldType> range_raw;
+
+			/* collect */
+			for (int i=0; i<positive_token.size(); i++)
+				for (int j=0; j<positive_token[i].size(); j++)
+					range_raw.push_back(positive_token[i][j][handle]);
+			for (int i=0; i<negative_token.size(); i++)
+				for (int j=0; j<negative_token[i].size(); j++)
+					range_raw.push_back(negative_token[i][j][handle]);
+
+			/* remove dup */
+			std::sort(range_raw.begin(), range_raw.end());
+			range.push_back(vector<StreamFieldType>());
+			range.back().push_back(range_raw[0]);
+			for (int i=1; i<range_raw.size(); i++)
+				if (range_raw[i] != range_raw[i-1])
+					range.back().push_back(range_raw[i]);
+
+		}
+	}
+
 	void from_file(string positive_file, string negative_file)
 	{
 		auto read_example = [&](vector<TokenStream>& target, string file_name)
@@ -52,7 +89,9 @@ class NetqreExample: public GeneralExample{
 			string it_s;
 			getline(fin, it_s); //eat \n from last line
 			getline(fin, it_s);
-			config.field_iterative = it_s.split(" ").map<bool>([](string t)->bool { return t == "1"; });
+			config.field_property = it_s.split(" ").map<StreamFieldProperty>([](string t)->StreamFieldProperty { 
+				return static_cast<StreamFieldProperty>(t.to_i()); 
+			});
 
 			/* read data */
 			for (int i=0; i<traces; i++)
@@ -77,6 +116,7 @@ class NetqreExample: public GeneralExample{
 
 		read_example(positive_token, positive_file);
 		read_example(negative_token, negative_file);
+		collect_range();
 	}
 
 	shared_ptr<NetqreExample> split()
@@ -123,6 +163,30 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	public:
 	NetqreInterpreterInterface(vector<string> servers, vector<int> ports){
 		manager = new Netqre::NetqreClientManager(servers, ports);
+	}
+
+	/* [TODO] interpret from binary index to true number */
+	string to_string(shared_ptr<GeneralSyntaxTree> code) {
+		string s;
+		if (code->root->get_type()->is_term) 
+			s = code->root->get_type()->name;
+		else if (code->root->get_option() == SyntaxLeftHandSide::NoOption)
+			s = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(code->root->get_type())->name;
+		else
+		{
+			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (code->root->get_type()->option[code->root->get_option()]);
+			int j = 0;
+			for (int i=0; i<rhs->subexp_full.size(); i++)	{
+				if (rhs->subexp_full[i]->is_functional()) {
+					s = s + (code->subtree[j]->to_string());
+					j++;
+				}
+				else {
+					s = s + (rhs->subexp_full[i]->name);
+				}
+			}
+		}
+		return s;
 	}
 
 	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
@@ -210,6 +274,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		auto m = interpreter.interpret(ast);
 		GeneralMatchingResult res;
 
+		auto master = require_(std::thread::id, "master_id");
+		auto e_top = require_from_(master, shared_ptr<NetqreExample>, "global_example");
+		m->bind_context(e_top);
 		if (!m->valid())
 		{
 			res = false;
@@ -410,7 +477,22 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		*/
 	}
 
+	class ComplexityContext
+	{
+		public:
+		bool missing_predicate = false;
+		bool missing_non_predicate = false;
+	};
+
 	double extra_complexity(shared_ptr<GeneralSyntaxTree> code) {
+		ComplexityContext ctxt;
+		return real_extra_complexity(code, ctxt);
+	}
+
+	double real_extra_complexity(shared_ptr<GeneralSyntaxTree> code, ComplexityContext& ctxt) {
+		const static double UNIT = 100.0;
+		const static double PANELTY = 10.0;
+
 		double complexity = 0;
 		string name = code->root->get_type()->name;
 		auto option = code->root->get_option();
@@ -418,38 +500,31 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		auto prune_count = code->prune_count;
 		if (is_term)
 		{
-//			complexity = 100.0;
-//			if ( name == "_")
-//				complexity = 300;
+			complexity = UNIT;
 		}
 		else if (option == SyntaxLeftHandSide::NoOption)
 		{
-//			complexity = 200.0;
-//			if (name == "#feature_set")
-//				complexity = 500.0;
-//			if (name == "#agg_op")
-//				complexity = 500.0;
-//			if (name == "#re")
-//				complexity = 200.0;
-//			complexity -= prune_count * 200;
+			if (!(name == "#index" ||
+				name == "#prefix" ||
+				name == "#cap_index" ||
+				name == "#bottom_index"))
+				ctxt.missing_non_predicate = true;
+			else
+				ctxt.missing_predicate = true;
+
+			if (ctxt.missing_predicate && ctxt.missing_non_predicate)
+				complexity = UNIT * PANELTY;
+			else
+				complexity = UNIT * 1.5;
 		}
 		else
 		{
-			if (name == "#predicate_entry" )
-				return 150;
 			complexity = 0;
 			for (int i=0; i<code->subtree.size(); i++)
-				complexity += extra_complexity(static_pointer_cast<GeneralSyntaxTree>(code->subtree[i]));
+				complexity += real_extra_complexity(static_pointer_cast<GeneralSyntaxTree>(code->subtree[i]), ctxt);
 
-			complexity += (code->subtree.size()-1) * 150.0;
+			complexity += (code->subtree.size()-1) * UNIT;
 //			complexity -= prune_count * 100;
-
-/*
-			if (name == "#predicate_set" && code->subtree.size() == 1)
-				complexity += 300;
-			if (name == "#predicate_set" && code->subtree.size() == 2)
-				complexity -= 600;
-				*/
 		}
 		return complexity;
 	}
@@ -463,56 +538,47 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		{
 			vector<string> ans;
 			for(int i=0; i<e->config.field_number; i++)
-			{
-//				if (e->config.field_iterative[i])
-				{
-					stringstream ss;
-					string tmp;
-					ss<<i;
-					ss>>tmp;
-					ans.push_back(tmp);
-				}
-			}
+				ans.push_back(_S_(i));
 			return ans;
 		}
-		else
+
+		if (handle == 1)
 		{
-			handle--;
+			vector<string> ans;
+			for(int i=0; i<e->config.field_number; i++)
+				if (e->config.field_property[i] == StreamFieldProperty::DISCRETE)
+					ans.push_back(_S_(i));
+			return ans;
 		}
 
-		vector<StreamFieldType> range_raw;
-		vector<StreamFieldType> range;
-		range_raw.clear();
-		range.clear();
-
-		/* collect */
-		for (int i=0; i<e->positive_token.size(); i++)
-			for (int j=0; j<e->positive_token[i].size(); j++)
-				range_raw.push_back(e->positive_token[i][j][handle]);
-		for (int i=0; i<e->negative_token.size(); i++)
-			for (int j=0; j<e->negative_token[i].size(); j++)
-				range_raw.push_back(e->negative_token[i][j][handle]);
-
-		/* remove dup */
-		std::sort(range_raw.begin(), range_raw.end());
-		range.push_back(range_raw[0]);
-		for (int i=1; i<range_raw.size(); i++)
-			if (range_raw[i] != range_raw[i-1])
-				range.push_back(range_raw[i]);
-
-		/* convert to string */
-		vector<string> ans;
-		for (int i=0; i<range.size(); i++)
+		if (handle == 2)
 		{
-			stringstream ss;
-			string tmp;
-			ss<<range[i];
-			ss>>tmp;
-			cerr<<"range+= "<<tmp<<endl;
-			ans.push_back(tmp);
+			vector<string> ans;
+			for(int i=0; i<e->config.field_number; i++)
+				if (e->config.field_property[i] == StreamFieldProperty::SCALAR || e->config.field_property[i] == StreamFieldProperty::RANGED)
+					ans.push_back(_S_(i));
+			return ans;
 		}
 
-		return ans;
+		if (handle == 3)
+		{
+			vector<string> ans;
+			for(int i=0; i<e->config.field_number; i++)
+				if (e->config.field_property[i] == StreamFieldProperty::SCALAR)
+					ans.push_back(_S_(i));
+			return ans;
+		}
+
+		if (handle == 4)
+		{
+			vector<string> ans;
+			for(int i=0; i<e->config.field_number; i++)
+				if (e->config.field_property[i] == StreamFieldProperty::SCALAR)
+					ans.push_back(_S_(i));
+			return ans;
+		}
+	
+		return vector<string>();
 	}
 
 	

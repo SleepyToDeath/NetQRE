@@ -244,7 +244,8 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 				});
 
 				pending_answer.select_( [&] (const shared_ptr<IESyntaxTree>& papapa)->bool {
-					double threshold = (buffer.size() > 0) ? (buffer[buffer.size()/2]->get_complexity()) : 0;
+//					double threshold = (buffer.size() > 0) ? (buffer[buffer.size()/2]->get_complexity()) : 0;
+					double threshold = 9999999;
 					if (papapa->get_complexity() <= threshold)
 					{
 						std::cerr<<"ANSWER FOUND: "<<papapa->to_string()

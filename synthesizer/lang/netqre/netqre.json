@@ -15,8 +15,7 @@
 		] },
 		{ "#qre_vs": [
 			[ "#agg_op","$(", "#qre_vs", "$,", "#feature_set", "$)" ],
-			[ "$split(","#qre_ps",", /*(_)/?1, sum)" ],
-			[ "$split( split(/*(_)/?1,","#qre_ps",",sum), /*(_)/?1, sum)" ]
+			[ "#qre_ps" ]
 		] },
 		{ "#agg_op": [
 			[ "max" ],
@@ -34,6 +33,7 @@
 		{ "#re": [
 			[ "#re", "#re" ],
 			[ "_" ],
+			[ "*(_)" ],
 			[ "#predicate_set" ]
 		]},
 		{ "#predicate_set": [
@@ -41,15 +41,35 @@
 			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
 			[ "$[", "#predicate_entry", "$]" ]		] },
 		{ "#predicate_entry": [
-			[ "8", "$=", "\\r9" ],
-			[ "10", "$=", "\\r11" ],
-			[ "11", "$=", "\\r12" ],
-			[ "12", "$=", "\\r13" ],
-			[ "13", "$=", "\\r14" ],
-			[ "14", "$=", "\\r15" ],
-			[ "15", "$=", "\\r16" ]
+			[ "\\r1", "$==", "$1","#index" ],
+			[ "\\r2", "$->", "$1","#prefix" ],
+			[ "\\r2", "$<=", "$1","#cap_index" ],
+			[ "\\r2", "$>=", "$1","#bottom_index" ]
+		] },
+		{ "#index": [
+			[ "0", "#index"],
+			[ "1", "#index"],
+			[ "0" ],
+			[ "1" ]
+		] },
+		{ "#prefix": [
+			[ "0", "#prefix"],
+			[ "1", "#prefix"],
+			[ "0" ],
+			[ "1" ]
+		] },
+		{ "#cap_index": [
+			[ "0", "#cap_index"],
+			[ "1", "#cap_index"],
+			[ "0" ],
+			[ "1" ]
+		] },
+		{ "#bottom_index": [
+			[ "0", "#bottom_index"],
+			[ "1", "#bottom_index"],
+			[ "0" ],
+			[ "1" ]
 		] }
-
 	] },
 
 	{ "positive_abstract" : [
@@ -58,7 +78,11 @@
 		{ "#predicate_set": "_" },
 		{ "#predicate_entry": "_" },
 		{ "#threshold": "threshold(0)" },
-		{ "#filter": "filter([_])" }
+		{ "#filter": "filter([_])" },
+		{ "#index": "" },
+		{ "#prefix": "" },
+		{ "#cap_index": "" },
+		{ "#bottom_index": "" }
 	] },
 
 	{ "negative_abstract" : [

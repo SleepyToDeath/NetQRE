@@ -42,7 +42,7 @@ shared_ptr<IEProgram> IESyntaxTree::to_program() {
 	return nullptr;
 }
 
-std::string IESyntaxTree::to_string() {
+Rubify::string IESyntaxTree::to_string() {
 	return nullptr;
 }
 

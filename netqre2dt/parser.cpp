@@ -5,12 +5,13 @@ using std::cerr;
 using std::endl;
 using std::unique_ptr;
 using std::shared_ptr;
-using std::string;
 using std::static_pointer_cast;
+using Rubify::vector;
+using Rubify::string;
 
 namespace Netqre {
 
-std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
+std::shared_ptr<NetqreAST> NetqreParser::parse(string code) {
 	int cursor = 0;
 	auto program = shared_ptr<NetqreAST>(new NetqreAST());
 	program->type = NetqreExpType::PROGRAM;
@@ -19,7 +20,7 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(std::string code) {
 }
 
 /* [TODO] This is a naive parser. Switch to lex & bison if possible */
-void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreAST> context) {
+void NetqreParser::real_parse(string &code, int &cursor, shared_ptr<NetqreAST> context) {
 
 #ifdef DT_DEBUG
 	cerr<< (int)context->type <<endl;
@@ -67,6 +68,14 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 		return stoll(code.substr(old_cursor, cursor-old_cursor));
 	};
 			
+	auto parse_binary_num = [&]() -> StreamFieldType
+	{
+		int old_cursor = cursor;
+		while (cursor < code.length() && code[cursor]>='0' && code[cursor]<='1')
+			cursor++;
+		return stoll(code.substr(old_cursor, cursor-old_cursor), nullptr, 2);
+	};
+
 	auto parse_ns = [&,this]()
 	{
 		parse_it(NetqreExpType::QRE_NS);
@@ -162,7 +171,29 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 			else
 			{
 				parse_it(NetqreExpType::FEATURE_NI);
-				skip_tail();
+				skip_space();
+				switch (code[cursor])
+				{
+					case '=':
+					context->pred_type = PredOpType::EQUAL;
+					cursor += 2;
+					break;
+
+					case '-':
+					context->pred_type = PredOpType::IN;
+					cursor += 2;
+					break;
+
+					case '>':
+					context->pred_type = PredOpType::BIGGER;
+					cursor += 2;
+					break;
+
+					case '<':
+					context->pred_type = PredOpType::SMALLER;
+					cursor += 2;
+					break;
+				}
 				parse_it(NetqreExpType::VALUE);
 			}
 			skip_tail();
@@ -177,7 +208,7 @@ void NetqreParser::real_parse(std::string &code, int &cursor, shared_ptr<NetqreA
 		
 		case NetqreExpType::VALUE:
 			
-			context->value = parse_num();
+			context->value = parse_binary_num();
 
 			break;
 

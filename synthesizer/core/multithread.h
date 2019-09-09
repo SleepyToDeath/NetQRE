@@ -16,6 +16,7 @@ enum TaskType {
 class MeansOfProduction {
 	public:
 	std::shared_ptr<RedundancyPlan> rp;
+	std::thread::id master_id;
 };
 
 class Mailbox {

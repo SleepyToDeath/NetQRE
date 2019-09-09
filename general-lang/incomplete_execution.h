@@ -32,7 +32,7 @@ class IESyntaxTree : public SyntaxTree {
 
 	virtual shared_ptr<IEProgram> to_program();
 
-	virtual std::string to_string();
+	virtual Rubify::string to_string();
 
 	void copy_initializer(shared_ptr<SyntaxTree> src);
 

@@ -23,7 +23,6 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter;
 /*
 */
 int main(int argc, char *argv[]) {
-	{
 
 	ifstream fin_g(argv[1]); // grammar
 	ifstream fin_c(argv[4]); // config
@@ -35,7 +34,7 @@ int main(int argc, char *argv[]) {
 	if (!fin_s.good())
 	{
 		cerr<< "Failed to open server list\n";
-		throw "wtf";
+		throw "Failed to open server list\n";
 	}
 	fin_s >> server_count;
 	cerr<<"Server number: "<<server_count<<endl;
@@ -61,7 +60,7 @@ int main(int argc, char *argv[]) {
 		if (name == "new_example_handle")
 			return shared_ptr<NetqreExampleHandle>(new NetqreExampleHandle());
 		else
-			throw name;
+			return require_(shared_ptr<GeneralExampleHandle>, name) ;
 	});
 	/*=============================================*/
 
@@ -127,6 +126,13 @@ int main(int argc, char *argv[]) {
 		e_test = static_pointer_cast<NetqreExampleHandle>(e_test_->to_handle(
 					e_train->positive_token.size(), 
 					e_train->negative_token.size()));
+
+	provide_([&](string name)->shared_ptr<NetqreExample> {
+		if (name == "global_example")
+			return e_train_;
+		else
+			return require_(shared_ptr<NetqreExample>, name);
+	});
 	/*=============================================*/
 
 
@@ -161,15 +167,24 @@ int main(int argc, char *argv[]) {
 
 
 	/*========== do searching =============*/
+	provide_( [&](Rubify::string name)->std::thread::id {
+		if (name == "master_id")
+			return std::this_thread::get_id();
+		else
+			return require_(std::thread::id, name);
+	});
+
+	errputs("Master thread id:" + _S_(std::this_thread::get_id()));
+
 	vector<shared_ptr<GeneralSyntaxTree> > answer;
 	MergeSearch search_engine;
 	try{
 		answer = search_engine.search(parser->root, parser->rp, e_train);
 	}
-	catch(char const* name)
+	catch(Rubify::string name)
 	{
 		cerr<<name<<endl;
-		throw name;
+		exit(1);
 	}
 	/*=============================================*/
 
@@ -201,6 +216,6 @@ int main(int argc, char *argv[]) {
 			cerr<<endl;
 		}
 	}
+	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
 	/*=============================================*/
-	}
 }

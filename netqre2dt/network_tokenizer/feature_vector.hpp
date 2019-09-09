@@ -16,7 +16,7 @@ typedef vector<FeatureSlot> FeatureVector;
 typedef vector<FeatureVector> TokenStream;
 
 enum class StreamFieldProperty {
-	SCALAR, RANGED, DISCRETE
+	SCALAR = 0, RANGED = 1, DISCRETE = 2
 };
 
 class StreamConfig

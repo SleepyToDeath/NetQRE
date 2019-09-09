@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 #include <set>
+#include "rpc/interface.hpp"
 
 #include <iostream>
 using std::cerr;
@@ -17,6 +18,44 @@ using std::pair;
 using std::set;
 
 namespace Netqre {
+
+auto high_one_bit = [](StreamFieldType num)->StreamFieldType {
+	StreamFieldType ans = (num == 0) ? 0 : 1;
+	while (num > 1)
+	{
+		num = num >> 1;
+		ans = ans << 1;
+	}
+	return ans;
+};
+
+/* [!] assume a leading guard bit in src */
+auto align_n_floor = [](StreamFieldType src, StreamFieldType target)->StreamFieldType {
+	StreamFieldType mask = high_one_bit(target) << 1;
+	if (src < (target | mask)) 
+	{
+		while (!(src & mask))
+			src = src << 1;
+		return src ^ mask;
+	}
+	return src ^ high_one_bit(src);
+};
+
+/* [!] assume a leading guard bit in src */
+auto align_n_celling = [](StreamFieldType src, StreamFieldType target)->StreamFieldType {
+	StreamFieldType mask = high_one_bit(target) << 1;
+	if (src < (target | mask))
+	{
+		StreamFieldType low_one_bit = 1;
+		while (!(src & mask)) {
+			src = src << 1;
+			low_one_bit << 1;
+		}
+		src = (src ^ mask) + low_one_bit - 1 ;
+	}
+	return (src > target) ? target : src;
+};
+
 
 /* [TODO] modify parser, remove threshold */
 /* [?] what threshold? */
@@ -44,23 +83,65 @@ std::unique_ptr<IntValue> Machine::process(TokenStream &feature_stream) {
 	return num_tree->eval();
 }
 
-bool check_predicate(int &last_feature, shared_ptr<NetqreAST> pred)
+bool check_predicate(int &last_feature, shared_ptr<NetqreAST> pred, vector< vector<StreamFieldType> >& range)
 {
 	if (pred->type == NetqreExpType::PREDICATE)
 	{
+		/* check whether is unknown */
+		if (pred->subtree.size() == 1)
+			return true;
+
+		/* check features being listed in ascending order */
 		auto l = pred->subtree[0];
 		int index = l->value;
 		if (index <= last_feature)
 			return false;
 		last_feature = index;
+
+		/* check features being listed in ascending order */
+		auto r = pred->subtree[1];
+		StreamFieldType value = r->value;
+		if (value < 0)
+			return false;
+		switch(pred->pred_type)
+		{
+			case PredOpType::EQUAL:
+			case PredOpType::BIGGER:
+			case PredOpType::SMALLER:
+			{
+				int bottom_index = align_n_floor(value, range[index].size()-1);
+				if (bottom_index >= range[index].size())
+					return false;
+				break;
+			}
+
+			case PredOpType::IN:
+			{
+				StreamFieldType cap = align_n_celling(value, range[index][-1]);
+				StreamFieldType bottom = align_n_floor(value, range[index][-1]);
+				if (cap < range[index][0] || bottom > range[index][-1])
+					return false;
+				/* check if some value in range */
+				int maybe = range[index].locate( [&](const StreamFieldType& e) { return e < bottom; } );
+				if (maybe >= range[index].size() || range[index][maybe] > cap)
+					return false;
+				break;
+			}
+		}
+
 	}
 	else
 	{
 		for (int i=0; i<pred->subtree.size(); i++)
-			if (!check_predicate(last_feature, pred->subtree[i]))
+			if (!check_predicate(last_feature, pred->subtree[i], range))
 				return false;
 	}
 	return true;
+}
+
+void Machine::bind_context(shared_ptr<NetqreExample> global_example)
+{
+	this->global_example = global_example;
 }
 	
 bool Machine::valid()
@@ -83,7 +164,7 @@ bool Machine::valid()
 	for (int i=0; i<predicates.size(); i++)
 	{
 		int last_feat = -1;
-		if (!check_predicate(last_feat, predicates[i]))
+		if (!check_predicate(last_feat, predicates[i], global_example->range))
 			return false;
 	}
 	return true;
@@ -222,16 +303,42 @@ unique_ptr<BoolValue> Machine::satisfy(shared_ptr<NetqreAST> predicate, FeatureV
 			StreamFieldType value = r->value;
 			auto sat = unique_ptr<BoolValue> (new BoolValue());
 			sat->unknown = false;
-			/* TODO implement in and comparison */
+			vector< vector<StreamFieldType> >& range = global_example->range;
 			switch(predicate->pred_type)
 			{
-				case PredOpType::BIGGER:
-				break;
-				case PredOpType::SMALLER:
-				break;
 				case PredOpType::EQUAL:
-				sat->val = (fv[index] == value);
-				break;
+				{
+					int cap_index = align_n_celling(value, range[index].size()-1);
+					int bottom_index = align_n_floor(value, range[index].size()-1);
+					StreamFieldType cap = range[index][cap_index];
+					StreamFieldType bottom = range[index][cap_index];
+					sat->val = (fv[index] >= bottom && fv[index] <= cap);
+					break;
+				}
+
+				case PredOpType::BIGGER:
+				{
+					int bottom_index = align_n_floor(value, range[index].size()-1);
+					StreamFieldType bottom = range[index][bottom_index];
+					sat->val = (fv[index] >= bottom);
+					break;
+				}
+
+				case PredOpType::SMALLER:
+				{
+					int cap_index = align_n_celling(value, range[index].size()-1);
+					StreamFieldType cap = range[index][cap_index];
+					sat->val = (fv[index] <= cap);
+					break;
+				}
+
+				case PredOpType::IN:
+				{
+					StreamFieldType cap = align_n_celling(value, range[index][-1]);
+					StreamFieldType bottom = align_n_floor(value, range[index][-1]);
+					sat->val = (fv[index] >= bottom && fv[index] <= cap);
+					break;
+				}
 			}
 			return sat;
 		}

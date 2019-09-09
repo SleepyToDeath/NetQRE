@@ -36,10 +36,10 @@ class GeneralTestResult {
 
 class AbstractCode {
 	public:
-	AbstractCode(std::string _pos, std::string _neg):pos(_pos),neg(_neg),completable(true){}
+	AbstractCode(string _pos, string _neg):pos(_pos),neg(_neg),completable(true){}
 	AbstractCode():pos(""),neg(""),completable(false){}
-	std::string pos;
-	std::string neg;
+	string pos;
+	string neg;
 	bool completable;
 };
 
@@ -76,6 +76,7 @@ class GeneralInterpreter {
 					shared_ptr<GeneralSolutionGroupConstraint> constraint = nullptr) 
 					{ return !complete; }
 //	virtual GeneralMatchingResult accept(shared_ptr<GeneralSyntaxTree> code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
+	virtual string to_string(shared_ptr<GeneralSyntaxTree> code) = 0;
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 	virtual double extra_complexity(shared_ptr<GeneralSyntaxTree> code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
@@ -126,11 +127,7 @@ class GeneralProgram: public IEProgram {
 	bool accept( shared_ptr<IEExample> input, IEConfig cfg = DEFAULT_IE_CONFIG) {
 		if (!source_code.completable)
 			return true;
-//		else
-//			cerr<<"Completable Found!"<<endl;
 		return interpreter->accept(source_code, complete, std::static_pointer_cast<GeneralExample>(input), cfg);
-//		utility_rate = r.utility_rate;
-//		return r.accept;
 	}
 
 	/* set this to the interpreter of your specific language */
@@ -146,7 +143,7 @@ class GeneralSyntaxLeftHandSide;
 class GeneralSyntaxRightHandSide : public IESyntaxRightHandSide {
 	public:
 	GeneralSyntaxRightHandSide() { name = ""; }
-	std::string to_string(vector<std::string> subs) { return ""; }
+	string to_string(vector<string> subs) { return ""; }
 	shared_ptr<IEProgram> combine_subprograms(vector< shared_ptr<IEProgram> > subprograms) {return nullptr;}
 
 	vector<std::shared_ptr<GeneralSyntaxLeftHandSide> > subexp_full;
@@ -168,8 +165,8 @@ class GeneralSyntaxLeftHandSide : public IESyntaxLeftHandSide {
 		return functional;
 	}
 
-	std::string positive_abstract_code = "";
-	std::string negative_abstract_code = "";
+	string positive_abstract_code = "";
+	string negative_abstract_code = "";
 	bool functional; /* example of non-functional symbol : "(", ")", ",", non-functional symbols start with "$" */
 
 	private:
@@ -199,8 +196,8 @@ class GeneralSyntaxTree : public IESyntaxTree {
 
 
 	AbstractCode to_code() {
-		std::string pos;
-		std::string neg;
+		string pos;
+		string neg;
 		if (root->get_type()->is_term) 
 		{
 			pos = root->get_type()->name;
@@ -252,8 +249,11 @@ class GeneralSyntaxTree : public IESyntaxTree {
 	}
 
 
-	std::string to_string() {
-		std::string s;
+	string to_string() {
+		return GeneralProgram::interpreter->to_string(static_pointer_cast<GeneralSyntaxTree>(shared_from_this()));
+		
+		/*
+		string s;
 		if (root->get_type()->is_term) 
 			s = root->get_type()->name;
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
@@ -273,6 +273,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			}
 		}
 		return s;
+		*/
 	}
 
 	void copy_initializer(shared_ptr<SyntaxTree> src) {
@@ -378,6 +379,5 @@ class GeneralSyntaxTreeFactory : public SyntaxTreeFactory {
 	}
 };
 
-std::unique_ptr<SyntaxTreeFactory> SyntaxTree::factory = unique_ptr<GeneralSyntaxTreeFactory>(new GeneralSyntaxTreeFactory());
 
 #endif

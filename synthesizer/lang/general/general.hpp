@@ -14,23 +14,24 @@
 
 using std::cerr;
 using std::endl;
+using Rubify::string;
 using std::static_pointer_cast;
 
-const std::string SYNTAX_ROOT_NAME = "program";
+const string SYNTAX_ROOT_NAME = "program";
 
 class GeneralConfigParser {
 	private:
 
 	class State {
 		public:
-		map<std::string, shared_ptr<GeneralSyntaxLeftHandSide> > name_list;
-		vector<shared_ptr<GeneralSyntaxLeftHandSide> > dep_list; /* input dependent LHS list */
+		map<string, shared_ptr<GeneralSyntaxLeftHandSide> > name_list;
+		map<int, shared_ptr<GeneralSyntaxLeftHandSide> > dep_list; /* input dependent LHS list */
 	};
 
 	class Token {
 		public:
 		bool variable;
-		std::string name;
+		string name;
 		shared_ptr<GeneralSyntaxLeftHandSide> lhs;
 	};
 
@@ -90,13 +91,8 @@ class GeneralConfigParser {
 	 * will determine is_term for all LHS
 	 * will determine functional for all LHS */
 	void scan_names(std::shared_ptr<GJson> json) {
-		shared_ptr<GJson> syntax = json->get(0)->value();
-		/* syntax */
-		for (int i=0; i<syntax->size(); i++)
-		{
-			/* Add LHS to the name list
-			 * LHS must be non-terminal and functional */
-			std::string name = syntax->get(i)->name();
+
+		auto parse_non_term = [&](string name) {
 			if (state->name_list.count(name) == 0)
 			{
 				cerr<<"new name: "<<name<<endl;
@@ -105,6 +101,45 @@ class GeneralConfigParser {
 			state->name_list[name]->name = name;
 			state->name_list[name]->is_term = false;
 			state->name_list[name]->functional = true;
+		};
+
+		auto parse_maybe_term = [&](string name) {
+			string real_name = name;
+			if (name[0] == '$')
+				real_name = name.substr(1, name.length()-1);
+			/* add new LHS to list */
+			if (state->name_list.count(real_name) == 0)
+			{
+				cerr<<"new name: "<<real_name<<endl;
+				state->name_list[real_name] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+				state->name_list[real_name]->name = real_name;
+				/* check input dependency */
+				if (name.start_with("\\r"))
+				{
+					state->name_list[real_name]->is_term = false;
+					int handle = Rubify::string(name.substr(2, name.size()-2)).to_i();
+					state->dep_list[handle] = (state->name_list[real_name]);
+				}
+			}
+			/* set functional */
+			if (name[0] == '$')
+			{
+				state->name_list[real_name]->functional = false;
+			}
+			else
+				state->name_list[real_name]->functional = true;
+
+		};
+
+		shared_ptr<GJson> syntax = json->get(0)->value();
+		/* syntax */
+		for (int i=0; i<syntax->size(); i++)
+		{
+			/* Add LHS to the name list
+			 * LHS must be non-terminal and functional */
+			string name = syntax->get(i)->name();
+			parse_non_term(name);
+
 			/* Add elements in RHS to the name list 
 			 * is_term is by default true, not functional if name start with '$'*/
 			shared_ptr<GJson> rhs = syntax->get(i)->value();
@@ -113,33 +148,8 @@ class GeneralConfigParser {
 				shared_ptr<GJson> rhs_entry = rhs->get(j);
 				for (int k=0; k<rhs_entry->size(); k++)
 				{
-					std::string name2 = rhs_entry->get(k)->name();
-					std::string real_name2 = name2;
-					if (name2[0] == '$')
-						real_name2 = name2.substr(1, name2.length()-1);
-					/* add new LHS to list */
-					if (state->name_list.count(real_name2) == 0)
-					{
-						cerr<<"new name: "<<real_name2<<endl;
-						state->name_list[real_name2] = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
-						state->name_list[real_name2]->name = real_name2;
-						/* check input dependency */
-						if (name2[0] == '\\' && name2[1] == 'r')
-						{
-							state->name_list[real_name2]->is_term = false;
-							int handle = stoi(name2.substr(2, name2.size()-2));
-							if (state->dep_list.size() <= handle)
-								state->dep_list.resize(handle+1, nullptr);
-							state->dep_list[handle] = (state->name_list[real_name2]);
-						}
-					}
-					/* set functional */
-					if (name2[0] == '$')
-					{
-						state->name_list[real_name2]->functional = false;
-					}
-					else
-						state->name_list[real_name2]->functional = true;
+					string name2 = rhs_entry->get(k)->name();
+					parse_maybe_term(name2);
 				}
 			}
 		}
@@ -207,7 +217,7 @@ class GeneralConfigParser {
 		return nullptr;
 	}
 
-	shared_ptr<SyntaxTreeTemplate> parse_template(std::string code) {
+	shared_ptr<SyntaxTreeTemplate> parse_template(string code) {
 		auto cursor = shared_ptr<int>(new int(0));
 		return parse_template_recursive(code, cursor);
 	}
@@ -286,12 +296,12 @@ class GeneralConfigParser {
 		shared_ptr<GJson> neg_json = json->get(2)->value();
 		for (int i=0; i<pos_json->size(); i++)
 		{
-			std::string name = pos_json->get(i)->name();
+			string name = pos_json->get(i)->name();
 			state->name_list[name]->positive_abstract_code = pos_json->get(i)->value()->name();
 		}
 		for (int i=0; i<neg_json->size(); i++)
 		{
-			std::string name = neg_json->get(i)->name();
+			string name = neg_json->get(i)->name();
 			state->name_list[name]->negative_abstract_code = neg_json->get(i)->value()->name();
 		}
 	}
@@ -340,25 +350,21 @@ class GeneralConfigParser {
 	shared_ptr<RedundancyPlan> rp;
 
 	void generate_input_dependent_syntax(shared_ptr<GeneralExample> example) {
-		for (int i=0; i<state->dep_list.size(); i++)
+		state->dep_list.each( [&](int handle, shared_ptr<GeneralSyntaxLeftHandSide> lhs) 
 		{
-			auto lhs = state->dep_list[i];
-			if (lhs != nullptr)
+			auto range = GeneralProgram::interpreter->get_range(handle, example);
+			range.each( [&] (auto name)
 			{
-				auto range = GeneralProgram::interpreter->get_range(i, example);
-				for (int j=0; j<range.size(); j++)
-				{
-					auto new_rhs = shared_ptr<GeneralSyntaxRightHandSide>(new GeneralSyntaxRightHandSide());
-					lhs->option.push_back(new_rhs);
-					auto new_lhs = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
-					new_lhs->is_term = true;
-					new_lhs->functional = true;
-					new_lhs->name = range[j];
-					new_rhs->subexp.push_back(new_lhs);
-					new_rhs->subexp_full.push_back(new_lhs);
-				}
-			}
-		}
+				auto new_rhs = shared_ptr<GeneralSyntaxRightHandSide>(new GeneralSyntaxRightHandSide());
+				lhs->option.push_back(new_rhs);
+				auto new_lhs = shared_ptr<GeneralSyntaxLeftHandSide>(new GeneralSyntaxLeftHandSide());
+				new_lhs->is_term = true;
+				new_lhs->functional = true;
+				new_lhs->name = name;
+				new_rhs->subexp.push_back(new_lhs);
+				new_rhs->subexp_full.push_back(new_lhs);
+			});
+		});
 	}
 
 	void parse_config(shared_ptr<GJson> json) {

@@ -5,7 +5,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-using std::string;
+using Rubify::string;
 
 /*
 bool compare_syntax_tree_complexity(shared_ptr<SyntaxTree> a, shared_ptr<SyntaxTree> b) {
@@ -268,8 +268,8 @@ bool SyntaxTree::collect_variable(shared_ptr<VariableMap> vars, shared_ptr<Synta
 	}
 }
 
-std::string SyntaxTreeTemplate::to_string() {
-	std::string s;
+Rubify::string SyntaxTreeTemplate::to_string() {
+	Rubify::string s;
 //	cout<<root->get_type()->name<<"--> subtree size: "<<subtree.size()<<endl;
 	if (root->get_type()->is_term) 
 		s = root->get_type()->name;
@@ -303,9 +303,9 @@ shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap
 	return new_tree;
 }
 
-std::string SyntaxTree::to_string() {
+Rubify::string SyntaxTree::to_string() {
 	throw string("SyntaxTree::to_string This function shouldn't be called\n");
-	std::string s;
+	Rubify::string s;
 	if (root->get_type()->is_term) 
 		s = root->get_type()->name;
 	else if (root->get_option() == SyntaxLeftHandSide::NoOption)

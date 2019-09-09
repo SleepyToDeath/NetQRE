@@ -49,7 +49,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	{
 		public:
 		/* <var name, var value> */
-		std::map<std::string, shared_ptr<SyntaxTree> > map;
+		std::map<Rubify::string, shared_ptr<SyntaxTree> > map;
 	};
 
 	/* mutate a node of depth AT MOST `max_depth` into all possible RHS, and append the results to `queue` */
@@ -62,7 +62,7 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	/* check if all leaf nodes are terminal */
 	bool is_complete();
 	virtual double get_complexity();
-	virtual std::string to_string();
+	virtual Rubify::string to_string();
 	size_t hash();
 	bool equal(shared_ptr<SyntaxTree> t);
 
@@ -114,8 +114,8 @@ class SyntaxTreeNode {
 class SyntaxTreeTemplate: public SyntaxTree {
 	public:
 	SyntaxTreeTemplate(shared_ptr<SyntaxTreeNode> root);
-	std::string var_name;
-	std::string to_string();
+	Rubify::string var_name;
+	Rubify::string to_string();
 	bool is_variable(); /* non-terminal and no option in a template means a variable */
 	shared_ptr<SyntaxTree> to_syntax_tree(shared_ptr<VariableMap> vars, int _depth);
 };
@@ -123,7 +123,7 @@ class SyntaxTreeTemplate: public SyntaxTree {
 class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide> {
 	public:
 	int id;
-	std::string name;
+	Rubify::string name;
 	vector<std::shared_ptr<SyntaxRightHandSide> > option;
 	vector<std::shared_ptr<SyntaxTree> > shortcut;
 	bool is_term;
@@ -134,11 +134,11 @@ class SyntaxLeftHandSide: public std::enable_shared_from_this<SyntaxLeftHandSide
 class SyntaxRightHandSide: public std::enable_shared_from_this<SyntaxRightHandSide> {
 	public:
 	int id;
-	std::string name;
+	Rubify::string name;
 	bool independent; /* only support one dependent subexp, which must be the only subexp */
 	vector<std::shared_ptr<SyntaxLeftHandSide> > subexp;
 
-	virtual std::string to_string(vector<std::string> subs) {return "";};
+	virtual Rubify::string to_string(vector<Rubify::string> subs) {return "";};
 };
 
 class SyntaxTreeFactory {
