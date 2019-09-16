@@ -299,7 +299,8 @@ class MergeSearch {
 			}
 			cerr<<"Size of global pool: "<<global_pool.size()<<endl;
 			cerr<<"Answers found so far: "<<global_answer.size()<<endl;
-			cerr<<"Weight remain: "<<global_constraint->total_weight_pos()<<" "<<global_constraint->total_weight_neg()<<endl;
+			if (global_constraint != nullptr)
+				cerr<<"Weight remain: "<<global_constraint->total_weight_pos()<<" "<<global_constraint->total_weight_neg()<<endl;
 		}
 		cerr<<"Done! Size: "<<e->positive_token[0]<<"~"<<e->positive_token.size()<<" "<<e->negative_token[0]<<"~"<<e->negative_token.size()<<endl;
 		return ans;

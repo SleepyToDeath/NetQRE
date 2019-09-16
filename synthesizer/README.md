@@ -62,6 +62,8 @@ in the server's directory before running a new task.
 Whenever you change the test data, run `distribute.sh` again and then
 refresh servers.
 
+##Feature Types:
+SCALAR = 0, RANGED = 1, DISCRETE = 2
 
 # How the synthesis work?
 

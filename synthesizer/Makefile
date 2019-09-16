@@ -6,7 +6,7 @@ d: test-netqre-debug
 
 p: profile-regex
 
-test: test-netqre
+train: train-netqre
 
 INCLUDE_PATH = ../../rubify
 
@@ -63,7 +63,7 @@ netqre:
 netqre-debug:
 	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -g $(STD) -lrpc -pthread -lpcap
 
-test-netqre:
+train-netqre:
 	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server-local
 	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) 
 
