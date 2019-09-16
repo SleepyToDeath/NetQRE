@@ -20,8 +20,10 @@ SERVER_FILE = mode-P_server_list.txt
 SERVER_FILE_LOCAL = local_server_list.txt
 QUERY_FILE = query.qre
 UNLABELED_DATA_FILE = unlabeled.ts
-POS_DATA_FILE = positive.ts
-NEG_DATA_FILE = negative.ts
+POS_DATA_FILE = positive_train.ts
+NEG_DATA_FILE = negative_train.ts
+POS_TEST_FILE = positive_test.ts
+NEG_TEST_FILE = negative_test.ts
 RESULT_FILE = result_vector
 
 all:
@@ -40,13 +42,13 @@ test0:
 run-server-local:
 	echo "Staring QRE Servers Locally"
 	-killall netqre_server
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 >> server_log_1 2>&1 &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(SAVING_PATH)$(POS_TEST_FILE) $(SAVING_PATH)$(NEG_TEST_FILE) 23333 >> server_log_1 2>&1 &
 	sleep 0.1
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 >> server_log_2 2>&1 &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(SAVING_PATH)$(POS_TEST_FILE) $(SAVING_PATH)$(NEG_TEST_FILE) 23334 >> server_log_1 2>&1 &
 	sleep 0.1
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 >> server_log_3 2>&1 &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(SAVING_PATH)$(POS_TEST_FILE) $(SAVING_PATH)$(NEG_TEST_FILE) 23335 >> server_log_1 2>&1 &
 	sleep 0.1
-	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 >> server_log_4 2>&1 &
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(SAVING_PATH)$(POS_TEST_FILE) $(SAVING_PATH)$(NEG_TEST_FILE) 23336 >> server_log_1 2>&1 &
 	sleep 5
 
 run-server-exec-local:

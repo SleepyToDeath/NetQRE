@@ -12,40 +12,61 @@ Netqre::Interpreter interpreter;
 Netqre::NetqreParser parser;
 
 int main(int argc, char *argv[]) {
-	rpc::server srv(std::stoi(argv[3], nullptr));
+	rpc::server srv(std::stoi(argv[5], nullptr));
 	int packet_batch_size = 100;
-	auto example = shared_ptr<NetqreExample>(new NetqreExample());
-	example->from_file(argv[1], argv[2]);
+	auto e_train = shared_ptr<NetqreExample>(new NetqreExample());
+	auto e_test = shared_ptr<NetqreExample>(new NetqreExample());
+	e_train->from_file(argv[1], argv[2]);
+	e_test->from_file(argv[3], argv[4]);
+	
 
-	std::cout<<"Example size:" +_S_(example->positive_token.size()) + _S_(example->negative_token.size())<<endl;
+	std::cout<<"Example size:" +_S_(e_train->positive_token.size()) + _S_(e_train->negative_token.size())<<endl;
 
 	provide_([&](string name)->shared_ptr<NetqreExample> {
 		if (name == "global_example")
-			return example;
+			return e_train;
 		else
 			return require_(shared_ptr<NetqreExample>, name);
 	});
 
 	auto master_id = std::this_thread::get_id();
 
-	/* [TODO] pass global example through arguments */
+	/* [TODO] pass global e_train through arguments */
 
 	srv.bind(Netqre::SERVICE_NAME, [&](std::string code, bool example_positive, int example_index) {
 
 		puts("Request:"+code+"["+_S_(example_positive)+","+_S_(example_index)+"]");
 		auto ast = parser.parse(code);
 		auto m = interpreter.interpret(ast);
-		m->bind_context(example);
+		m->bind_context(e_train);
 		unique_ptr<Netqre::IntValue> ans;
 		if (example_positive)
 		{
-			auto s = example->positive_token[example_index];
-			ans = m->process(s);
+			if (example_index < e_train->positive_token.size())
+			{
+				auto s = e_train->positive_token[example_index];
+				ans = m->process(s);
+			}
+			else
+			{
+				example_index -= e_train->positive_token.size();
+				auto s = e_test->positive_token[example_index];
+				ans = m->process(s);
+			}
 		}
 		else
 		{
-			auto s = example->negative_token[example_index];
-			ans = m->process(s);
+			if (example_index < e_train->negative_token.size())
+			{
+				auto s = e_train->negative_token[example_index];
+				ans = m->process(s);
+			}
+			else
+			{
+				example_index -= e_train->negative_token.size();
+				auto s = e_test->negative_token[example_index];
+				ans = m->process(s);
+			}
 		}
 
 		Netqre::IntValueMsg ret;

@@ -39,8 +39,10 @@ SRC2 += $(INCLUDE_PATH)/rubify.cpp
 #shared parameter
 EXECUTION_PATH = ../netqre2dt/rpc/
 CONFIG_PATH = ./lang/netqre/
-POS_FILE = positive.ts
-NEG_FILE = negative.ts
+POS_FILE = positive_train.ts
+NEG_FILE = negative_train.ts
+POS_TEST_FILE = positive_test.ts
+NEG_TEST_FILE = negative_test.ts
 SERVER_FILE_LOCAL = local_server_list.txt
 
 #mode-p only
@@ -65,7 +67,7 @@ netqre-debug:
 
 train-netqre:
 	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server-local
-	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) 
+	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(SAVING_PATH_0)$(POS_TEST_FILE) $(SAVING_PATH_0)$(NEG_TEST_FILE) 
 
 test-netqre-debug:
 	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt

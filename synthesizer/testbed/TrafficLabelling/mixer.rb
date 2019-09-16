@@ -32,6 +32,8 @@ class Mixer
     @config = config
 
     @counter = 0
+
+    skip
   end
 
   def output
@@ -48,6 +50,15 @@ class Mixer
   end
 
   private
+
+  def skip
+    (1..$pos_skip).each do |_|
+      @pos_handle = @pos_source.next_flow.pkts.each
+    end
+    (1..$neg_skip).each do |_|
+      @neg_handle = @neg_source.next_flow.pkts.each
+    end
+  end
 
   def next_packet
     get_packet = ->(source, handle) do
@@ -92,6 +103,9 @@ $neg_csv = './dataset/Monday-WorkingHours.pcap_ISCX.csv'
 $neg_pcap = ['./dataset/Monday-WorkingHours.pcap.split6']
 $max_flow_length = 1000
 
+$pos_skip = 1000
+$neg_skip = 1000
+
 #pos_ratio, neg_ratio, batch, count
 small_simple_pure_pos = MixerConfig.new(1, 0, 1, 10)
 small_simple_pure_neg = MixerConfig.new(0, 1, 1, 10)
@@ -103,12 +117,12 @@ combined_pure_neg = MixerConfig.new(0, 1, 8, 50)
 
 dummy_source = DDataSource.new
 
-#pos_source = CICIDS2017Source.new
-#neg_source = dummy_source
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
 
-pos_source = dummy_source
-neg_source = CICIDS2017SourceNeg.new
+#pos_source = dummy_source
+#neg_source = CICIDS2017SourceNeg.new
 
-mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
 mx.output
 

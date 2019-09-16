@@ -25,8 +25,8 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter;
 int main(int argc, char *argv[]) {
 
 	ifstream fin_g(argv[1]); // grammar
-	ifstream fin_c(argv[4]); // config
-	ifstream fin_s(argv[5]); // server list
+	ifstream fin_c(argv[2]); // config
+	ifstream fin_s(argv[3]); // server list
 
 	
 	/*========== read server list =============*/
@@ -112,22 +112,19 @@ int main(int argc, char *argv[]) {
 
 
 	/*========== read examples =============*/
-	auto name_pos = string(argv[2]); // example pos
-	auto name_neg = string(argv[3]); // example neg
-
 	auto e_train_ = shared_ptr<NetqreExample>(new NetqreExample());
-	e_train_->from_file(argv[2], argv[3]);
-	auto e_test_ = e_train_;
-	if (require_(int, "do_test"))
-		e_test_ = e_train_->split();
-	
+	e_train_->from_file(argv[4], argv[5]);
 	auto e_train = static_pointer_cast<NetqreExampleHandle>(e_train_->to_handle());
+
+	auto e_test_ = shared_ptr<NetqreExample>(new NetqreExample());
 	auto e_test = e_train;
 	if (require_(int, "do_test"))
+	{
+		e_test_->from_file(argv[6], argv[7]);
 		e_test = static_pointer_cast<NetqreExampleHandle>(e_test_->to_handle(
-					e_train->positive_token.size(), 
-					e_train->negative_token.size()));
-
+						e_train->positive_token.size(), e_train->negative_token.size()));
+	}
+	
 	provide_([&](string name)->shared_ptr<NetqreExample> {
 		if (name == "global_example")
 			return e_train_;
