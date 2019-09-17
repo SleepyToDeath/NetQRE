@@ -488,6 +488,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	constexpr static double INCOMPLETE_PENALTY = 1.5;
 	constexpr static double INVALID_PANELTY = 100.0;
 	constexpr static double PREFER_REWARD = 0.2;
+	constexpr static double UNFAVORED_PANELTY = 4.0;
 
 	double extra_complexity(shared_ptr<GeneralSyntaxTree> code) {
 		ComplexityContext ctxt;
@@ -538,6 +539,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				|| (name == "#predicate_set")
 				|| (name == "#predicate_entry"))
 				complexity -= UNIT * PREFER_REWARD;
+			if (name == "#qre_vs")
+				complexity += UNIT * UNFAVORED_PANELTY;
 //			complexity -= prune_count * 100;
 		}
 		return complexity;

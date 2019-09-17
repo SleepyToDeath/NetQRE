@@ -6,9 +6,15 @@ require 'pcaprub'
 require 'packetfu'
 require './ppacket'
 
-def parse_time(csv, is_afternoon)
+def is_afternoon(time)
+	beginning_of_the_day = Time.new(time.year, time.month, time.day, time.zone)
+	return time - beginning_of_the_day < 8*3600
+end
+
+def parse_time(csv)
   csv.each do |row|
-    row[6] = Time.parse(row[6]).to_i + (is_afternoon ? (3600*11) : (-3600))
+		t = Time.parse(row[6])
+    row[6] = t.to_i + (is_afternoon(t) ? (3600*11) : (-3600))
   end
 end
 
@@ -158,7 +164,7 @@ class CICIDS2017Source < DDataSource
   def init_source
     csv = CSV.read($pos_csv)
     pos = get_pos(csv)
-    parse_time(pos, ($pos_csv.include? "Afternoon"))
+    parse_time(pos)
     STDERR.puts "label starting time: #{pos.min{|row| row[6]}[6]}"
     STDERR.puts "label ending time: #{pos.max{|row| row[6]}[6]}"
 #    write_pos_file(pos, $pos_csv)
@@ -211,6 +217,7 @@ class CICIDS2017Source < DDataSource
     attack_flows.group_by { |flow| flow.attack_type }.each do |type, flow_bucket|
       STDERR.puts type
       @output_flows << flow_bucket.select{ |flow| not flow.pkts.empty? }
+      STDERR.puts @output_flows[-1].length
     end
       
     @source = @output_flows[$wanted_type].each 
@@ -239,7 +246,7 @@ class CICIDS2017SourceNeg < DDataSource
   def init_source
     csv = CSV.read($neg_csv)
     neg = get_neg(csv)
-    parse_time(neg, ($neg_csv.include? "Afternoon"))
+    parse_time(neg)
     STDERR.puts "label starting time: #{neg.min{|row| row[6]}[6]}"
     STDERR.puts "label ending time: #{neg.max{|row| row[6]}[6]}"
     STDERR.puts "negative: #{neg.size}/#{csv.size}"

@@ -214,6 +214,6 @@ int main(int argc, char *argv[]) {
 			cerr<<endl;
 		}
 	}
-	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
+//	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
 	/*=============================================*/
 }

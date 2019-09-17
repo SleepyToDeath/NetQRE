@@ -95,25 +95,44 @@ class Mixer
 end
 
 #file names
-$pos_csv = './dataset/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv'
+=begin
+#DDoS
+$pos_csv = './csv/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Friday-WorkingHours-split.pcap16']
 $wanted_type = 0
+=end
 
-$neg_csv = './dataset/Monday-WorkingHours.pcap_ISCX.csv'
-$neg_pcap = ['./dataset/Monday-WorkingHours.pcap.split6']
+=begin
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Wednesday-WorkingHours.pcap.split38'
+]
+$wanted_type = 3
+=end
+
+$pos_csv = './csv/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split22',
+]
+$wanted_type = 0
+
+$neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
+$neg_pcap = ['./dataset/Monday-WorkingHours.pcap.split12']
 $max_flow_length = 1000
 
-$pos_skip = 1000
-$neg_skip = 1000
+$pos_skip = 2000
+$neg_skip = 0
 
 #pos_ratio, neg_ratio, batch, count
 small_simple_pure_pos = MixerConfig.new(1, 0, 1, 10)
 small_simple_pure_neg = MixerConfig.new(0, 1, 1, 10)
 
 single_pure_pos = MixerConfig.new(1, 0, 1, 50)
-combined_pure_pos = MixerConfig.new(1, 0, 8, 50)
+combined_pure_pos = MixerConfig.new(1, 0, 20, 50)
 single_pure_neg = MixerConfig.new(0, 1, 1, 50)
 combined_pure_neg = MixerConfig.new(0, 1, 8, 50)
+
+combined_few_pos = MixerConfig.new(1, 0, 1, 3)
 
 dummy_source = DDataSource.new
 
