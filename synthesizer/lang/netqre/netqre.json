@@ -28,13 +28,13 @@
 		{ "#qre_ps": [
 			[ "$split(", "#qre_ps", "$,", "#qre_ps", "$,", "#agg_op", "$)" ],
 			[ "$iter(", "#qre_ps", "$,", "#agg_op", "$)" ],
-			[ "$/","#re","$/?1" ]
+			[ "$/*(_)","#re","$/?1" ]
 		] },
 		{ "#re": [
 			[ "#re", "#re" ],
 			[ "_" ],
 			[ "*(_)" ],
-			[ "#predicate_set" ]
+			[ "#predicate_set","$*(_)" ]
 		]},
 		{ "#predicate_set": [
 			[ "$||([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],

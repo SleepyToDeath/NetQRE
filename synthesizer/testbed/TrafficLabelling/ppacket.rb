@@ -109,6 +109,13 @@ class PPacket
   end
 
   def to_feature
+		time = Time.at(@time)
+		beginning_of_the_day = Time.new(time.year, time.month, time.day, time.zone).to_i
+		@time = @time - beginning_of_the_day
+
+		# time can basically explain everything
+		# this is to nullify its effect
+		@time = 0
 =begin
             0,  1,
             2,  3,  4,  5,  6,
@@ -116,7 +123,7 @@ class PPacket
             12, 13, 14, 15, 16, 17,
             18, 19
 =end
-    return [@time, @time_since_last, 
+    return [@time, @time_since_last.to_i, 
             @src_ip, @src_port, @dst_ip, @dst_port, @protocol, 
             @frag, @id, @len, @tos, @ttl, 
             @syn, @ack, @fin, @rst, @psh, @urg,

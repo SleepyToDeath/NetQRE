@@ -204,8 +204,17 @@ int main(int argc, char *argv[]) {
 						<<static_cast<int>(e_train->threshold)<<" "
 						<<static_cast<int>(e_train->indistinguishable_is_negative)<<endl;
 
+		{
+			cerr<<"Training Set:"<<endl;
+			auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), e_train);
+			cerr<<"Positive accuracy: "<<res.pos_accuracy<<endl;
+			cerr<<"Negative accuracy: "<<res.neg_accuracy<<endl;
+			cerr<<endl;
+		}
+
 		if (require_(int, "do_test"))
 		{
+			cerr<<"Testing Set:"<<endl;
 			e_test->threshold = e_train->threshold;
 			e_test->indistinguishable_is_negative = e_train->indistinguishable_is_negative;
 			auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), e_test);
@@ -214,6 +223,6 @@ int main(int argc, char *argv[]) {
 			cerr<<endl;
 		}
 	}
-//	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
+	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
 	/*=============================================*/
 }

@@ -2,6 +2,7 @@
 
 require './ppacket'
 require './cicids2017'
+require './kitsune'
 
 class MixerConfig
   attr_reader :sample_count, :batch_size
@@ -23,8 +24,8 @@ class Mixer
     @pos_source = pos_source
     @neg_source = neg_source
 
-    @pos_source.init_source
     @neg_source.init_source
+    @pos_source.init_source
 
     @pos_handle = pos_source.next_flow.pkts.each
     @neg_handle = neg_source.next_flow.pkts.each
@@ -110,6 +111,7 @@ $pos_pcap = [
 $wanted_type = 3
 =end
 
+#================ for CICIDS2017 =================
 $pos_csv = './csv/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.pos.csv'
 $pos_pcap = [
 './dataset/Friday-WorkingHours.pcap.split22',
@@ -120,8 +122,26 @@ $neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
 $neg_pcap = ['./dataset/Monday-WorkingHours.pcap.split12']
 $max_flow_length = 1000
 
-$pos_skip = 2000
-$neg_skip = 0
+
+#================ for general =================
+$batch_size = 10
+$sample_count = 1000
+$pos_skip = rand(665459) - $batch_size * $sample_count
+#$pos_skip = 661497
+$neg_skip = rand(1334541) - $batch_size * $sample_count
+#$neg_skip = 1338503
+
+#================ for kitsune =================
+$ki_csv =
+'./kitsune/Active Wiretap_labels.csv'
+
+$ki_pcap = 
+'./kitsune/Active Wiretap_pcap.pcapng'
+
+$pos_prepare_num = $batch_size * $sample_count * 2 + $pos_skip
+$neg_prepare_num = $batch_size * $sample_count * 2 + $neg_skip
+
+
 
 #pos_ratio, neg_ratio, batch, count
 small_simple_pure_pos = MixerConfig.new(1, 0, 1, 10)
@@ -130,18 +150,26 @@ small_simple_pure_neg = MixerConfig.new(0, 1, 1, 10)
 single_pure_pos = MixerConfig.new(1, 0, 1, 50)
 combined_pure_pos = MixerConfig.new(1, 0, 20, 50)
 single_pure_neg = MixerConfig.new(0, 1, 1, 50)
-combined_pure_neg = MixerConfig.new(0, 1, 8, 50)
+combined_pure_neg = MixerConfig.new(0, 1, 20, 50)
 
 combined_few_pos = MixerConfig.new(1, 0, 1, 3)
 
 dummy_source = DDataSource.new
 
-pos_source = CICIDS2017Source.new
-neg_source = dummy_source
+bulk_pure_pos = MixerConfig.new(1, 0, $batch_size, $sample_count)
+bulk_pure_neg = MixerConfig.new(0, 1, $batch_size, $sample_count)
+
+#pos_source = CICIDS2017Source.new
+#neg_source = dummy_source
 
 #pos_source = dummy_source
 #neg_source = CICIDS2017SourceNeg.new
 
-mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+#pos_source = KitsuneSourcePos.new
+pos_source = dummy_source
+neg_source = KitsuneSourceNeg.new
+#neg_source = dummy_source
+
+mx = Mixer.new(bulk_pure_neg, pos_source, neg_source)
 mx.output
 

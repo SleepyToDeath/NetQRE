@@ -110,7 +110,7 @@ void WorkerThread::working_loop() {
 			return require_(std::thread::id, name);
 	});
 
-	errputs("Master thread id:" + _S_(m.master_id));
+//	errputs("Master thread id:" + _S_(m.master_id));
 
 	try
 	{

@@ -1,3 +1,5 @@
+#Once Upon a Time:
+
 ## Speculative vs exhaustive search
 	- speculative: use positive and negative examples with same index as basic search unit, `n` units in total
 	- exhaustive: use each pair of positive and negative examples as basic search unit, `n^2` units in total
@@ -36,4 +38,31 @@
 	- negative example: long ago traces
 	- if there indeed is a trending, recent traces should be classified as positive
 
+
+
+
+
+#2019/09/22
+
+## wrap pred with skip [DONE]
+- `*(_) [pred] *(_)` [`[pred]*(_)`]
+- default or optional ? [default]
+- try both
+
+## take max value of output [DONE]
+
+## search over different scales
+- concatenate every n flows as a new example
+- n = 2^k, k = 0, 1, 2, 3,.....
+- how to convert the pattern back for original examples?
+- what do we eventually want?
+
+## prioritize harvested subtree
+- a complexity reward to grammar RHS
+
+## make the search more deterministic [future work]
+- start with low accuracy requirement?
+- break down grammar?
+- break down examples?
+- module?
 

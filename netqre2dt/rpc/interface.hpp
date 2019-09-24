@@ -205,6 +205,16 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		}).to_s() <<std::endl;
 		*/
 
+
+		/* make as much match as possible */
+		ans_pos.each( [](auto& ans) {
+			ans->lower = ans->upper;
+		});
+		ans_neg.each( [](auto& ans) {
+			ans->lower = ans->upper;
+		});
+
+
 		for (int i=0; i<ans_pos.size(); i++)
 		{
 			unique_ptr<Netqre::IntValue>& ans = ans_pos[i];
@@ -303,6 +313,15 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 		if (complete)
 		{
+			/* make as much match as possible */
+			ans_pos.each( [](auto& ans) {
+				ans.answer.lower = ans.answer.upper;
+			});
+			ans_neg.each( [](auto& ans) {
+				ans.answer.lower = ans.answer.upper;
+			});
+
+
 			/* pack with group_by to ensure stable sort */
 			ans_pos = ans_pos.sort_by<StreamFieldType>( [](auto ans)->StreamFieldType {
 				return ans.answer.upper;
@@ -488,7 +507,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	constexpr static double INCOMPLETE_PENALTY = 1.5;
 	constexpr static double INVALID_PANELTY = 100.0;
 	constexpr static double PREFER_REWARD = 0.2;
-	constexpr static double UNFAVORED_PANELTY = 4.0;
+	constexpr static double UNFAVORED_PANELTY = 10.0;
 
 	double extra_complexity(shared_ptr<GeneralSyntaxTree> code) {
 		ComplexityContext ctxt;
@@ -540,7 +559,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				|| (name == "#predicate_entry"))
 				complexity -= UNIT * PREFER_REWARD;
 			if (name == "#qre_vs")
-				complexity += UNIT * UNFAVORED_PANELTY;
+				complexity = complexity * 2;
 //			complexity -= prune_count * 100;
 		}
 		return complexity;
