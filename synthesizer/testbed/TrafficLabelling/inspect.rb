@@ -28,8 +28,8 @@ def main
 	types.each do |type, rows|
 		rows.sort!{|row| row[6]}
 		STDERR.puts "Type: #{type}"
-		STDERR.puts "Label starting time : #{rows[0][6]}"
-		STDERR.puts "Label ending time   : #{rows[-1][6]}"
+		STDERR.puts "Label starting time : #{rows[0][6]} #{Time.at(rows[0][6])}"
+		STDERR.puts "Label ending time   : #{rows[-1][6]} #{Time.at(rows[-1][6])}"
 		STDERR.puts "Ratio: #{rows.size}/#{csv.size}"
 	end
 

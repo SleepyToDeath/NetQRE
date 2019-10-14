@@ -114,7 +114,7 @@ class PPacket
 		@time = @time - beginning_of_the_day
 
 		# time can basically explain everything
-		# this is to nullify its effect
+		# nullify its effect
 		@time = 0
 =begin
             0,  1,

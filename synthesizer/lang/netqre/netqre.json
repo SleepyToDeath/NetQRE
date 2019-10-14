@@ -14,7 +14,7 @@
 			[ "$qre(","#qre_vs","$)" ]
 		] },
 		{ "#qre_vs": [
-			[ "#agg_op","$(", "#qre_vs", "$,", "#feature_set", "$)" ],
+			[ "#agg_op","$(", "#qre_ps", "$,", "#feature_set", "$)" ],
 			[ "#qre_ps" ]
 		] },
 		{ "#agg_op": [
@@ -22,7 +22,6 @@
 			[ "sum" ]
 		] },
 		{ "#feature_set": [
-			[ "\\r0", "$,", "\\r0" ],
 			[ "\\r0" ]
 		] },
 		{ "#qre_ps": [

@@ -214,6 +214,20 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			ans->lower = ans->upper;
 		});
 
+		auto tmp_pos = ans_pos.map<StreamFieldType>([](auto& ans)->StreamFieldType { return ans->upper; })
+						.sort_by<StreamFieldType>([](auto ans)->StreamFieldType { return ans; });
+		auto tmp_neg = ans_neg.map<StreamFieldType>([](auto& ans)->StreamFieldType { return ans->upper; })
+						.sort_by<StreamFieldType>([](auto ans)->StreamFieldType { return ans; });
+
+		errputs("Negative results:");
+		tmp_neg.each([](auto ans) {
+			errputs("- " + _S_(ans));
+		});
+
+		errputs("Positive results:");
+		tmp_pos.each([](auto ans) {
+			errputs("- " + _S_(ans));
+		});
 
 		for (int i=0; i<ans_pos.size(); i++)
 		{
@@ -504,7 +518,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	};
 
 	constexpr static double UNIT = 100.0;
-	constexpr static double INCOMPLETE_PENALTY = 1.5;
+	constexpr static double INCOMPLETE_PENALTY = 5.0;
 	constexpr static double INVALID_PANELTY = 100.0;
 	constexpr static double PREFER_REWARD = 0.2;
 	constexpr static double UNFAVORED_PANELTY = 10.0;
@@ -558,8 +572,8 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 				|| (name == "#predicate_set")
 				|| (name == "#predicate_entry"))
 				complexity -= UNIT * PREFER_REWARD;
-			if (name == "#qre_vs")
-				complexity = complexity * 2;
+			if (name == "#qre_vs" && code->subtree.size() > 1)
+				complexity = complexity * 2 + UNIT * UNFAVORED_PANELTY;
 //			complexity -= prune_count * 100;
 		}
 		return complexity;

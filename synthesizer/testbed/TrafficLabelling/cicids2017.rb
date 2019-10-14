@@ -150,25 +150,27 @@ class CICIDS2017Source < DDataSource
     end
   end
 
-  def get_pos(csv)
+  def get_pos(csv_name)
     pos = []
-    csv.each do |row|
+		counter = 0
+    CSV.foreach(csv_name) do |row|
       if row[0] =~ /\d/ and row[-1] != "BENIGN" then
         pos << row
       end
+
+			counter += 1
     end
     return pos
   end
 
 
   def init_source
-    csv = CSV.read($pos_csv)
-    pos = get_pos(csv)
+    pos = get_pos($pos_csv)
     parse_time(pos)
     STDERR.puts "label starting time: #{pos.min{|row| row[6]}[6]}"
     STDERR.puts "label ending time: #{pos.max{|row| row[6]}[6]}"
 #    write_pos_file(pos, $pos_csv)
-    STDERR.puts "Positive: #{pos.size}/#{csv.size}"
+#    STDERR.puts "Positive: #{pos.size}/#{csv.size}"
 
     STDERR.puts pos.group_by{ |row| row[-1] }.map{ |k, v| k }.to_s
 
@@ -232,24 +234,29 @@ end
 
 class CICIDS2017SourceNeg < DDataSource
 
-  def get_neg(csv)
+  def get_neg(csv_name)
     neg = []
-    csv.each do |row|
+		counter = 0
+    CSV.foreach(csv_name) do |row|
       if row[0] =~ /\d/ and row[-1] == "BENIGN" then
         neg << row
       end
+
+			counter += 1
+			if counter > 1000000
+				break
+			end
     end
     return neg
   end
 
 
   def init_source
-    csv = CSV.read($neg_csv)
-    neg = get_neg(csv)
+    neg = get_neg($neg_csv)
     parse_time(neg)
     STDERR.puts "label starting time: #{neg.min{|row| row[6]}[6]}"
     STDERR.puts "label ending time: #{neg.max{|row| row[6]}[6]}"
-    STDERR.puts "negative: #{neg.size}/#{csv.size}"
+#    STDERR.puts "negative: #{neg.size}/#{csv.size}"
 
     STDERR.puts neg.group_by{ |row| row[-1] }.map{ |k, v| k }.to_s
 
@@ -295,6 +302,7 @@ class CICIDS2017SourceNeg < DDataSource
     end
 
     normal_flows.select!{ |flow| (not flow.pkts.empty?) and (flow.pkts.length < $max_flow_length) }
+		STDERR.puts "#{normal_flows.length} processed flows"
 
     @source = normal_flows.each 
   end

@@ -47,6 +47,7 @@ class Mixer
         write_packet(pkt)
       end
       puts ""
+			step
     end
   end
 
@@ -60,6 +61,12 @@ class Mixer
       @neg_handle = @neg_source.next_flow.pkts.each
     end
   end
+
+	def step
+    (1..$neg_step_size).each do |_|
+      @neg_handle = @neg_source.next_flow.pkts.each
+		end
+	end
 
   def next_packet
     get_packet = ->(source, handle) do
@@ -111,38 +118,6 @@ $pos_pcap = [
 $wanted_type = 3
 =end
 
-#================ for CICIDS2017 =================
-$pos_csv = './csv/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.pos.csv'
-$pos_pcap = [
-'./dataset/Friday-WorkingHours.pcap.split22',
-]
-$wanted_type = 0
-
-$neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
-$neg_pcap = ['./dataset/Monday-WorkingHours.pcap.split12']
-$max_flow_length = 1000
-
-
-#================ for general =================
-$batch_size = 10
-$sample_count = 1000
-$pos_skip = rand(665459) - $batch_size * $sample_count
-#$pos_skip = 661497
-$neg_skip = rand(1334541) - $batch_size * $sample_count
-#$neg_skip = 1338503
-
-#================ for kitsune =================
-$ki_csv =
-'./kitsune/Active Wiretap_labels.csv'
-
-$ki_pcap = 
-'./kitsune/Active Wiretap_pcap.pcapng'
-
-$pos_prepare_num = $batch_size * $sample_count * 2 + $pos_skip
-$neg_prepare_num = $batch_size * $sample_count * 2 + $neg_skip
-
-
-
 #pos_ratio, neg_ratio, batch, count
 small_simple_pure_pos = MixerConfig.new(1, 0, 1, 10)
 small_simple_pure_neg = MixerConfig.new(0, 1, 1, 10)
@@ -159,17 +134,302 @@ dummy_source = DDataSource.new
 bulk_pure_pos = MixerConfig.new(1, 0, $batch_size, $sample_count)
 bulk_pure_neg = MixerConfig.new(0, 1, $batch_size, $sample_count)
 
-#pos_source = CICIDS2017Source.new
-#neg_source = dummy_source
+
+#================ for CICIDS2017 =================
+
+#Bot test
+$pos_csv = 
+'./csv/Friday-WorkingHours-Morning.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split11',
+'./dataset/Friday-WorkingHours.pcap.split12',
+'./dataset/Friday-WorkingHours.pcap.split13',
+'./dataset/Friday-WorkingHours.pcap.split14',
+'./dataset/Friday-WorkingHours.pcap.split15',
+'./dataset/Friday-WorkingHours.pcap.split16',
+'./dataset/Friday-WorkingHours.pcap.split17',
+'./dataset/Friday-WorkingHours.pcap.split18'
+]
+$wanted_type = 0
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 500
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 100)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+
+=begin
+#Bot train
+$pos_csv = 
+'./csv/Friday-WorkingHours-Morning.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split11',
+'./dataset/Friday-WorkingHours.pcap.split12',
+'./dataset/Friday-WorkingHours.pcap.split13',
+'./dataset/Friday-WorkingHours.pcap.split14',
+'./dataset/Friday-WorkingHours.pcap.split15',
+'./dataset/Friday-WorkingHours.pcap.split16',
+'./dataset/Friday-WorkingHours.pcap.split17',
+'./dataset/Friday-WorkingHours.pcap.split18'
+]
+$wanted_type = 0
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 50)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
+#SSH patator test
+$pos_csv = 
+'./csv/Tuesday-WorkingHours.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Tuesday-WorkingHours.pcap.split32',
+'./dataset/Tuesday-WorkingHours.pcap.split33'
+]
+$wanted_type = 1
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 1000
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 100)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
+#SSH patator train
+$pos_csv = 
+'./csv/Tuesday-WorkingHours.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Tuesday-WorkingHours.pcap.split32',
+'./dataset/Tuesday-WorkingHours.pcap.split33'
+]
+$wanted_type = 1
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 100)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+
+=begin
+#FTP patator test
+$pos_csv = 
+'./csv/Tuesday-WorkingHours.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Tuesday-WorkingHours.pcap.split25',
+'./dataset/Tuesday-WorkingHours.pcap.split26'
+]
+$wanted_type = 0
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 900
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 90)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+
+=begin
+#FTP patator train
+$pos_csv = 
+'./csv/Tuesday-WorkingHours.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Tuesday-WorkingHours.pcap.split25',
+'./dataset/Tuesday-WorkingHours.pcap.split26'
+]
+$wanted_type = 0
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 90)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+
+=begin
+#DoS Hulk test
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split28']
+$wanted_type = 2
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 2000
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+
+=begin
+#DoS Hulk train
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split28']
+$wanted_type = 2
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+
+=begin
+#slowhttps train
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split26']
+$wanted_type = 1
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
+#slowhttps test
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split26']
+$wanted_type = 1
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 1600
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+#slowloris train
+=begin
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split25']
+$wanted_type = 0
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 100
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
+#slowloris test
+$pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
+$pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split25']
+$wanted_type = 0
+$batch_size = 0
+$sample_count = 100
+$pos_skip = 1700
+$neg_skip = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+#neg
+=begin
+$neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
+$neg_pcap = [
+'./dataset/Monday-WorkingHours.pcap.split10',
+'./dataset/Monday-WorkingHours.pcap.split11',
+'./dataset/Monday-WorkingHours.pcap.split12',
+'./dataset/Monday-WorkingHours.pcap.split13',
+'./dataset/Monday-WorkingHours.pcap.split14',
+'./dataset/Monday-WorkingHours.pcap.split15',
+]
+$wanted_type = 0
+$max_flow_length = 200
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+pos_source = dummy_source
+neg_source = CICIDS2017SourceNeg.new
+combined_pure_neg = MixerConfig.new(0, 1, 10, 1000)
+mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
+=end
+
+
+#================ for general =================
+#$batch_size = 0
+#$sample_count = 100
+#$pos_skip = rand(665459) - $batch_size * $sample_count
+#$pos_skip = 661497
+#$neg_skip = rand(1334541) - $batch_size * $sample_count
+#$neg_skip = 1338503
+
+#================ for kitsune =================
+$ki_csv =
+'./kitsune/Active Wiretap_labels.csv'
+
+$ki_pcap = 
+'./kitsune/Active Wiretap_pcap.pcapng'
+
+#$pos_prepare_num = $batch_size * $sample_count * 2 + $pos_skip
+#$neg_prepare_num = $batch_size * $sample_count * 2 + $neg_skip
 
 #pos_source = dummy_source
 #neg_source = CICIDS2017SourceNeg.new
 
 #pos_source = KitsuneSourcePos.new
-pos_source = dummy_source
-neg_source = KitsuneSourceNeg.new
+#pos_source = dummy_source
+#neg_source = KitsuneSourceNeg.new
 #neg_source = dummy_source
 
-mx = Mixer.new(bulk_pure_neg, pos_source, neg_source)
+
+
+
 mx.output
 
