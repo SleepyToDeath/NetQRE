@@ -137,6 +137,83 @@ bulk_pure_neg = MixerConfig.new(0, 1, $batch_size, $sample_count)
 
 #================ for CICIDS2017 =================
 
+#=begin
+#PortScan test
+$pos_csv = 
+'./csv/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split22'
+]
+$wanted_type = 0
+$batch_size = 0
+$pos_skip = 10000
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+#=end
+
+=begin
+#PortScan train
+$pos_csv = 
+'./csv/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split22'
+]
+$wanted_type = 0
+$batch_size = 0
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
+#DDoS test
+$pos_csv = 
+'./csv/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split25'
+]
+$wanted_type = 0
+$batch_size = 0
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
+#DDoS train
+$pos_csv = 
+'./csv/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.pos.csv'
+$pos_pcap = [
+'./dataset/Friday-WorkingHours.pcap.split24'
+]
+$wanted_type = 0
+$batch_size = 0
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = CICIDS2017Source.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+=begin
 #Bot test
 $pos_csv = 
 './csv/Friday-WorkingHours-Morning.pcap_ISCX.pos.csv'
@@ -152,7 +229,6 @@ $pos_pcap = [
 ]
 $wanted_type = 0
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 500
 $neg_skip = 0
 $neg_step_size = 0
@@ -161,6 +237,7 @@ pos_source = CICIDS2017Source.new
 neg_source = dummy_source
 combined_pure_pos = MixerConfig.new(1, 0, 10, 100)
 mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
 
 =begin
 #Bot train
@@ -178,7 +255,6 @@ $pos_pcap = [
 ]
 $wanted_type = 0
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 0
 $neg_skip = 0
 $neg_step_size = 0
@@ -199,7 +275,6 @@ $pos_pcap = [
 ]
 $wanted_type = 1
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 1000
 $neg_skip = 0
 $neg_step_size = 0
@@ -220,7 +295,6 @@ $pos_pcap = [
 ]
 $wanted_type = 1
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 0
 $neg_skip = 0
 $neg_step_size = 0
@@ -242,7 +316,6 @@ $pos_pcap = [
 ]
 $wanted_type = 0
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 900
 $neg_skip = 0
 $neg_step_size = 0
@@ -264,7 +337,6 @@ $pos_pcap = [
 ]
 $wanted_type = 0
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 0
 $neg_skip = 0
 $neg_step_size = 0
@@ -282,7 +354,6 @@ $pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split28']
 $wanted_type = 2
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 2000
 $neg_skip = 0
 $neg_step_size = 0
@@ -300,7 +371,6 @@ $pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split28']
 $wanted_type = 2
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 0
 $neg_skip = 0
 $neg_step_size = 0
@@ -318,7 +388,6 @@ $pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split26']
 $wanted_type = 1
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 0
 $neg_skip = 0
 $neg_step_size = 0
@@ -335,7 +404,6 @@ $pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split26']
 $wanted_type = 1
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 1600
 $neg_skip = 0
 $neg_step_size = 0
@@ -352,7 +420,6 @@ $pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split25']
 $wanted_type = 0
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 100
 $neg_skip = 0
 $neg_step_size = 0
@@ -369,7 +436,6 @@ $pos_csv = './csv/Wednesday-workingHours.pcap_ISCX.pos.csv'
 $pos_pcap = ['./dataset/Wednesday-WorkingHours.pcap.split25']
 $wanted_type = 0
 $batch_size = 0
-$sample_count = 100
 $pos_skip = 1700
 $neg_skip = 0
 $max_flow_length = 1000
