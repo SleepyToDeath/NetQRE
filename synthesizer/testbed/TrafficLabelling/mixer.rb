@@ -2,7 +2,7 @@
 
 require './ppacket'
 require './cicids2017'
-require './kitsune'
+require './kitsune_csv'
 
 class MixerConfig
   attr_reader :sample_count, :batch_size
@@ -33,9 +33,14 @@ class Mixer
     @config = config
 
     @counter = 0
+		@feature_types = []
 
     skip
   end
+	
+	def set_feature_types ( types )
+		@feature_types = types
+	end
 
   def output
     write_header
@@ -63,6 +68,9 @@ class Mixer
   end
 
 	def step
+    (1..$pos_step_size).each do |_|
+      @pos_handle = @pos_source.next_flow.pkts.each
+		end
     (1..$neg_step_size).each do |_|
       @neg_handle = @neg_source.next_flow.pkts.each
 		end
@@ -93,8 +101,8 @@ class Mixer
   end
 
   def write_header
-    puts "#{@config.sample_count} #{PPacket.to_feature_type.length}"
-    puts PPacket.to_feature_type.join(" ")
+    puts "#{@config.sample_count} #{@feature_types.length}"
+    puts @feature_types.join(" ")
   end
 
   def write_packet(pkt)
@@ -137,7 +145,7 @@ bulk_pure_neg = MixerConfig.new(0, 1, $batch_size, $sample_count)
 
 #================ for CICIDS2017 =================
 
-#=begin
+=begin
 #PortScan test
 $pos_csv = 
 './csv/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.pos.csv'
@@ -154,7 +162,7 @@ pos_source = CICIDS2017Source.new
 neg_source = dummy_source
 combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
 mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
-#=end
+=end
 
 =begin
 #PortScan train
@@ -477,11 +485,80 @@ mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
 #$neg_skip = 1338503
 
 #================ for kitsune =================
-$ki_csv =
-'./kitsune/Active Wiretap_labels.csv'
 
-$ki_pcap = 
-'./kitsune/Active Wiretap_pcap.pcapng'
+STDERR.puts "Start config"
+
+#SYN DoS neg Testing
+=begin
+$neg_csv = './kitsune-bak/SYN DoS_labels.csv'
+$neg_csvf = './kitsune-bak/SYN DoS_dataset.csv'
+$pos_skip = 0
+$neg_skip = 20000
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = dummy_source
+neg_source = KitsuneSourceNeg.new
+combined_pure_neg = MixerConfig.new(0, 1, 20, 1000)
+mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
+=end
+
+#SYN DoS neg Training
+=begin
+$neg_csv = './kitsune-bak/SYN DoS_labels.csv'
+$neg_csvf = './kitsune-bak/SYN DoS_dataset.csv'
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$max_flow_length = 1000
+pos_source = dummy_source
+neg_source = KitsuneSourceNeg.new
+combined_pure_neg = MixerConfig.new(0, 1, 20, 1000)
+mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
+=end
+
+#SYN DoS Pos Testing
+#=begin
+$pos_csv = './kitsune-bak/SYN DoS_labels.csv'
+$pos_csvf = './kitsune-bak/SYN DoS_dataset.csv'
+$pos_skip = 20
+$neg_skip = 0
+$neg_step_size = 0
+$pos_step_size = 20
+$max_flow_length = 1000
+pos_source = KitsuneSourcePos.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 20, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+#=end
+
+#SYN DoS Pos Training
+=begin
+$pos_csv = './kitsune-bak/SYN DoS_labels.csv'
+$pos_csvf = './kitsune-bak/SYN DoS_dataset.csv'
+$pos_skip = 0
+$neg_skip = 0
+$neg_step_size = 0
+$pos_step_size = 20
+$max_flow_length = 1000
+pos_source = KitsuneSourcePos.new
+neg_source = dummy_source
+combined_pure_pos = MixerConfig.new(1, 0, 20, 150)
+mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
+=end
+
+STDERR.puts "Config done"
+=begin
+#SYN DoS Neg Training
+$pos_csv = './kitsune/SYN DoS_labels.csv'
+$pos_csvf = './kitsune/SYN DoS_dataset.csv'
+$pos_skip = 0
+$neg_skip = 0
+$max_flow_length = 1000
+pos_source = dummy_source
+neg_source = KitsuneSourceNeg.new
+combined_pure_neg = MixerConfig.new(0, 1, 20, 150)
+mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
+=end
 
 #$pos_prepare_num = $batch_size * $sample_count * 2 + $pos_skip
 #$neg_prepare_num = $batch_size * $sample_count * 2 + $neg_skip
@@ -495,6 +572,8 @@ $ki_pcap =
 #neg_source = dummy_source
 
 
+#mx.set_feature_types( PPacket.to_feature_type )
+mx.set_feature_types( KiPacket.to_feature_type )
 
 
 mx.output
