@@ -11,7 +11,7 @@ end
 
 
 class FFlow
-  attr_accessor :sig, :pkts, :est_time, :op_time, :ed_time, :attack_type
+  attr_accessor :sig, :pkts, :est_time, :op_time, :ed_time, :attack_type, :feature_vector
   def initialize(sig, est_time, type)
     @sig = sig
     @est_time = est_time
@@ -20,6 +20,10 @@ class FFlow
     @pkts = []
     @attack_type = type
   end
+
+	def to_feature_vector
+		return @feature_vector
+	end
 end
 
 

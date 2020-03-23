@@ -289,7 +289,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						else
 							std::cerr<<"One current sample: "<<(buffer[0]->to_string())
 											<<" | #"<<buffer[0]->get_complexity()<<std::endl;
-						std::cerr<<"Programs searched: "<<search_counter<<" | "<<visited->size()<<" | "<<helper_counter<<std::endl;
+						std::cerr<<"Programs searched: "<<search_counter<<" | "<<visited->size()<<" | "<<helper_counter<<" | "<<total_programs_searched<<std::endl;
 						std::cerr<<std::endl<<endl;;
 					}
 				} );

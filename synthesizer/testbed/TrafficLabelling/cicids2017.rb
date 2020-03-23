@@ -32,6 +32,12 @@ def row2time(row)
   return row[6]
 end
 
+def row2feature_vector(row)
+	part1 = row2flow_signature(row)
+	part2 = row[6..-2]
+	return (part1+part2).map{ |s| s.to_f }
+end
+
 def parse_packets(cap)
   traffic = []
   counter = 0
@@ -75,12 +81,14 @@ class TTraffic
     @csv.each do |row|
       sig = row2flow_signature(row)
       time = row2time(row)
+			feature_vector = row2feature_vector(row)
       if @flows.has_key? sig
         @flows[sig].seq << FFlow.new(sig, time, row[-1])
       else
         @flows[sig] = FFlowSeq.new
         @flows[sig].seq << FFlow.new(sig, time, row[-1])
       end
+			@flows[sig].seq[-1].feature_vector = feature_vector
     end
 
     @flows.each do |_, fs|
