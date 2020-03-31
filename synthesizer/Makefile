@@ -71,7 +71,7 @@ train-netqre:
 
 train-netqre-distro:
 	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server
-	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(SAVING_PATH_0)$(POS_TEST_FILE) $(SAVING_PATH_0)$(NEG_TEST_FILE) 
+	valgrind --tool=callgrind ./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(SAVING_PATH_0)$(POS_TEST_FILE) $(SAVING_PATH_0)$(NEG_TEST_FILE) 
 
 test-netqre-debug:
 	gdb -ex run --args ./testbed/synthesizer_debug ./lang/netqre/netqre.json ./testbed/positive.ts ./testbed/negative.ts ./lang/netqre/netqre.config ./lang/netqre/netqre_server_list.txt
