@@ -33,7 +33,7 @@ all:
 #	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 debug:
-	$(CC) -o netqre_server $(SRC) -lrpc -lpthread -lpcap -g $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -g $(STD)
 
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &
@@ -93,7 +93,7 @@ run-test: run-server
 test:                                           
 	for ((i=23333; i<=23333; i++)); \
 	do \
-		./netqre_server ./$(POS_DATA_FILE) ./$(NEG_DATA_FILE) ./$(POS_TEST_FILE) ./$(NEG_TEST_FILE) $$i >> server_log &  \
+		valgrind --tool=callgrind ./netqre_server ./$(POS_DATA_FILE) ./$(NEG_DATA_FILE) ./$(POS_TEST_FILE) ./$(NEG_TEST_FILE) $$i >> server_log &  \
 		sleep 0.1 ;\
 	done 
 
