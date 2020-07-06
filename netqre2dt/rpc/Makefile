@@ -91,7 +91,7 @@ run-test: run-server
 	./netqre_client ./testbed/test1/test.netqre ./testbed/test1/01.ts ./testbed/test1/server_list.txt
 
 test:                                           
-	for ((i=23333; i<=23333; i++)); \
+	for ((i=23333; i<=23340; i++)); \
 	do \
 		valgrind --tool=callgrind ./netqre_server ./$(POS_DATA_FILE) ./$(NEG_DATA_FILE) ./$(POS_TEST_FILE) ./$(NEG_TEST_FILE) $$i >> server_log &  \
 		sleep 0.1 ;\
