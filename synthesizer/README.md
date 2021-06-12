@@ -4,7 +4,7 @@ and generates some candidate programs that can distinguish positive and negative
 
 # How to use?
 
-##Overview
+## Overview
 The synthesizer has 2 parts: the enumerator and the execution server. Their functions are
 straightforward from the name. There will be an enumerator process and arbitrary number of 
 execution servers. Whenever the enumerator wants to check a program, it will send the program to the 
@@ -13,7 +13,7 @@ least busy server for execution via RPC.
 This directory contains only the code for enumerator. The execution server is located
 in `../netqre2dt/` and `../data-transducer/`. Its build directory is `../netqre2dt/rpc`.
 
-##Dependency
+## Dependency
 - A compiler that supports full feature of c++20
 (
 You can install g++-9 on older versions of Ubuntu:  
@@ -28,12 +28,12 @@ You can install g++-9 on older versions of Ubuntu:
 
 - Rubify (github.com/SleepyToDeath/rubify, place side by side with the top level directory of this repo, if you see strange grammar in the code, it's probably from this library)
 
-##Compile
+## Compile
 - `make` here
 - `make` in `../netqre2dt/rpc`
 - Beware to change `CC` variable in both Makefiles if you do not use `g++`
 
-##Run
+## Run
 To use the system, you need to do the following:
 1. prepare configuration files for the enumerator
 2. prepare data for the enumerator
@@ -106,7 +106,7 @@ One example can be found in the Makefile here under `train-netqre-distro` target
 Makefile and bash scripts in the execution server directory. But since they are for our own cluster,
 you will need to modify them to fit your own machine and network setup.
 
-##Interpret the result
+## Interpret the result
 The result contains all the answer programs found and their accuracies over training and testing data.
 The last number after each program is the true threshold learned for it.
 Constants in the programs are represented by position in the value space
@@ -116,9 +116,52 @@ After each accuracy result are the NetQRE program's outputs on all data points, 
 
 
 
-#Another mode
+
+
+# Another mode
 [TODO] 
 This is actually a possible future work.
+
+
+
+
+# Prepare CICIDS2017 Dataset
+We use CICIDS2017 dataset as a benchmark to demonstrate the ability of our system. 
+It is provided in the format of a CSV file that gives the extracted feature vector 
+and label of entire flows and a pcap file that contains the raw trace. 
+
+For a typical machine learning system, it is enough to use the CSV file. But we need 
+to correlate the two to rebuild labelled raw traces and turn them into the tokenized
+trace file our system takes as input. 
+
+We have a script writen in Ruby that automatically does this job. To use it, you first
+need to install the dependencies:
+- Ruby
+- Ruby packet `pcaprub` (with gem)
+- Ruby packet `packetfu` (with gem)
+
+Then download the dataset from https://www.unb.ca/cic/datasets/ids-2017.html
+
+After that, split the pcap files into smaller pcap files with tcpdump, each of
+size 300MB. This may take a while.
+- `tcpdump -r FileName -w FileName.split -C 300`
+
+Extract positive(attack) entries from the CSV files by using `./testbed/TrafficLabelling/extract.rb`
+- `extract.rb FileName`
+
+Place all pcap files in `./testbed/TrafficLabelling/dataset/`
+
+Place all csv files in `./testbed/TrafficLabelling/csv/`
+
+Now you can goto `./testbed/TrafficLabelling/` and use `mixer.rb` to generate positive/negative 
+training/testing data. For each attack type, generate one positive training file and one positive 
+testing file. Generate one shared negative training file and one shared negative testing file.
+`mixer.rb` contains one configuration for each file to generate. Uncomment the target config
+and comment all others and run `mixer.rb` to generate the corresponding file.
+Use only targets in `for CICIDS2017` section.
+
+Then you can use the workflow above to learn classifier programs and test them. 
+Learn one attack type each time. You'll need 4 files for each (pos/neg train/test).
 
 
 

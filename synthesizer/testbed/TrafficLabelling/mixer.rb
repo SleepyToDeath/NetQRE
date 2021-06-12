@@ -453,7 +453,7 @@ combined_pure_pos = MixerConfig.new(1, 0, 10, 150)
 mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
 =end
 
-#neg
+#neg train
 =begin
 $neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
 $neg_pcap = [
@@ -474,6 +474,29 @@ neg_source = CICIDS2017SourceNeg.new
 combined_pure_neg = MixerConfig.new(0, 1, 10, 1000)
 mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
 =end
+
+#neg test
+=begin
+$neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
+$neg_pcap = [
+'./dataset/Monday-WorkingHours.pcap.split10',
+'./dataset/Monday-WorkingHours.pcap.split11',
+'./dataset/Monday-WorkingHours.pcap.split12',
+'./dataset/Monday-WorkingHours.pcap.split13',
+'./dataset/Monday-WorkingHours.pcap.split14',
+'./dataset/Monday-WorkingHours.pcap.split15',
+]
+$wanted_type = 0
+$max_flow_length = 200
+$pos_skip = 0
+$neg_skip = 10100
+$neg_step_size = 0
+pos_source = dummy_source
+neg_source = CICIDS2017SourceNeg.new
+combined_pure_neg = MixerConfig.new(0, 1, 10, 1000)
+mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
+=end
+
 
 
 #================ for general =================
@@ -517,7 +540,7 @@ mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
 =end
 
 #SYN DoS Pos Testing
-#=begin
+=begin
 $pos_csv = './kitsune-bak/SYN DoS_labels.csv'
 $pos_csvf = './kitsune-bak/SYN DoS_dataset.csv'
 $pos_skip = 20
@@ -529,7 +552,7 @@ pos_source = KitsuneSourcePos.new
 neg_source = dummy_source
 combined_pure_pos = MixerConfig.new(1, 0, 20, 150)
 mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
-#=end
+=end
 
 #SYN DoS Pos Training
 =begin
@@ -572,8 +595,8 @@ mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
 #neg_source = dummy_source
 
 
-#mx.set_feature_types( PPacket.to_feature_type )
-mx.set_feature_types( KiPacket.to_feature_type )
+mx.set_feature_types( PPacket.to_feature_type )
+#mx.set_feature_types( KiPacket.to_feature_type )
 
 
 mx.output
