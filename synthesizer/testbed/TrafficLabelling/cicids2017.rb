@@ -230,6 +230,7 @@ class CICIDS2017Source < DDataSource
       STDERR.puts @output_flows[-1].length
     end
       
+    STDERR.puts @output_flows[$wanted_type].length
     @source = @output_flows[$wanted_type].each 
   end
     
