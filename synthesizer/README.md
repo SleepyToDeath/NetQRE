@@ -148,6 +148,8 @@ size 300MB. This may take a while.
 
 Extract positive(attack) entries from the CSV files by using `./testbed/TrafficLabelling/extract.rb`
 - `extract.rb FileName`
+- 
+Notice that you should use the CSV files in `GeneratedLabelledFlows.zip`, NOT `MachineLearningCSV.zip`.
 
 Place all pcap files in `./testbed/TrafficLabelling/dataset/`
 
@@ -159,6 +161,9 @@ testing file. Generate one shared negative training file and one shared negative
 `mixer.rb` contains one configuration for each file to generate. Uncomment the target config
 and comment all others and run `mixer.rb` to generate the corresponding file.
 Use only targets in `for CICIDS2017` section.
+
+Notice that this step may have aggressive usage of memory. You'll probably need 32GB of memory for it to
+finish normally.
 
 Then you can use the workflow above to learn classifier programs and test them. 
 Learn one attack type each time. You'll need 4 files for each (pos/neg train/test).
