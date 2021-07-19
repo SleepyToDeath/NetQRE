@@ -148,7 +148,7 @@ size 300MB. This may take a while.
 
 Extract positive(attack) entries from the CSV files by using `./testbed/TrafficLabelling/extract.rb`
 - `extract.rb FileName`
-- 
+
 Notice that you should use the CSV files in `GeneratedLabelledFlows.zip`, NOT `MachineLearningCSV.zip`.
 
 Place all pcap files in `./testbed/TrafficLabelling/dataset/`
