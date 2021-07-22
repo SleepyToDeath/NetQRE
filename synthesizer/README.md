@@ -159,7 +159,8 @@ Now you can goto `./testbed/TrafficLabelling/` and use `mixer.rb` to generate po
 training/testing data. For each attack type, generate one positive training file and one positive 
 testing file. Generate one shared negative training file and one shared negative testing file.
 `mixer.rb` contains one configuration for each file to generate. Uncomment the target config
-and comment all others and run `mixer.rb` to generate the corresponding file.
+and comment all others and run `mixer.rb` to generate the corresponding file(printed to stdout; 
+log is printed in stderr so you can safely redirect stdout to a file).
 Use only targets in `for CICIDS2017` section.
 
 Notice that this step may have aggressive usage of memory. You'll probably need 32GB of memory for it to
