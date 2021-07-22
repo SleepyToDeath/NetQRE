@@ -70,7 +70,7 @@ There are 3 configuration files needed:
    - `force_search_factor`: in the divide-and-conquer process, if enough existing candidate programs can
    							correctly classify a new subset, the search over this subset will be skipped.
 							You can force a search after a number of skips with this parameter.
-							A greater number will increase the chance to find an answer early, but also slows down the search in general.
+							A smaller number will increase the chance to find an answer early, but also slows down the search in general.
    - `accuracy`: the accuracy over training set required to consider a candidate program correct. 
    				A higher number will give more accurate answers, but will also take longer to finish.
    - `accuracy_exp`: the actual accuracy you believe an answer program can achieve on average. 
