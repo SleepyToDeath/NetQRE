@@ -164,7 +164,9 @@ log is printed in stderr so you can safely redirect stdout to a file).
 Use only targets in `for CICIDS2017` section.
 
 Notice that this step may have aggressive usage of memory. You'll probably need 32GB of memory for it to
-finish normally.
+finish normally. Also, since the packets are generated at timezone ET, you'll need to ensure the
+environment timezone is ET for the script to correctly correlate the data. Use `export TZ=America/New_York`
+before running `mixer.rb` if your machine's local timezone is different.
 
 Then you can use the workflow above to learn classifier programs and test them. 
 Learn one attack type each time. You'll need 4 files for each (pos/neg train/test).
