@@ -252,7 +252,7 @@ combined_pure_pos = MixerConfig.new(1, 0, 10, 100)
 mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
 =end
 
-#=begin
+=begin
 #Bot train
 $pos_csv = 
 './csv/Friday-WorkingHours-Morning.pcap_ISCX.pos.csv'
@@ -277,7 +277,7 @@ pos_source = CICIDS2017Source.new
 neg_source = dummy_source
 combined_pure_pos = MixerConfig.new(1, 0, 10, 50)
 mx = Mixer.new(combined_pure_pos, pos_source, neg_source)
-#=end
+=end
 
 =begin
 #SSH patator test
@@ -492,27 +492,34 @@ mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
 =end
 
 #neg test
-=begin
+#=begin
 $neg_csv = './csv/Monday-WorkingHours.pcap_ISCX.csv'
 $neg_pcap = [
-'./dataset/Monday-WorkingHours.pcap.split10',
-'./dataset/Monday-WorkingHours.pcap.split11',
-'./dataset/Monday-WorkingHours.pcap.split12',
-'./dataset/Monday-WorkingHours.pcap.split13',
-'./dataset/Monday-WorkingHours.pcap.split14',
-'./dataset/Monday-WorkingHours.pcap.split15',
+'./dataset/Monday-WorkingHours.pcap.split16',
+'./dataset/Monday-WorkingHours.pcap.split17',
+'./dataset/Monday-WorkingHours.pcap.split18',
+'./dataset/Monday-WorkingHours.pcap.split19',
+'./dataset/Monday-WorkingHours.pcap.split20',
+'./dataset/Monday-WorkingHours.pcap.split21',
+'./dataset/Monday-WorkingHours.pcap.split22',
+'./dataset/Monday-WorkingHours.pcap.split23',
+'./dataset/Monday-WorkingHours.pcap.split24',
+'./dataset/Monday-WorkingHours.pcap.split25',
+'./dataset/Monday-WorkingHours.pcap.split26',
+'./dataset/Monday-WorkingHours.pcap.split27',
+'./dataset/Monday-WorkingHours.pcap.split28',
 ]
 $wanted_type = 0
 $max_flow_length = 200
 $pos_skip = 0
-$neg_skip = 10100
+$neg_skip = 0
 $pos_step_size = 0
 $neg_step_size = 0
 pos_source = dummy_source
 neg_source = CICIDS2017SourceNeg.new
 combined_pure_neg = MixerConfig.new(0, 1, 10, 1000)
 mx = Mixer.new(combined_pure_neg, pos_source, neg_source)
-=end
+#=end
 
 
 
