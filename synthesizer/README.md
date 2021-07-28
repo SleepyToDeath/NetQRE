@@ -70,7 +70,7 @@ There are 3 configuration files needed:
    - `force_search_factor`: in the divide-and-conquer process, if enough existing candidate programs can
    							correctly classify a new subset, the search over this subset will be skipped.
 							You can force a search after a number of skips with this parameter.
-							A greater number will increase the chance to find an answer early, but also slows down the search in general.
+							A smaller number will increase the chance to find an answer early, but also slows down the search in general.
    - `accuracy`: the accuracy over training set required to consider a candidate program correct. 
    				A higher number will give more accurate answers, but will also take longer to finish.
    - `accuracy_exp`: the actual accuracy you believe an answer program can achieve on average. 
@@ -149,6 +149,8 @@ size 300MB. This may take a while.
 Extract positive(attack) entries from the CSV files by using `./testbed/TrafficLabelling/extract.rb`
 - `extract.rb FileName`
 
+Notice that you should use the CSV files in `GeneratedLabelledFlows.zip`, NOT `MachineLearningCSV.zip`.
+
 Place all pcap files in `./testbed/TrafficLabelling/dataset/`
 
 Place all csv files in `./testbed/TrafficLabelling/csv/`
@@ -157,8 +159,14 @@ Now you can goto `./testbed/TrafficLabelling/` and use `mixer.rb` to generate po
 training/testing data. For each attack type, generate one positive training file and one positive 
 testing file. Generate one shared negative training file and one shared negative testing file.
 `mixer.rb` contains one configuration for each file to generate. Uncomment the target config
-and comment all others and run `mixer.rb` to generate the corresponding file.
+and comment all others and run `mixer.rb` to generate the corresponding file(printed to stdout; 
+log is printed in stderr so you can safely redirect stdout to a file).
 Use only targets in `for CICIDS2017` section.
+
+Notice that this step may have aggressive usage of memory. You'll probably need 32GB of memory for it to
+finish normally. Also, since the packets are generated at timezone ET, you'll need to ensure the
+environment timezone is ET for the script to correctly correlate the data. Use `export TZ=America/New_York`
+before running `mixer.rb` if your machine's local timezone is different.
 
 Then you can use the workflow above to learn classifier programs and test them. 
 Learn one attack type each time. You'll need 4 files for each (pos/neg train/test).
