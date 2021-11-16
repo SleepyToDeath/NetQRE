@@ -6,18 +6,165 @@ using std::endl;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::static_pointer_cast;
+using std::make_shared;
+using std::tuple;
 using Rubify::vector;
 using Rubify::string;
 
 namespace Netqre {
 
 std::shared_ptr<NetqreAST> NetqreParser::parse(string code) {
+	return structured_parse(code);
+	/*
 	int cursor = 0;
 	auto program = shared_ptr<NetqreAST>(new NetqreAST());
 	program->type = NetqreExpType::PROGRAM;
 	real_parse(code, cursor, program);
 	return program;
+	*/
 }
+
+
+std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
+
+
+	auto parse_node = [&](int cursor) -> tuple<shared_ptr<NetqreAST>, int>
+	{
+		auto node = make_shared<NetqreAST>();
+		auto tokens = Rubify::string(code.substr(cursor)).split(MarshallDelimiter);
+		string node_name = tokens[0];
+
+		auto cur = make_shared<NetqreAST>();
+
+/*
+		switch (node_name)
+		{
+//	PROGRAM, 		//0
+			case "program":
+			cur->type = NetqreExpType::PROGRAM;
+			break;
+//	FILTER, 		//1
+			case "filter":
+			cur->type = NetqreExpType::FILTER;
+			break;
+//	PREDICATE_SET, 	//2
+			case "predicate_set":
+			cur->type = NetqreExpType::PREDICATE_SET;
+			break;
+//	PREDICATE, 		//3
+			case "predicate_entry":
+			cur->type = NetqreExpType::PREDICATE;
+			break;
+//	FEATURE_NI, 	//4
+			case "feature_ni":
+			cur->type = NetqreExpType::FEATURE_NI;
+			break;
+//	VALUE, 			//5
+			case "value":
+			cur->type = NetqreExpType::VALUE;
+			break;
+//	QRE,			//6
+			case "qre":
+			cur->type = NetqreExpType::QRE;
+			break;
+//	QRE_NS, 		//7
+			case "qre_ns":
+			cur->type = NetqreExpType::QRE_NS;
+			break;
+//	NUM_OP, 		//8
+			case "num_op":
+			cur->type = NetqreExpType::NUM_OP;
+			break;
+//	QRE_VS, 		//9
+			case "qre_vs":
+			cur->type = NetqreExpType::QRE_VS;
+			break;
+//	AGG_OP, 		//10
+			case "agg_op":
+			cur->type = NetqreExpType::AGG_OP;
+			break;
+//	FEATURE_SET,	//11
+			case "feature_set":
+			cur->type = NetqreExpType::FEATURE_SET;
+			break;
+//	FEATURE_I, 		//12
+			case "filter":
+			cur->type = NetqreExpType::FEATURE_I;
+			break;
+//	QRE_PS,			//13
+			case "qre_ps":
+			cur->type = NetqreExpType::QRE_PS;
+			break;
+//	QRE_COND,		//14
+			case "qre_cond":
+			cur->type = NetqreExpType::QRE_COND;
+			break;
+//	RE,				//15
+			case "re":
+			cur->type = NetqreExpType::RE;
+			break;
+//	RE_STAR,		//16
+			case "re_star":
+			cur->type = NetqreExpType::RE_STAR;
+			break;
+//	OUTPUT,			//17
+			case "output":
+			cur->type = NetqreExpType::OUTPUT;
+			break;
+//	WILDCARD,		//18
+			case "wildcard":
+			cur->type = NetqreExpType::WILDCARD;
+			break;
+//	CONST,			//19
+			case "const":
+			cur->type = NetqreExpType::CONST;
+			break;
+//	THRESHOLD,		//20
+			case "threshold":
+			cur->type = NetqreExpType::THRESHOLD;
+			break;
+//	UNKNOWN			//21
+			case "unknown":
+			cur->type = NetqreExpType::UNKNOWN;
+			break;
+		}
+		*/
+
+	};
+	auto [ast, cursor] = parse_node(1);
+	return ast;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ------------------------- Obsolete ----------------------------- */
+
 
 /* [TODO] This is a naive parser. Switch to lex & bison if possible */
 void NetqreParser::real_parse(string &code, int &cursor, shared_ptr<NetqreAST> context) {

@@ -46,6 +46,10 @@ Rubify::string IESyntaxTree::to_string() {
 	return nullptr;
 }
 
+Rubify::string IESyntaxTree::marshall() {
+	return nullptr;
+}
+
 /*
 IEProgram* IESyntaxTree::to_program() {
 	if (p != nullptr)

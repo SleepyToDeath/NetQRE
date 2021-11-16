@@ -165,6 +165,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		manager = new Netqre::NetqreClientManager(servers, ports);
 	}
 
+	/* marshall string */
 	/* [TODO] interpret from binary index to true number */
 	string to_string(shared_ptr<GeneralSyntaxTree> code) {
 		string s;
@@ -188,6 +189,37 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		}
 		return s;
 	}
+
+	/* human readable string */
+	string to_string_h(shared_ptr<GeneralSyntaxTree> code) {
+
+	}
+
+/*
+	string to_string(shared_ptr<GeneralSyntaxTree> code) {
+		string s;
+		if (code->root->get_type()->is_term) 
+			s = code->root->get_type()->name;
+		else if (code->root->get_option() == SyntaxLeftHandSide::NoOption)
+			s = std::static_pointer_cast<GeneralSyntaxLeftHandSide>(code->root->get_type())->name;
+		else
+		{
+			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (code->root->get_type()->option[code->root->get_option()]);
+			int j = 0;
+			for (int i=0; i<rhs->subexp_full.size(); i++)	{
+				if (rhs->subexp_full[i]->is_functional()) {
+					s = s + (code->subtree[j]->to_string());
+					j++;
+				}
+				else {
+					s = s + (rhs->subexp_full[i]->name);
+				}
+			}
+		}
+		return s;
+	}
+	*/
+
 
 	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
 		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
@@ -581,6 +613,12 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 	vector<string> get_range(int handle, shared_ptr<GeneralExample> input)
 	{
+		if (input == nullptr)
+		{
+			std::cerr<<"WARNING: using default range for syntax\n";
+			return vector<string>(1, "1");
+		}
+
 		auto e = std::static_pointer_cast<NetqreExample>(input);
 		cerr<<"Getting range for "<<handle<<endl;
 

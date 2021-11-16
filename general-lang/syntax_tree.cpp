@@ -303,6 +303,10 @@ shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap
 	return new_tree;
 }
 
+Rubify::string SyntaxTree::marshall() {
+	return nullptr;
+}
+
 Rubify::string SyntaxTree::to_string() {
 	throw string("SyntaxTree::to_string This function shouldn't be called\n");
 	Rubify::string s;

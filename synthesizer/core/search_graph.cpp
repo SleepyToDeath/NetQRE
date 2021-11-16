@@ -35,8 +35,7 @@ SearchGraph::SearchGraph(
 vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(
 	shared_ptr<IEExample> examples, 
 	vector<shared_ptr<IESyntaxTree> > seed = vector<shared_ptr<IESyntaxTree> >(),
-	unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate 
-	= unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree >() )
+	VisitPool eliminate = VisitPool() )
 {
 	return enumerate_random_v2(examples, seed, eliminate);
 }
@@ -44,17 +43,16 @@ vector<shared_ptr<IESyntaxTree> > SearchGraph::search_top_level_v2(
 vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 	shared_ptr<IEExample> examples, 
 	vector<shared_ptr<IESyntaxTree> > seed,
-	std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate)
+	VisitPool eliminate)
 {
 	vector<shared_ptr<IESyntaxTree> > this_round = seed;
 	vector<shared_ptr<IESyntaxTree> > buffer;
 	vector<shared_ptr<IESyntaxTree> > answer;
 	vector<shared_ptr<IESyntaxTree> > pending_answer;
-	typedef std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > VisitPool;
 	auto visited = shared_ptr<VisitPool>(new VisitPool(eliminate));
 	rp->visited = visited;
 
-	cerr<<visited->size()<<" eliminated answers at beginning\n";
+	cerr<<visited->size()<<" eliminated answers at the beginning\n";
 
 	MeansOfProduction mop;
 	mop.rp = rp;
@@ -361,3 +359,51 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 	return answer;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ================================== For Testing ===========================================
+
+void SearchGraph::enum_pure(
+	vector<shared_ptr<IESyntaxTree> > seed,
+	VisitPool eliminate)
+{
+	vector<shared_ptr<IESyntaxTree> > this_round = seed;
+	int i=0;
+	while (i < this_round.size())
+	{
+		auto tmp = std::make_shared<SyntaxTree::Queue>();
+		/* prepare exploration */
+		tmp->q.clear();
+		auto current = this_round[i];
+
+		/* explore new programs */
+		shared_ptr<SyntaxTree> place_holder = current;
+		if (current->multi_mutate(place_holder, current, 99999, tmp))
+		{
+			for (int j=0; j<tmp->q.size(); j++)
+			{
+				auto explored = std::static_pointer_cast<IESyntaxTree>(tmp->q[j]);
+				if (explored != nullptr)
+				{
+					this_round.push_back(explored);
+					std::cout<<explored->to_string()<<std::endl;
+					std::cout<<explored->marshall()<<std::endl<<std::endl;
+				}
+			}
+		}
+		i++;
+	}
+}

@@ -23,7 +23,6 @@ SRC += lang/general/json11/json11.hpp
 
 SRC2 = core/*pp
 SRC2 += lang/general/*pp
-SRC2 += lang/general/*cc
 SRC2 += lang/general/json11/json11.cpp
 SRC2 += lang/general/json11/json11.hpp
 SRC2 += ../netqre2dt/network_tokenizer/feature_vector.hpp
@@ -35,6 +34,9 @@ SRC2 += ../data-transducer/*pp
 SRC2 += ../general-lang/*pp
 SRC2 += ../netqre2dt/rpc/client.cpp
 SRC2 += $(INCLUDE_PATH)/rubify.cpp
+
+SRC_MAIN = lang/general/main.cc
+SRC_ENUM = lang/general/enumerator.cc
 
 #shared parameter
 EXECUTION_PATH = ../netqre2dt/rpc/
@@ -60,10 +62,10 @@ SERVER_FILE_0 = server_list.txt
 
 
 netqre:
-	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -O2 $(STD) -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) $(SRC_MAIN) -O2 $(STD) -lrpc -pthread -lpcap
 
 netqre-debug:
-	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) -g $(STD) -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) $(SRC_MAIN) -g $(STD) -lrpc -pthread -lpcap
 
 train-netqre:
 	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server-local
@@ -94,6 +96,11 @@ test-mode-P:
 	sleep 3
 	echo "running enumerator"
 	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE) $(SAVING_PATH)$(POS_FILE) $(SAVING_PATH)$(NEG_FILE) $(CONFIG_PATH)$(CONFIG_FILE) $(CONFIG_PATH)$(SERVER_FILE) > $(SAVING_PATH)$(QUERY_FILE)
+
+
+enum:
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) $(SRC_ENUM) -O2 $(STD) -lrpc -pthread -lpcap
+
 
 clean:
 	-rm testbed/regex

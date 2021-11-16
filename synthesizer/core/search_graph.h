@@ -5,6 +5,8 @@
 #include "../../general-lang/incomplete_execution.h"
 #include "redundancy.h"
 
+typedef std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > VisitPool;
+
 class SearchGraph {
 	public:
 
@@ -16,7 +18,11 @@ class SearchGraph {
 	vector<shared_ptr<IESyntaxTree> > search_top_level_v2(
 		shared_ptr<IEExample> examples, 
 		vector<shared_ptr<IESyntaxTree> > seed,
-		std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate);
+		VisitPool eliminate);
+
+	static void enum_pure(
+		vector<shared_ptr<IESyntaxTree> > seed,
+		VisitPool eliminate);
 
 	private:
 	int search_depth;
@@ -34,7 +40,7 @@ class SearchGraph {
 	vector< shared_ptr<IESyntaxTree> > enumerate_random_v2(
 		shared_ptr<IEExample> examples, 
 		vector<shared_ptr<IESyntaxTree> > seed,
-		std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > eliminate);
+		VisitPool eliminate);
 };
 
 #endif
