@@ -167,6 +167,25 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 
 	/* marshall string */
 	/* [TODO] interpret from binary index to true number */
+	string marshall(shared_ptr<GeneralSyntaxTree> code) {
+		string deli = Netqre::MarshallDelimiter;
+		string lsign = Netqre::MarshallLeft;
+		string rsign = Netqre::MarshallRight;
+		
+		string encode;
+		encode += lsign;
+		encode += code->root->get_type()->name;
+		encode += deli;
+		for (int i=0; i< code->subtree.size(); i++)
+		{
+			encode += marshall(static_pointer_cast<GeneralSyntaxTree>(code->subtree[i]));
+			encode += deli;
+		}
+		encode += rsign;
+		return encode;
+	}
+
+	/* human readable string */
 	string to_string(shared_ptr<GeneralSyntaxTree> code) {
 		string s;
 		if (code->root->get_type()->is_term) 
@@ -188,11 +207,6 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 			}
 		}
 		return s;
-	}
-
-	/* human readable string */
-	string to_string_h(shared_ptr<GeneralSyntaxTree> code) {
-
 	}
 
 /*

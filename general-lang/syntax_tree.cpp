@@ -304,7 +304,7 @@ shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap
 }
 
 Rubify::string SyntaxTree::marshall() {
-	return nullptr;
+	return "";
 }
 
 Rubify::string SyntaxTree::to_string() {

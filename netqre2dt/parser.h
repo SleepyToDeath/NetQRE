@@ -22,6 +22,20 @@ const std::string MarshallDelimiter = ",";
 const std::string MarshallLeft = "{";
 const std::string MarshallRight = "}";
 
+const std::map<std::string, Netqre::NetqreExpType> ExpTypeMap = {
+	{"program", NetqreExpType::PROGRAM},
+	{"#filter", NetqreExpType::FILTER},
+	{"#threshold", NetqreExpType::THRESHOLD},
+	{"#qre_top", NetqreExpType::QRE},
+	{"#qre_vs", NetqreExpType::QRE_VS},
+	{"#qre_ps", NetqreExpType::QRE_PS},
+	{"#agg_op", NetqreExpType::AGG_OP},
+	{"#feature_set", NetqreExpType::FEATURE_SET},
+	{"#re", NetqreExpType::RE},
+	{"#predicate_set", NetqreExpType::PREDICATE_SET},
+	{"#predicate_entry", NetqreExpType::PREDICATE}
+};
+
 }
 
 #endif

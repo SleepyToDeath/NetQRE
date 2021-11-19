@@ -99,7 +99,7 @@ test-mode-P:
 
 
 enum:
-	$(CC) -I$(INCLUDE_PATH) -o ./testbed/synthesizer $(SRC2) $(SRC_ENUM) -O2 $(STD) -lrpc -pthread -lpcap
+	$(CC) -I$(INCLUDE_PATH) -o ./testbed/enumerator $(SRC2) $(SRC_ENUM) -g $(STD) -lrpc -pthread -lpcap
 
 
 clean:

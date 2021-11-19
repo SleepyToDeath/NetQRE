@@ -28,12 +28,20 @@ POS_TEST_FILE = positive_test.ts
 NEG_TEST_FILE = negative_test.ts
 RESULT_FILE = result_vector
 
+SRC2 = ../*pp
+SRC2 += ../../data-transducer/*pp
+SRC2 += $(INCLUDE_PATH)/rubify.*pp
+
 all:
-	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cc $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 #	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 debug:
 	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cpp $(SRC) -lrpc -lpthread -lpcap -g $(STD)
+
+parser:
+	$(CC) -I$(INCLUDE_PATH) -o netqre_parser parser.cc $(SRC2) -lrpc -lpthread -lpcap -g $(STD)
+	
 
 test0:
 	./netqre_server ../../synthesizer/testbed/small_valid_tcp.pcap ../../synthesizer/testbed/large_random_tcp.pcap 23333 &

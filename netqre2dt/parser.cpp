@@ -28,110 +28,93 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(string code) {
 std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 
-	auto parse_node = [&](int cursor) -> tuple<shared_ptr<NetqreAST>, int>
+	auto parse_node = [&](int cursor, auto& self) -> tuple<shared_ptr<NetqreAST>, int>
 	{
+		if (code[cursor] == MarshallRight[0])
+			return {nullptr, cursor+1};
+		if (code[cursor] == MarshallLeft[0])
+			cursor++;
 		auto node = make_shared<NetqreAST>();
 		auto tokens = Rubify::string(code.substr(cursor)).split(MarshallDelimiter);
-		string node_name = tokens[0];
 
 		auto cur = make_shared<NetqreAST>();
+		string node_name = tokens[0];
+		if (ExpTypeMap.contains(node_name))
+			cur->type = ExpTypeMap.at(node_name);
+		else
+			cur->type = NetqreExpType::PENDING_LITERAL;
 
-/*
-		switch (node_name)
+		std::cerr<<node_name<<" "<<cursor<<" ";
+
+		int cursor2 = cursor + node_name.length();
+		while (code[cursor2] == MarshallDelimiter[0])
 		{
-//	PROGRAM, 		//0
-			case "program":
-			cur->type = NetqreExpType::PROGRAM;
-			break;
-//	FILTER, 		//1
-			case "filter":
-			cur->type = NetqreExpType::FILTER;
-			break;
-//	PREDICATE_SET, 	//2
-			case "predicate_set":
-			cur->type = NetqreExpType::PREDICATE_SET;
-			break;
-//	PREDICATE, 		//3
-			case "predicate_entry":
-			cur->type = NetqreExpType::PREDICATE;
-			break;
-//	FEATURE_NI, 	//4
-			case "feature_ni":
-			cur->type = NetqreExpType::FEATURE_NI;
-			break;
-//	VALUE, 			//5
-			case "value":
-			cur->type = NetqreExpType::VALUE;
-			break;
-//	QRE,			//6
-			case "qre":
-			cur->type = NetqreExpType::QRE;
-			break;
-//	QRE_NS, 		//7
-			case "qre_ns":
-			cur->type = NetqreExpType::QRE_NS;
-			break;
-//	NUM_OP, 		//8
-			case "num_op":
-			cur->type = NetqreExpType::NUM_OP;
-			break;
-//	QRE_VS, 		//9
-			case "qre_vs":
-			cur->type = NetqreExpType::QRE_VS;
-			break;
-//	AGG_OP, 		//10
-			case "agg_op":
-			cur->type = NetqreExpType::AGG_OP;
-			break;
-//	FEATURE_SET,	//11
-			case "feature_set":
-			cur->type = NetqreExpType::FEATURE_SET;
-			break;
-//	FEATURE_I, 		//12
-			case "filter":
-			cur->type = NetqreExpType::FEATURE_I;
-			break;
-//	QRE_PS,			//13
-			case "qre_ps":
-			cur->type = NetqreExpType::QRE_PS;
-			break;
-//	QRE_COND,		//14
-			case "qre_cond":
-			cur->type = NetqreExpType::QRE_COND;
-			break;
-//	RE,				//15
-			case "re":
-			cur->type = NetqreExpType::RE;
-			break;
-//	RE_STAR,		//16
-			case "re_star":
-			cur->type = NetqreExpType::RE_STAR;
-			break;
-//	OUTPUT,			//17
-			case "output":
-			cur->type = NetqreExpType::OUTPUT;
-			break;
-//	WILDCARD,		//18
-			case "wildcard":
-			cur->type = NetqreExpType::WILDCARD;
-			break;
-//	CONST,			//19
-			case "const":
-			cur->type = NetqreExpType::CONST;
-			break;
-//	THRESHOLD,		//20
-			case "threshold":
-			cur->type = NetqreExpType::THRESHOLD;
-			break;
-//	UNKNOWN			//21
-			case "unknown":
-			cur->type = NetqreExpType::UNKNOWN;
-			break;
-		}
-		*/
+			/* parse next sub-tree */
+			auto [sub, cursor3] = self(cursor2 + 1, self);
+			cursor2 = cursor3;
 
+			/* check reaching the end */
+			if (sub == nullptr)
+				return {cur, cursor2};
+
+			/* add sub-tree to list */
+			cur->subtree.push_back(sub);
+		}
+
+		switch(cur->type)
+		{
+			case NetqreExpType::PROGRAM:
+				break;
+			case NetqreExpType::FILTER:
+				break;
+			case NetqreExpType::PREDICATE_SET:
+				break;
+			case NetqreExpType::PREDICATE:
+				break;
+			case NetqreExpType::FEATURE_NI:
+				break;
+			case NetqreExpType::VALUE:
+				break;
+			case NetqreExpType::QRE:
+				break;
+			case NetqreExpType::QRE_NS:
+				break;
+			case NetqreExpType::NUM_OP:
+				break;
+			case NetqreExpType::QRE_VS:
+				break;
+			case NetqreExpType::AGG_OP:
+				break;
+			case NetqreExpType::FEATURE_SET:
+				break;
+			case NetqreExpType::FEATURE_I:
+				break;
+			case NetqreExpType::QRE_PS:
+				break;
+			case NetqreExpType::QRE_COND:
+				break;
+			case NetqreExpType::RE:
+				break;
+			case NetqreExpType::RE_STAR:
+				break;
+			case NetqreExpType::OUTPUT:
+				break;
+			case NetqreExpType::WILDCARD:
+				break;
+			case NetqreExpType::CONST:
+				break;
+			case NetqreExpType::THRESHOLD:
+				break;
+			case NetqreExpType::UNKNOWN:
+				break;
+			case NetqreExpType::PENDING_LITERAL:
+				break;
+			default:
+				break;
+		}
+		return {cur, cursor2};
 	};
-	auto [ast, cursor] = parse_node(1);
+	auto [ast, cursor] = parse_node(0, parse_node);
 	return ast;
 }
 

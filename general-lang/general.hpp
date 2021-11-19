@@ -77,6 +77,7 @@ class GeneralInterpreter {
 					{ return !complete; }
 //	virtual GeneralMatchingResult accept(shared_ptr<GeneralSyntaxTree> code, bool complete,  shared_ptr<GeneralExample> input, IEConfig cfg = IEConfig()) { return !complete; }
 	virtual string to_string(shared_ptr<GeneralSyntaxTree> code) = 0;
+	virtual string marshall(shared_ptr<GeneralSyntaxTree> code) = 0;
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 	virtual double extra_complexity(shared_ptr<GeneralSyntaxTree> code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
@@ -246,6 +247,11 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			}
 		}
 		return AbstractCode(pos, neg);
+	}
+
+
+	string marshall() {
+		return GeneralProgram::interpreter->marshall(static_pointer_cast<GeneralSyntaxTree>(shared_from_this()));
 	}
 
 

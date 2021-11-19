@@ -43,11 +43,11 @@ shared_ptr<IEProgram> IESyntaxTree::to_program() {
 }
 
 Rubify::string IESyntaxTree::to_string() {
-	return nullptr;
+	return "";
 }
 
 Rubify::string IESyntaxTree::marshall() {
-	return nullptr;
+	return "";
 }
 
 /*

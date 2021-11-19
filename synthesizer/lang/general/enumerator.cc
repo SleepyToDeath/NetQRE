@@ -25,8 +25,10 @@ std::unique_ptr<GeneralInterpreter> GeneralProgram::interpreter;
 int main(int argc, char *argv[]) {
 
 	ifstream fin_g(argv[1]); // grammar
+	/*
 	ifstream fin_c(argv[2]); // config
 	ifstream fin_s(argv[3]); // server list
+	*/
 
 	
 	/* [!] LANGUAGE SPECIFIC */
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]) {
 
 
 	/*========== read config =============*/
+	/*
 	map<string, int> int_config;
 	map<string, double> float_config;
 
@@ -80,6 +83,7 @@ int main(int argc, char *argv[]) {
 	provide_([&](string name)->double {
 		return float_config[name];
 	});
+	*/
 
 	/*=============================================*/
 

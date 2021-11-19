@@ -107,7 +107,8 @@ enum class NetqreExpType {
 	WILDCARD,		//18
 	CONST,			//19
 	THRESHOLD,		//20
-	UNKNOWN			//21
+	UNKNOWN,		//21
+	PENDING_LITERAL	//22
 };
 
 enum class AggOpType {
@@ -141,6 +142,9 @@ class NetqreAST
 		StreamFieldType value;
 		PredOpType pred_type;
 	};
+
+	NetqreAST() {};
+	NetqreAST(NetqreExpType type) {this->type = type;}
 
 	TagType tag;
 
