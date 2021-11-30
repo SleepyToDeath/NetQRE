@@ -218,7 +218,10 @@ class GeneralConfigParser {
 	}
 
 	shared_ptr<SyntaxTreeTemplate> parse_template(string code) {
+		cerr<<"parsing template "<<code<<endl;
 		auto cursor = shared_ptr<int>(new int(0));
+		if (code.length() == 0)
+			return nullptr;
 		return parse_template_recursive(code, cursor);
 	}
 
@@ -297,12 +300,14 @@ class GeneralConfigParser {
 		for (int i=0; i<pos_json->size(); i++)
 		{
 			string name = pos_json->get(i)->name();
-			state->name_list[name]->positive_abstract_code = pos_json->get(i)->value()->name();
+			auto temp = parse_template(pos_json->get(i)->value()->name());
+			state->name_list[name]->positive_abstract_code = (temp == nullptr) ? "" : temp->marshall();
 		}
 		for (int i=0; i<neg_json->size(); i++)
 		{
 			string name = neg_json->get(i)->name();
-			state->name_list[name]->negative_abstract_code = neg_json->get(i)->value()->name();
+			auto temp = parse_template(neg_json->get(i)->value()->name());
+			state->name_list[name]->negative_abstract_code = (temp == nullptr) ? "" : temp->marshall();
 		}
 	}
 

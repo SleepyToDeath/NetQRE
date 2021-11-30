@@ -250,13 +250,15 @@ class GeneralSyntaxTree : public IESyntaxTree {
 	}
 
 
+/*
 	string marshall() {
 		return GeneralProgram::interpreter->marshall(static_pointer_cast<GeneralSyntaxTree>(shared_from_this()));
 	}
 
+		*/
 
-	string to_string() {
-		return GeneralProgram::interpreter->to_string(static_pointer_cast<GeneralSyntaxTree>(shared_from_this()));
+//	string to_string() {
+//		return GeneralProgram::interpreter->to_string(static_pointer_cast<GeneralSyntaxTree>(shared_from_this()));
 		
 		/*
 		string s;
@@ -280,7 +282,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 		}
 		return s;
 		*/
-	}
+//	}
 
 	void copy_initializer(shared_ptr<SyntaxTree> src) {
 		for (int i=0; i<src->subtree.size(); i++)

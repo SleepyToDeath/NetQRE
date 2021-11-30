@@ -168,9 +168,9 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	/* marshall string */
 	/* [TODO] interpret from binary index to true number */
 	string marshall(shared_ptr<GeneralSyntaxTree> code) {
-		string deli = Netqre::MarshallDelimiter;
-		string lsign = Netqre::MarshallLeft;
-		string rsign = Netqre::MarshallRight;
+		string deli = MarshallDelimiter;
+		string lsign = MarshallLeft;
+		string rsign = MarshallRight;
 		
 		string encode;
 		encode += lsign;

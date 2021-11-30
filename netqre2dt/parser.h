@@ -4,6 +4,7 @@
 #include <memory>
 #include "syntax.h"
 #include "rubify.hpp"
+#include "../general-lang/syntax_tree.h"
 
 namespace Netqre {
 
@@ -18,9 +19,6 @@ class NetqreParser
 
 };
 
-const std::string MarshallDelimiter = ",";
-const std::string MarshallLeft = "{";
-const std::string MarshallRight = "}";
 
 const std::map<std::string, Netqre::NetqreExpType> ExpTypeMap = {
 	{"program", NetqreExpType::PROGRAM},
@@ -33,7 +31,14 @@ const std::map<std::string, Netqre::NetqreExpType> ExpTypeMap = {
 	{"#feature_set", NetqreExpType::FEATURE_SET},
 	{"#re", NetqreExpType::RE},
 	{"#predicate_set", NetqreExpType::PREDICATE_SET},
-	{"#predicate_entry", NetqreExpType::PREDICATE}
+	{"#predicate_entry", NetqreExpType::PREDICATE},
+	{"#index", NetqreExpType::VALUE},
+	{"#prefix", NetqreExpType::VALUE},
+	{"#cap_index", NetqreExpType::VALUE},
+	{"#bottom_index", NetqreExpType::VALUE},
+	{"0", NetqreExpType::VALUE},
+	{"1", NetqreExpType::VALUE},
+	{"_", NetqreExpType::UNKNOWN}
 };
 
 }

@@ -24,6 +24,10 @@ enum SyntaxTreeCompleteness {
 	UNKNOWN, COMPLETE, INCOMPLETE
 };
 
+const std::string MarshallDelimiter = ",";
+const std::string MarshallLeft = "{";
+const std::string MarshallRight = "}";
+
 class SyntaxTreeFactory;
 class SyntaxTreeTemplate;
 
@@ -62,8 +66,8 @@ class SyntaxTree: public std::enable_shared_from_this<SyntaxTree> {
 	/* check if all leaf nodes are terminal */
 	bool is_complete();
 	virtual double get_complexity();
-	virtual Rubify::string to_string(); //for human
-	virtual Rubify::string marshall(); //for parser
+	Rubify::string to_string(); //for human
+	Rubify::string marshall(); //for parser
 	size_t hash();
 	bool equal(shared_ptr<SyntaxTree> t);
 

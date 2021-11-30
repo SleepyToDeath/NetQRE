@@ -304,10 +304,26 @@ shared_ptr<SyntaxTree> SyntaxTreeTemplate::to_syntax_tree(shared_ptr<VariableMap
 }
 
 Rubify::string SyntaxTree::marshall() {
-	return "";
+	string deli = MarshallDelimiter;
+	string lsign = MarshallLeft;
+	string rsign = MarshallRight;
+	
+	string encode;
+	encode += lsign;
+	encode += root->get_type()->name;
+	encode += deli;
+	for (int i=0; i< subtree.size(); i++)
+	{
+		encode += subtree[i]->marshall();
+		encode += deli;
+	}
+	encode += rsign;
+	return encode;
 }
 
 Rubify::string SyntaxTree::to_string() {
+	return marshall();
+/*
 	throw string("SyntaxTree::to_string This function shouldn't be called\n");
 	Rubify::string s;
 	if (root->get_type()->is_term) 
@@ -326,6 +342,7 @@ Rubify::string SyntaxTree::to_string() {
 			s = s + " )";
 	}
 	return s;
+	*/
 }
 
 size_t SyntaxTree::hash() {

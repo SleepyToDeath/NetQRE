@@ -11,10 +11,10 @@
 			[ "threshold(0)" ]
 		] },
 		{ "#qre_top": [
-			[ "$qre(","#qre_vs","$)" ]
+			[ "#qre_vs" ]
 		] },
 		{ "#qre_vs": [
-			[ "#agg_op","$(", "#qre_ps", "$,", "#feature_set", "$)" ],
+			[ "#agg_op", "#qre_ps", "#feature_set" ],
 			[ "#qre_ps" ]
 		] },
 		{ "#agg_op": [
@@ -25,25 +25,25 @@
 			[ "\\r0" ]
 		] },
 		{ "#qre_ps": [
-			[ "$split(", "#qre_ps", "$,", "#qre_ps", "$,", "#agg_op", "$)" ],
-			[ "$iter(", "#qre_ps", "$,", "#agg_op", "$)" ],
-			[ "$/*(_)","#re","$/?1" ]
+			[ "$split", "#qre_ps", "#qre_ps", "#agg_op" ],
+			[ "$iter", "#qre_ps", "#agg_op" ],
+			[ "#re" ]
 		] },
 		{ "#re": [
 			[ "#re", "#re" ],
 			[ "_" ],
-			[ "*(_)" ],
-			[ "#predicate_set","$*(_)" ]
+			[ "*_" ],
+			[ "#predicate_set" ]
 		]},
 		{ "#predicate_set": [
-			[ "$||([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
-			[ "$&&([", "#predicate_entry", "$]", "$,", "$[", "#predicate_entry", "$]", "$)" ],
-			[ "$[", "#predicate_entry", "$]" ]		] },
+			[ "$||", "#predicate_entry", "#predicate_entry" ],
+			[ "$&&", "#predicate_entry", "#predicate_entry" ],
+			[ "#predicate_entry" ]		] },
 		{ "#predicate_entry": [
-			[ "\\r1", "$==", "$1","#index" ],
-			[ "\\r2", "$->", "$1","#prefix" ],
-			[ "\\r3", "$>=", "$1","#cap_index" ],
-			[ "\\r4", "$<=", "$1","#bottom_index" ]
+			[ "\\r1", "$==", "#index" ],
+			[ "\\r2", "$->", "#prefix" ],
+			[ "\\r3", "$>=", "#cap_index" ],
+			[ "\\r4", "$<=", "#bottom_index" ]
 		] },
 		{ "#index": [
 			[ "0", "#index"],
@@ -72,8 +72,8 @@
 	] },
 
 	{ "positive_abstract" : [
-		{ "#qre_ps": "iter( /_*(_)/?1, sum)" },
-		{ "#re": "_*(_)" },
+		{ "#qre_ps": "#qre_ps iter #qre_ps #re #re _ #re *_ #agg_op sum "},
+		{ "#re": "#re #re _ #re *_"},
 		{ "#predicate_set": "_" },
 		{ "#predicate_entry": "_" },
 		{ "#threshold": "threshold(0)" },
@@ -91,10 +91,10 @@
 	] },
 	
 	{ "unconditional_redundancy" : [
-		{ "#predicate_set ||([ #predicate_entry@1 ],[ #predicate_entry@1 ])" : "#re _" },
+		{ "#predicate_set || #predicate_entry@1 #predicate_entry@1" : "#re _" },
 		{ "#re #re #re@1 #re@2 #re@3" : "#re _" },
-		{ "#qre_ps split( #qre_ps split( #qre_ps@1, #qre_ps@2, #agg_op@3 ), #qre_ps@4, #agg_op@4)" : "#re _" },
-		{ "#qre_ps iter( #qre_ps iter( #qre_ps@1, #agg_op@2 ) ,  #agg_op@3 )" : "#re _" }
+		{ "#qre_ps split #qre_ps split #qre_ps@1 #qre_ps@2 #agg_op@3 #qre_ps@4 #agg_op@4" : "#re _" },
+		{ "#qre_ps iter #qre_ps iter #qre_ps@1 #agg_op@2 #agg_op@3" : "#re _" }
 	] }
 ]
 

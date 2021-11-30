@@ -150,6 +150,8 @@ class NetqreAST
 
 	NetqreExpType type;
 
+	Rubify::string name;
+
 	Rubify::vector< std::shared_ptr<NetqreAST> > subtree;
 
 	Rubify::string to_s()

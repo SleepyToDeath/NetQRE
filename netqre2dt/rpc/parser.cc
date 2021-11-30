@@ -1,11 +1,13 @@
 #include "../parser.h"
 #include <iostream>
+#include <fstream>
 
-int main()
+int main(int argc, char* argv[])
 {
 	Netqre::NetqreParser parser;
-	Rubify::string program = 
-	"{program,{#filter,{filter([_]),},},{#qre_top,{#qre_vs,{#agg_op,{sum,},},{#qre_ps,{#qre_ps,{#qre_ps,},{#agg_op,},},{#qre_ps,{#re,{#predicate_set,{#predicate_entry,},},},},{#agg_op,{max,},},},{#feature_set,{\r0,{1,},},},},},{#threshold,{threshold(0),},},}";
+	Rubify::string program;
+	std::ifstream fin(argv[1]); // grammar
+	std::getline(fin, program);
 	parser.parse(program);
 	std::cerr<<std::endl;
 }

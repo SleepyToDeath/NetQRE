@@ -37,8 +37,10 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 		auto node = make_shared<NetqreAST>();
 		auto tokens = Rubify::string(code.substr(cursor)).split(MarshallDelimiter);
 
+		/* initialize this node */
 		auto cur = make_shared<NetqreAST>();
 		string node_name = tokens[0];
+		cur->name = node_name;
 		if (ExpTypeMap.contains(node_name))
 			cur->type = ExpTypeMap.at(node_name);
 		else
@@ -46,6 +48,8 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 		std::cerr<<node_name<<" "<<cursor<<" ";
 
+		/* parse subtree */
+		vector< std::shared_ptr<NetqreAST> > pending;
 		int cursor2 = cursor + node_name.length();
 		while (code[cursor2] == MarshallDelimiter[0])
 		{
@@ -58,38 +62,145 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				return {cur, cursor2};
 
 			/* add sub-tree to list */
-			cur->subtree.push_back(sub);
+			pending.push_back(sub);
 		}
 
 		switch(cur->type)
 		{
 			case NetqreExpType::PROGRAM:
-				break;
 			case NetqreExpType::FILTER:
-				break;
-			case NetqreExpType::PREDICATE_SET:
-				break;
-			case NetqreExpType::PREDICATE:
-				break;
-			case NetqreExpType::FEATURE_NI:
-				break;
-			case NetqreExpType::VALUE:
-				break;
-			case NetqreExpType::QRE:
-				break;
+			case NetqreExpType::THRESHOLD:
 			case NetqreExpType::QRE_NS:
+				cur->subtree = pending;
 				break;
-			case NetqreExpType::NUM_OP:
+
+			case NetqreExpType::QRE:
+			{
+				auto dummy_ns = make_shared<NetqreAST>(NetqreExpType::QRE_NS);
+				dummy_ns->subtree.push_back(pending[1]);
+				cur->subtree.push_back(dummy_ns);
 				break;
+			}
+
 			case NetqreExpType::QRE_VS:
+			{
+				if (pending.size() == 1)
+				{
+					cur->subtree = pending;
+					break;
+				}
+				else if (pending[0]->name == "max")
+					cur->agg_type = AggOpType::MAX;
+				else if (pending[0]->name == "min")
+					cur->agg_type = AggOpType::MIN;
+				else if (pending[0]->name == "sum")
+					cur->agg_type = AggOpType::SUM;
+				cur->subtree.push_back(pending[1]);
+				cur->subtree.push_back(pending[2]);
 				break;
+			}
+
+			case NetqreExpType::QRE_PS:
+			{
+				if (pending[0]->name == "split")
+				{
+					cur->reg_type = RegularOpType::CONCAT;
+					cur->subtree.push_back(pending[1]);
+					cur->subtree.push_back(pending[2]);
+					cur->subtree.push_back(pending[3]);
+				}
+				else if (pending[0]->name == "iter")
+				{
+					cur->reg_type = RegularOpType::STAR;
+					cur->subtree.push_back(pending[1]);
+					cur->subtree.push_back(pending[2]);
+				}
+				else
+				{
+					auto cond = make_shared<NetqreAST>(NetqreExpType::QRE_COND);
+					cur->subtree.push_back(cond);
+					cond->subtree = pending;
+				}
+				break;
+			}
+
+			case NetqreExpType::PREDICATE_SET:
+			{
+				switch(pending[0]->name[0])
+				{
+					case '&':
+					cur->bool_type = BoolOpType::AND;
+					cur->subtree.push_back(pending[1]);
+					cur->subtree.push_back(pending[2]);
+					break;
+
+					case '|':
+					cur->bool_type = BoolOpType::OR;
+					cur->subtree.push_back(pending[1]);
+					cur->subtree.push_back(pending[2]);
+					break;
+
+					default:
+					cur->bool_type = BoolOpType::NONE;
+					cur->subtree.push_back(pending[0]);
+					break;
+				}
+				break;
+			}
+
+			case NetqreExpType::PREDICATE:
+			{
+				cur->subtree.push_back(pending[0]);
+				cur->subtree.push_back(pending[3]);
+				switch(pending[1]->name[0])
+				{
+					case '=':
+					cur->pred_type = PredOpType::EQUAL;
+					break;
+
+					case '-':
+					cur->pred_type = PredOpType::IN;
+					break;
+
+					case '>':
+					cur->pred_type = PredOpType::BIGGER;
+					break;
+
+					case '<':
+					cur->pred_type = PredOpType::SMALLER;
+					break;
+				}
+				break;
+			}
+
+			case NetqreExpType::FEATURE_NI:
+			{
+				cur->value = cur->name.to_i();
+				break;
+			}
+
+			case NetqreExpType::VALUE:
+			{
+				if (pending.size() != 0)
+					cur->name = pending[0]->name + pending[1]->name;
+				cur->value = Rubify::string("1" + cur->name).to_i(2);
+				break;
+			}
+
 			case NetqreExpType::AGG_OP:
+			{
+				if (pending[0]->name == "max")
+					cur->agg_type = AggOpType::MAX;
+				else if (pending[0]->name == "min")
+					cur->agg_type = AggOpType::MIN;
+				else if (pending[0]->name == "sum")
+					cur->agg_type = AggOpType::SUM;
 				break;
+			}
+
 			case NetqreExpType::FEATURE_SET:
 				break;
 			case NetqreExpType::FEATURE_I:
-				break;
-			case NetqreExpType::QRE_PS:
 				break;
 			case NetqreExpType::QRE_COND:
 				break;
@@ -103,12 +214,15 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				break;
 			case NetqreExpType::CONST:
 				break;
-			case NetqreExpType::THRESHOLD:
-				break;
 			case NetqreExpType::UNKNOWN:
+			{
+				cur->bool_type = BoolOpType::NONE;
 				break;
+			}
+
 			case NetqreExpType::PENDING_LITERAL:
 				break;
+
 			default:
 				break;
 		}

@@ -32,8 +32,8 @@ class IESyntaxTree : public SyntaxTree {
 
 	virtual shared_ptr<IEProgram> to_program();
 
-	virtual Rubify::string to_string();
-	virtual Rubify::string marshall();
+//	virtual Rubify::string to_string();
+//	virtual Rubify::string marshall();
 
 	void copy_initializer(shared_ptr<SyntaxTree> src);
 

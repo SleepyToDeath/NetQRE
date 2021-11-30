@@ -42,6 +42,7 @@ shared_ptr<IEProgram> IESyntaxTree::to_program() {
 	return nullptr;
 }
 
+/*
 Rubify::string IESyntaxTree::to_string() {
 	return "";
 }
@@ -49,6 +50,7 @@ Rubify::string IESyntaxTree::to_string() {
 Rubify::string IESyntaxTree::marshall() {
 	return "";
 }
+*/
 
 /*
 IEProgram* IESyntaxTree::to_program() {
