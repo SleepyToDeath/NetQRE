@@ -197,11 +197,32 @@ class GeneralSyntaxTree : public IESyntaxTree {
 
 
 	AbstractCode to_code() {
+
+/*
+		string encode;
+		encode += lsign;
+		encode += root->get_type()->name;
+		encode += deli;
+		for (int i=0; i< subtree.size(); i++)
+		{
+			encode += subtree[i]->marshall();
+			encode += deli;
+		}
+		encode += rsign;
+		*/
+
+
+
+		string deli = MarshallDelimiter;
+		string lsign = MarshallLeft;
+		string rsign = MarshallRight;
+
 		string pos;
 		string neg;
+
 		if (root->get_type()->is_term) 
 		{
-			pos = root->get_type()->name;
+			pos = lsign + root->get_type()->name + deli + rsign;
 			neg = pos;
 		}
 		else if (root->get_option() == SyntaxLeftHandSide::NoOption)
@@ -211,12 +232,23 @@ class GeneralSyntaxTree : public IESyntaxTree {
 			/* [!] it is assumed that pos & neg are either both completable or both uncompletable */
 			if (pos == "")
 				return AbstractCode();
+				/*
+			else
+			{
+				pos = lsign + pos + deli + rsign;
+				neg = lsign + neg + deli + rsign;
+			}
+			*/
 		}
 		else
 		{
 			auto rhs = std::static_pointer_cast<GeneralSyntaxRightHandSide> (root->get_type()->option[root->get_option()]);
 			int j = 0;
 			bool completable_flag = true;
+
+			pos = lsign + root->get_type()->name + deli;
+			neg = pos;
+
 			for (int i=0; i<rhs->subexp_full.size(); i++)	
 			{
 				if (rhs->subexp_full[i]->is_functional()) 
@@ -232,10 +264,16 @@ class GeneralSyntaxTree : public IESyntaxTree {
 					j++;
 				}
 				else {
-					pos = pos + (rhs->subexp_full[i]->name);
-					neg = neg + (rhs->subexp_full[i]->name);
+					pos = pos + lsign + (rhs->subexp_full[i]->name) + deli + rsign;
+					neg = neg + lsign + (rhs->subexp_full[i]->name) + deli + rsign;
 				}
+
+				pos += deli;
+				neg += deli;
 			}
+
+			pos += rsign;
+			neg += rsign;
 
 			if (!completable_flag)
 			{
@@ -245,6 +283,7 @@ class GeneralSyntaxTree : public IESyntaxTree {
 				if (pos == "")
 					return AbstractCode();
 			}
+			
 		}
 		return AbstractCode(pos, neg);
 	}

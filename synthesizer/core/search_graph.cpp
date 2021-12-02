@@ -395,12 +395,12 @@ void SearchGraph::enum_pure(
 		{
 			for (int j=0; j<tmp->q.size(); j++)
 			{
-				auto explored = std::static_pointer_cast<IESyntaxTree>(tmp->q[j]);
+				auto explored = std::static_pointer_cast<GeneralSyntaxTree>(tmp->q[j]);
 				if (explored != nullptr)
 				{
 					this_round.push_back(explored);
-					std::cout<<explored->to_string()<<std::endl;
-					std::cout<<explored->marshall()<<std::endl<<std::endl;
+					std::cout<< explored->marshall() <<std::endl;
+					std::cout<< explored->to_code().pos <<std::endl<<std::endl;
 				}
 			}
 		}

@@ -2,7 +2,7 @@
 #define SEARCH_GRAPH_H
 
 #include <unordered_set>
-#include "../../general-lang/incomplete_execution.h"
+#include "../../general-lang/general.hpp"
 #include "redundancy.h"
 
 typedef std::unordered_set<shared_ptr<SyntaxTree>, HashSyntaxTree, CmpSyntaxTree > VisitPool;

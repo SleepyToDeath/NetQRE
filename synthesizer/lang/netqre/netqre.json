@@ -25,8 +25,8 @@
 			[ "\\r0" ]
 		] },
 		{ "#qre_ps": [
-			[ "$split", "#qre_ps", "#qre_ps", "#agg_op" ],
-			[ "$iter", "#qre_ps", "#agg_op" ],
+			[ "split", "#qre_ps", "#qre_ps", "#agg_op" ],
+			[ "iter", "#qre_ps", "#agg_op" ],
 			[ "#re" ]
 		] },
 		{ "#re": [
@@ -36,14 +36,14 @@
 			[ "#predicate_set" ]
 		]},
 		{ "#predicate_set": [
-			[ "$||", "#predicate_entry", "#predicate_entry" ],
-			[ "$&&", "#predicate_entry", "#predicate_entry" ],
+			[ "||", "#predicate_entry", "#predicate_entry" ],
+			[ "&&", "#predicate_entry", "#predicate_entry" ],
 			[ "#predicate_entry" ]		] },
 		{ "#predicate_entry": [
-			[ "\\r1", "$==", "#index" ],
-			[ "\\r2", "$->", "#prefix" ],
-			[ "\\r3", "$>=", "#cap_index" ],
-			[ "\\r4", "$<=", "#bottom_index" ]
+			[ "\\r1", "==", "#index" ],
+			[ "\\r2", "->", "#prefix" ],
+			[ "\\r3", ">=", "#cap_index" ],
+			[ "\\r4", "<=", "#bottom_index" ]
 		] },
 		{ "#index": [
 			[ "0", "#index"],

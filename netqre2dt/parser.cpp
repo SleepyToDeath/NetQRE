@@ -46,7 +46,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 		else
 			cur->type = NetqreExpType::PENDING_LITERAL;
 
-		std::cerr<<node_name<<" "<<cursor<<" ";
+		std::cerr<<"{ "<<node_name<<" "<<cursor<<" |";
 
 		/* parse subtree */
 		vector< std::shared_ptr<NetqreAST> > pending;
@@ -59,11 +59,12 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 			/* check reaching the end */
 			if (sub == nullptr)
-				return {cur, cursor2};
+				break;
 
 			/* add sub-tree to list */
 			pending.push_back(sub);
 		}
+
 
 		switch(cur->type)
 		{
@@ -71,13 +72,48 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			case NetqreExpType::FILTER:
 			case NetqreExpType::THRESHOLD:
 			case NetqreExpType::QRE_NS:
+			case NetqreExpType::FEATURE_SET:
+			case NetqreExpType::FEATURE_I:
+			case NetqreExpType::QRE_COND:
+			case NetqreExpType::RE_STAR:
+			case NetqreExpType::OUTPUT:
+			case NetqreExpType::WILDCARD:
+			case NetqreExpType::CONST:
+			{
 				cur->subtree = pending;
 				break;
+			}
+
+			case NetqreExpType::RE:
+			{
+				switch (pending[0]->type)
+				{
+					case NetqreExpType::PREDICATE_SET:
+					case NetqreExpType::UNKNOWN:
+					cur->reg_type = RegularOpType::NONE;
+					cur->subtree = pending;
+					break;
+
+					case NetqreExpType::RE:
+					cur->reg_type = RegularOpType::CONCAT;
+					cur->subtree = pending;
+					break;
+
+					case NetqreExpType::RE_STAR:
+					{
+						cur->reg_type = RegularOpType::STAR;
+						auto ast_wild = make_shared<NetqreAST>(NetqreExpType::UNKNOWN);
+						cur->subtree.push_back(ast_wild);
+						break;
+					}
+				}
+				break;
+			}
 
 			case NetqreExpType::QRE:
 			{
 				auto dummy_ns = make_shared<NetqreAST>(NetqreExpType::QRE_NS);
-				dummy_ns->subtree.push_back(pending[1]);
+				dummy_ns->subtree.push_back(pending[0]);
 				cur->subtree.push_back(dummy_ns);
 				break;
 			}
@@ -86,6 +122,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			{
 				if (pending.size() == 1)
 				{
+					cur->agg_type = AggOpType::NONE;
 					cur->subtree = pending;
 					break;
 				}
@@ -117,6 +154,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				}
 				else
 				{
+					cur->reg_type = RegularOpType::NONE;
 					auto cond = make_shared<NetqreAST>(NetqreExpType::QRE_COND);
 					cur->subtree.push_back(cond);
 					cond->subtree = pending;
@@ -151,7 +189,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			case NetqreExpType::PREDICATE:
 			{
 				cur->subtree.push_back(pending[0]);
-				cur->subtree.push_back(pending[3]);
+				cur->subtree.push_back(pending[2]);
 				switch(pending[1]->name[0])
 				{
 					case '=':
@@ -181,8 +219,16 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 			case NetqreExpType::VALUE:
 			{
+				cerr << " " << cur->name << "";
+				cur->value = pending[0]->value;
+				break;
+			}
+
+			case NetqreExpType::VALUE_DIGIT:
+			{
 				if (pending.size() != 0)
 					cur->name = pending[0]->name + pending[1]->name;
+				cerr << " " << cur->name << "";
 				cur->value = Rubify::string("1" + cur->name).to_i(2);
 				break;
 			}
@@ -198,22 +244,6 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				break;
 			}
 
-			case NetqreExpType::FEATURE_SET:
-				break;
-			case NetqreExpType::FEATURE_I:
-				break;
-			case NetqreExpType::QRE_COND:
-				break;
-			case NetqreExpType::RE:
-				break;
-			case NetqreExpType::RE_STAR:
-				break;
-			case NetqreExpType::OUTPUT:
-				break;
-			case NetqreExpType::WILDCARD:
-				break;
-			case NetqreExpType::CONST:
-				break;
 			case NetqreExpType::UNKNOWN:
 			{
 				cur->bool_type = BoolOpType::NONE;
@@ -226,6 +256,9 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			default:
 				break;
 		}
+
+		std::cerr<<" | "<<node_name<<" "<<cursor<<" "<<cur->subtree.size()<<" }";
+
 		return {cur, cursor2};
 	};
 	auto [ast, cursor] = parse_node(0, parse_node);

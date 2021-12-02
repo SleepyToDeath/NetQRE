@@ -108,7 +108,8 @@ enum class NetqreExpType {
 	CONST,			//19
 	THRESHOLD,		//20
 	UNKNOWN,		//21
-	PENDING_LITERAL	//22
+	PENDING_LITERAL,//22
+	VALUE_DIGIT		//23
 };
 
 enum class AggOpType {
