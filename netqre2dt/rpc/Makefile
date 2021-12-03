@@ -41,6 +41,9 @@ debug:
 
 parser:
 	$(CC) -I$(INCLUDE_PATH) -o netqre_parser parser.cc $(SRC2) -lrpc -lpthread -lpcap -g $(STD)
+
+exec:
+	$(CC) -I$(INCLUDE_PATH) -o netqre_parser exec.cc $(SRC2) -lrpc -lpthread -lpcap -g $(STD)
 	
 
 test0:
