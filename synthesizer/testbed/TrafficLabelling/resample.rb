@@ -17,8 +17,39 @@ def pick_rand_index(probabilities)
   return i
 end
 
+class Counter
+  def initialize(bar, func)
+    @bar = bar
+    @func = func
+    @counter = 0
+  end
+
+  def tick
+    @counter += 1
+    if @counter == @bar
+      @func.call
+      @counter = 0
+    end
+  end
+end
+
 class Trace
 
+  ## ========== constructor ===========
+
+  # copy initializer
+  def initialize(src)
+    @num_field = src.num_field
+    @num_flow = src.num_flow
+    @field_types = src.field_types
+    @flows = src.flows.clone
+  end
+
+  # do nothing, just a placeholder that allows lazy initialization later
+  def initialize
+  end
+
+  # lazy initializer, first set metadata
   def reset_meta(num_field, num_flow, field_types)
     @num_field = num_field
     @num_flow = num_flow
@@ -26,14 +57,33 @@ class Trace
     @flows = []
   end
 
+  # then insert flows one by one
   def push_flow(f)
     @flows << f
   end
 
+  # or entirely read from file
   def from_file(file_name)
-    
+    file = File.open(file_name)
+    fin = file.each_line
+    @num_field, @num_flow = fin.next.split(' ').map{|s| s.to_i}
+    @field_types = fin.next.split(' ').map{|s| s.to_i}
+    flow = []
+    loop do
+      s = fin.next
+      if s.split(' ').size == 0
+        @flows << flow
+        flow = []
+      else
+        flow << fin.next.split(' ').map{|s| s.to_i}
+      end
+    end
   end
 
+  ## ========= modifier ==========
+
+  # merge 2 traces into 1 with probability of taking next flow from each trace
+  #
   def merge(traces, probabilities)
     @num_field = traces[0].num_field
     @num_flow = traces.map{ |t| t.flows.size }.sum
@@ -50,15 +100,30 @@ class Trace
     end
   end
 
-  def print_meta(fp)
-    fp "#{@num_field} #{@num_flow}"
-    fp @field_types.map{ |x| x.to_s }.join(' ')
+  # keep only the first `len` flows
+  def trunc(len)
+
   end
 
-  def print_sample(size, fp)
+  ## ========== dump ===========
+  # sample size = how many flows each trace(data point for training and testing) contains
+
+  # dump metadata & flows separately
+  def print_meta(fp)
+    fp.call "#{@num_field} #{@num_flow}"
+    fp.call @field_types.map{ |x| x.to_s }.join(' ')
+  end
+
+  def print_samples(sample_size, fp)
+    ct = Counter.new(sample_size, ->{ fp.call("") } )
     @flows.each do |f|
-      fp f.map{ |x| x.to_s }.join(' ')
+      fp.call f.map{ |x| x.to_s }.join(' ')
+      ct.tick
     end
+  end
+
+  # dump everything to a file
+  def to_file(sample_size, file_name)
   end
 end
 
