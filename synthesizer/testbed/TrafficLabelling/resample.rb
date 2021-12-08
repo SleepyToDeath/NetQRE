@@ -1,8 +1,3 @@
-
-$input_files = ["input1", "input2"]
-$mix_rate = [ 0.3, 0.7 ]
-$sample_sizes = [ 5, 10, 20, 50, 100 ]
-
 def pick_rand_index(probabilities)
   r = rand(0.0..1.0)
   i = 0
@@ -35,6 +30,8 @@ end
 
 class Trace
 
+  attr_accessor :num_field, :num_flow, :field_types, :flows
+
   ## ========== constructor ===========
 
   # copy initializer
@@ -47,6 +44,7 @@ class Trace
 
   # do nothing, just a placeholder that allows lazy initialization later
   def initialize
+    @flows = []
   end
 
   # lazy initializer, first set metadata
@@ -75,7 +73,7 @@ class Trace
         @flows << flow
         flow = []
       else
-        flow << fin.next.split(' ').map{|s| s.to_i}
+        flow << s.split(' ').map{|s| s.to_i}
       end
     end
   end
@@ -92,9 +90,10 @@ class Trace
     counters = traces.map{ |x| 0 }
     while @flows.size < @num_flow do
       i = 0
-      do
+      loop do
         i = pick_rand_index(probabilities)
-      while counters[i] < traces[i].flows.size
+        break if counters[i] < traces[i].flows.size
+      end
       @flows << traces[i].flows[counters[i]]
       counters[i] += 1
     end
@@ -102,28 +101,56 @@ class Trace
 
   # keep only the first `len` flows
   def trunc(len)
-
+    @flows = @flows[0..(len-1)]
+    @num_flow = len
   end
 
   ## ========== dump ===========
   # sample size = how many flows each trace(data point for training and testing) contains
 
   # dump metadata & flows separately
-  def print_meta(fp)
-    fp.call "#{@num_field} #{@num_flow}"
+  def print_meta(sample_size, fp)
+    fp.call "#{@num_field} #{@num_flow / sample_size}"
     fp.call @field_types.map{ |x| x.to_s }.join(' ')
   end
 
   def print_samples(sample_size, fp)
     ct = Counter.new(sample_size, ->{ fp.call("") } )
     @flows.each do |f|
-      fp.call f.map{ |x| x.to_s }.join(' ')
+      f.each do |pkt|
+        fp.call pkt.map{ |x| x.to_s }.join(' ')
+      end
       ct.tick
     end
   end
 
   # dump everything to a file
   def to_file(sample_size, file_name)
+    s = ""
+    appendln = -> (suffix) { s += suffix + "\n" }
+    print_meta(sample_size, appendln)
+    print_samples(sample_size, appendln)
+    File.open(file_name, 'w') { |f| f.write s }
   end
 end
 
+$input_files = ["./tokenstreams/ddos-train.ts", "./tokenstreams/neg-train.ts"]
+$output_file_prefix = "./tokenstreams/mixed"
+$output_file_suffix = ".ts"
+$mix_rate = [ 0.3, 0.7 ]
+$sample_sizes = [ 1, 2, 3 ]
+
+srcs = $input_files.map do |name|
+  t = Trace.new
+  t.from_file(name)
+  t
+end
+
+dst = Trace.new
+dst.merge(srcs, $mix_rate)
+
+dst.trunc(10)
+$sample_sizes.each do |size|
+  name = $output_file_prefix + size.to_s + $output_file_suffix
+  dst.to_file(size, name)
+end
