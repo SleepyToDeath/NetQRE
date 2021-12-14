@@ -32,13 +32,11 @@ const std::map<std::string, Netqre::NetqreExpType> ExpTypeMap = {
 	{"#re", NetqreExpType::RE},
 	{"#predicate_set", NetqreExpType::PREDICATE_SET},
 	{"#predicate_entry", NetqreExpType::PREDICATE},
-	{"#index", NetqreExpType::VALUE},
-	{"#prefix", NetqreExpType::VALUE},
-	{"#cap_index", NetqreExpType::VALUE},
-	{"#bottom_index", NetqreExpType::VALUE},
-	{"0", NetqreExpType::VALUE_DIGIT},
-	{"1", NetqreExpType::VALUE_DIGIT},
-	{"_", NetqreExpType::UNKNOWN},
+	{"#index", NetqreExpType::VALUE_BIN},
+	{"#prefix", NetqreExpType::VALUE_BIN},
+	{"#cap_index", NetqreExpType::VALUE_BIN},
+	{"#bottom_index", NetqreExpType::VALUE_BIN},
+	{"_", NetqreExpType::WILDCARD},
 	{"*_", NetqreExpType::RE_STAR}
 };
 

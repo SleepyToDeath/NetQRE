@@ -88,28 +88,29 @@ namespace Netqre {
 enum class NetqreExpType {
 	PROGRAM, 		//0
 	FILTER, 		//1
-	PREDICATE_SET, 	//2
-	PREDICATE, 		//3
-	FEATURE_NI, 	//4
-	VALUE, 			//5
-	QRE,			//6
-	QRE_NS, 		//7
-	NUM_OP, 		//8
-	QRE_VS, 		//9
-	AGG_OP, 		//10
-	FEATURE_SET,	//11
-	FEATURE_I, 		//12
-	QRE_PS,			//13
-	QRE_COND,		//14
-	RE,				//15
-	RE_STAR,		//16
-	OUTPUT,			//17
-	WILDCARD,		//18
-	CONST,			//19
-	THRESHOLD,		//20
-	UNKNOWN,		//21
-	PENDING_LITERAL,//22
-	VALUE_DIGIT		//23
+	QRE,			//2
+	QRE_NS, 		//3
+	NUM_OP, 		//4
+	QRE_VS, 		//5
+	AGG_OP, 		//6
+	FEATURE_SET,	//7
+	FEATURE_I, 		//8
+	QRE_PS,			//9
+	QRE_COND,		//10
+	RE,				//11
+	RE_STAR,		//12
+	PREDICATE_SET, 	//13
+	PREDICATE, 		//14
+	FEATURE_NI, 	//15
+	WILDCARD,		//16
+	CONST,			//17
+	THRESHOLD,		//18
+	UNKNOWN,		//19
+	VALUE_BIN,		//20
+	VALUE_DEC,		//21
+	VALUE_DIGIT,	//22
+	VALUE_SET,		//23
+	PENDING_LITERAL	//24
 };
 
 enum class AggOpType {

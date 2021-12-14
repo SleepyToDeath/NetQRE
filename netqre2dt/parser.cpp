@@ -28,7 +28,7 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(string code) {
 std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 
-	auto parse_node = [&](int cursor, auto& self) -> tuple<shared_ptr<NetqreAST>, int>
+	auto parse_node = [&](int cursor, NetqreExpType context, auto& self) -> tuple<shared_ptr<NetqreAST>, int>
 	{
 		if (code[cursor] == MarshallRight[0])
 			return {nullptr, cursor+1};
@@ -43,10 +43,24 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 		cur->name = node_name;
 		if (ExpTypeMap.contains(node_name))
 			cur->type = ExpTypeMap.at(node_name);
+		else if (node_name[0] >= '0' && node_name[0] <= '9')
+		{
+			if (context == NetqreExpType::VALUE_SET || context == NetqreExpType::VALUE_DEC)
+				cur->type = NetqreExpType::VALUE_DEC;
+			else
+				cur->type = NetqreExpType::VALUE_DIGIT;
+		}
+		else if (node_name.start_with("\\r"))
+		{
+			if (context == NetqreExpType::FEATURE_SET)
+				cur->type = NetqreExpType::VALUE_SET;
+			else
+				cur->type = NetqreExpType::VALUE_DEC;
+		}
 		else
 			cur->type = NetqreExpType::PENDING_LITERAL;
 
-		std::cerr<<"{ "<<node_name<<" "<<cursor<<" |";
+		std::cerr<<"{ "<<node_name<<" "<< (int)(cur->type) <<" "<<cursor<<" |";
 
 		/* parse subtree */
 		vector< std::shared_ptr<NetqreAST> > pending;
@@ -54,7 +68,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 		while (code[cursor2] == MarshallDelimiter[0])
 		{
 			/* parse next sub-tree */
-			auto [sub, cursor3] = self(cursor2 + 1, self);
+			auto [sub, cursor3] = self(cursor2 + 1, cur->type, self);
 			cursor2 = cursor3;
 
 			/* check reaching the end */
@@ -72,15 +86,17 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			case NetqreExpType::FILTER:
 			case NetqreExpType::THRESHOLD:
 			case NetqreExpType::QRE_NS:
-			case NetqreExpType::FEATURE_SET:
-			case NetqreExpType::FEATURE_I:
 			case NetqreExpType::QRE_COND:
 			case NetqreExpType::RE_STAR:
-			case NetqreExpType::OUTPUT:
-			case NetqreExpType::WILDCARD:
-			case NetqreExpType::CONST:
+			case NetqreExpType::VALUE_SET:
 			{
 				cur->subtree = pending;
+				break;
+			}
+
+			case NetqreExpType::FEATURE_SET:
+			{
+				cur = pending[0];
 				break;
 			}
 
@@ -89,7 +105,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				switch (pending[0]->type)
 				{
 					case NetqreExpType::PREDICATE_SET:
-					case NetqreExpType::UNKNOWN:
+					case NetqreExpType::WILDCARD:
 					cur->reg_type = RegularOpType::NONE;
 					cur->subtree = pending;
 					break;
@@ -102,7 +118,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 					case NetqreExpType::RE_STAR:
 					{
 						cur->reg_type = RegularOpType::STAR;
-						auto ast_wild = make_shared<NetqreAST>(NetqreExpType::UNKNOWN);
+						auto ast_wild = make_shared<NetqreAST>(NetqreExpType::WILDCARD);
 						cur->subtree.push_back(ast_wild);
 						break;
 					}
@@ -211,13 +227,13 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				break;
 			}
 
-			case NetqreExpType::FEATURE_NI:
+			case NetqreExpType::VALUE_DEC:
 			{
 				cur->value = cur->name.to_i();
 				break;
 			}
 
-			case NetqreExpType::VALUE:
+			case NetqreExpType::VALUE_BIN:
 			{
 				cerr << " " << cur->name << "";
 				cur->value = pending[0]->value;
@@ -245,6 +261,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			}
 
 			case NetqreExpType::UNKNOWN:
+			case NetqreExpType::WILDCARD:
 			{
 				cur->bool_type = BoolOpType::NONE;
 				break;
@@ -261,8 +278,10 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 		return {cur, cursor2};
 	};
-	auto [ast, cursor] = parse_node(0, parse_node);
+	auto [ast, cursor] = parse_node(0, NetqreExpType::PENDING_LITERAL, parse_node);
 	return ast;
+}
+
 }
 
 
@@ -296,7 +315,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 /* ------------------------- Obsolete ----------------------------- */
 
 
-/* [TODO] This is a naive parser. Switch to lex & bison if possible */
+/*
 void NetqreParser::real_parse(string &code, int &cursor, shared_ptr<NetqreAST> context) {
 
 #ifdef DT_DEBUG
@@ -440,7 +459,6 @@ void NetqreParser::real_parse(string &code, int &cursor, shared_ptr<NetqreAST> c
 
 		case NetqreExpType::PREDICATE:
 
-			/* [TODO] parse '>', '<', '=' and prefix */
 			context->pred_type = PredOpType::NONE;
 			skip_head();
 			if (code[cursor] == '_')
@@ -723,5 +741,5 @@ void NetqreParser::real_parse(string &code, int &cursor, shared_ptr<NetqreAST> c
 	}
 
 }
+*/
 
-}

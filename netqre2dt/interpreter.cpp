@@ -271,7 +271,7 @@ vector<DT::Word> Machine::generate_tags(TokenStream &feature_stream)
 			StateValue* pred_tag = new StateValue();
 			pred_tag->active = satisfy(predicates[j], feature_stream[i]);
 #ifdef DT_DEBUG
-			cerr<<"Satisfy:"<<pred_tag->to_string()<<endl;
+//			cerr<<"Satisfy:"<<pred_tag->to_string()<<endl;
 #endif
 			DT::DataValue* tmp = nullptr;
 			/* [TODO] Not sure if it's compiler's bug or some bufferoverflow
@@ -523,7 +523,7 @@ std::shared_ptr<QRELeaf> Interpreter::real_interpret_agg(std::shared_ptr<NetqreA
 				{
 					auto feat = cur->subtree[1];
 					for (int i = 0; i < feat->subtree.size(); i++)
-					agg.param.push_back(feat->subtree[i]->value);
+						agg.param.push_back(feat->subtree[i]->value);
 					leaf->agg_stack.push_back(agg);
 				}
 

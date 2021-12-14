@@ -116,6 +116,7 @@ int main(int argc, char *argv[]) {
 	e_train_->from_file(argv[4], argv[5]);
 	auto e_train = static_pointer_cast<NetqreExampleHandle>(e_train_->to_handle());
 
+/*
 	auto e_test_ = shared_ptr<NetqreExample>(new NetqreExample());
 	auto e_test = e_train;
 	if (require_(int, "do_test"))
@@ -124,6 +125,7 @@ int main(int argc, char *argv[]) {
 		e_test = static_pointer_cast<NetqreExampleHandle>(e_test_->to_handle(
 						e_train->positive_token.size(), e_train->negative_token.size()));
 	}
+	*/
 	
 	provide_([&](string name)->shared_ptr<NetqreExample> {
 		if (name == "global_example")
@@ -212,6 +214,7 @@ int main(int argc, char *argv[]) {
 			cerr<<endl;
 		}
 
+/*
 		if (require_(int, "do_test"))
 		{
 			cerr<<"Testing Set:"<<endl;
@@ -222,6 +225,7 @@ int main(int argc, char *argv[]) {
 			cerr<<"Negative accuracy: "<<res.neg_accuracy<<endl;
 			cerr<<endl;
 		}
+		*/
 	}
 	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
 	/*=============================================*/

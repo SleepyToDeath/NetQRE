@@ -6,7 +6,7 @@ d: test-netqre-debug
 
 p: profile-regex
 
-train: train-netqre-distro
+train: train-netqre
 
 INCLUDE_PATH = ../../rubify
 
@@ -69,8 +69,8 @@ netqre-debug:
 
 train-netqre:
 	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server-local
-	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(SAVING_PATH_0)$(POS_TEST_FILE) $(SAVING_PATH_0)$(NEG_TEST_FILE) 
-
+	gdb -ex run --args ./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE_LOCAL) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) 
+	
 train-netqre-distro:
 	cd $(EXECUTION_PATH) ; make SAVING_PATH="../../synthesizer/testbed/" run-server
 	./testbed/synthesizer $(CONFIG_PATH)$(GRAMMAR_FILE_0) $(CONFIG_PATH)$(CONFIG_FILE_0) $(CONFIG_PATH)$(SERVER_FILE) $(SAVING_PATH_0)$(POS_FILE) $(SAVING_PATH_0)$(NEG_FILE) $(SAVING_PATH_0)$(POS_TEST_FILE) $(SAVING_PATH_0)$(NEG_TEST_FILE) 

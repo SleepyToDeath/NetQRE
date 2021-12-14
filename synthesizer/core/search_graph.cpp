@@ -128,12 +128,12 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					auto explored = msg.candidate;
 					if (VERBOSE_MODE)
 						std::cerr<<"[New!!!!]"<<explored->get_complexity()<<
-										" | "<<explored->to_string()<<std::endl;
+										" | "<<static_pointer_cast<GeneralSyntaxTree>(explored)->to_code().pos<<std::endl;
 
 					if (simplified != nullptr)
 					{
 						if (VERBOSE_MODE)
-							std::cerr<<"[New!]"<<simplified->to_string()<<std::endl;;
+							std::cerr<<"[New!]"<<static_pointer_cast<GeneralSyntaxTree>(simplified)->to_code().pos<<std::endl;;
 						visited->insert(explored);
 					}
 					/* not redundant and not repeating */
@@ -164,7 +164,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					{
 						/* drop */
 						if (VERBOSE_MODE)
-						std::cerr<<"[Rejected]"<<candidate->to_string()
+						std::cerr<<"[Rejected]"<<static_pointer_cast<GeneralSyntaxTree>(candidate)->to_code().pos
 										<<" | "<<candidate->get_complexity()<<std::endl;
 						total_drop += 1.0;
 						if (candidate->is_complete())
@@ -248,7 +248,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					double threshold = 10000;
 					if (papapa->get_complexity() <= threshold)
 					{
-						std::cerr<<"ANSWER FOUND: "<<papapa->to_string()
+						std::cerr<<"ANSWER FOUND: "<<static_pointer_cast<GeneralSyntaxTree>(papapa)->to_code().pos
 										<<" | "<<papapa->get_complexity()<<std::endl;
 						answer.push_back(papapa);
 						if (answer.size() >= answer_count)
@@ -281,11 +281,11 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 						if (buffer.size()>2)
 						{
 							int index = std::experimental::randint(0,(int)buffer.size()/2);
-							std::cerr<<"One current sample: "<<(buffer[index]->to_string())
+							std::cerr<<"One current sample: "<<(static_pointer_cast<GeneralSyntaxTree>(buffer[index])->to_code().pos)
 											<<" | #"<<buffer[index]->get_complexity()<<std::endl;
 						}
 						else
-							std::cerr<<"One current sample: "<<(buffer[0]->to_string())
+							std::cerr<<"One current sample: "<<(static_pointer_cast<GeneralSyntaxTree>(buffer[0])->to_code().pos)
 											<<" | #"<<buffer[0]->get_complexity()<<std::endl;
 						std::cerr<<"Programs searched: "<<search_counter<<" | "<<visited->size()<<" | "<<helper_counter<<" | "<<total_programs_searched<<std::endl;
 						std::cerr<<std::endl<<endl;;
@@ -342,10 +342,15 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 
 			/* ====================== Run ========================= */
+			errputs("#0");
 			run_this_round();
+			errputs("#1");
 			gather_candidates();
+			errputs("#2");
 			print_progress();
+			errputs("#3");
 			prepare_next_round();
+			errputs("#4");
 			/* ================== End of Run ====================== */
 		}
 	}
