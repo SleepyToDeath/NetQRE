@@ -17,8 +17,6 @@ using std::for_each;
 using std::pair;
 using std::set;
 
-#define DT_DEBUG
-
 namespace Netqre {
 
 auto high_one_bit = [](StreamFieldType num)->StreamFieldType {

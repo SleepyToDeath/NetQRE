@@ -37,13 +37,13 @@ all:
 #	$(CC) -I$(INCLUDE_PATH) -o netqre_client test_client.cpp $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 debug:
-	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cc $(SRC) -lrpc -lpthread -lpcap -g $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_server server.cc $(SRC) -lrpc -lpthread -lpcap -O2 $(STD)
 
 parser:
-	$(CC) -I$(INCLUDE_PATH) -o netqre_parser parser.cc $(SRC2) -lrpc -lpthread -lpcap -g $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_parser parser.cc $(SRC2) -lrpc -lpthread -lpcap -O2 $(STD)
 
 exec:
-	$(CC) -I$(INCLUDE_PATH) -o netqre_exec exec.cc $(SRC2) -lrpc -lpthread -lpcap -g $(STD)
+	$(CC) -I$(INCLUDE_PATH) -o netqre_exec exec.cc $(SRC2) -lrpc -lpthread -lpcap -O2 $(STD)
 	
 
 run-server-local:

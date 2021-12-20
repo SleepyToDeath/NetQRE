@@ -1,3 +1,4 @@
+#!/usr/bin/ruby
 def pick_rand_index(probabilities)
   r = rand(0.0..1.0)
   i = 0
@@ -11,6 +12,20 @@ def pick_rand_index(probabilities)
   end
   return i
 end
+
+$flow_id_idx = [2, 3, 4, 5, 6]
+
+def new_flow?(flow, pkt)
+  if flow.empty? then return false end
+  $flow_id_idx.each do |idx|
+    if flow[-1][idx] != pkt[idx]
+      return true
+    else
+      return false
+    end
+  end
+end
+
 
 class Counter
   def initialize(bar, func)
@@ -64,16 +79,18 @@ class Trace
   def from_file(file_name)
     file = File.open(file_name)
     fin = file.each_line
-    @num_field, @num_flow = fin.next.split(' ').map{|s| s.to_i}
+    @num_flow, @num_field = fin.next.split(' ').map{|s| s.to_i}
     @field_types = fin.next.split(' ').map{|s| s.to_i}
     flow = []
     loop do
       s = fin.next
-      if s.split(' ').size == 0
+      pkt = s.split(' ').map{|s| s.to_i}
+      if pkt.size == 0 || new_flow?(flow, pkt)
         @flows << flow
         flow = []
-      else
-        flow << s.split(' ').map{|s| s.to_i}
+      end
+      if pkt.size != 0
+        flow << pkt
       end
     end
   end
@@ -110,7 +127,7 @@ class Trace
 
   # dump metadata & flows separately
   def print_meta(sample_size, fp)
-    fp.call "#{@num_field} #{@num_flow / sample_size}"
+    fp.call "#{@num_flow / sample_size} #{@num_field}"
     fp.call @field_types.map{ |x| x.to_s }.join(' ')
   end
 
@@ -135,10 +152,10 @@ class Trace
 end
 
 $input_files = ["./tokenstreams/ddos-train.ts", "./tokenstreams/neg-train.ts"]
-$output_file_prefix = "./tokenstreams/mixed"
+$output_file_prefix = "./tokenstreams/mixed-ddos-train"
 $output_file_suffix = ".ts"
 $mix_rate = [ 0.3, 0.7 ]
-$sample_sizes = [ 1, 2, 3 ]
+$sample_sizes = [ 5, 10, 20 ]
 
 srcs = $input_files.map do |name|
   t = Trace.new
@@ -149,7 +166,7 @@ end
 dst = Trace.new
 dst.merge(srcs, $mix_rate)
 
-dst.trunc(10)
+dst.trunc(200)
 $sample_sizes.each do |size|
   name = $output_file_prefix + size.to_s + $output_file_suffix
   dst.to_file(size, name)

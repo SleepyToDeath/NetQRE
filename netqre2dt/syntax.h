@@ -110,7 +110,8 @@ enum class NetqreExpType {
 	VALUE_DEC,		//21
 	VALUE_DIGIT,	//22
 	VALUE_SET,		//23
-	PENDING_LITERAL	//24
+	VALUE_BOX,		//24
+	PENDING_LITERAL	//25
 };
 
 enum class AggOpType {

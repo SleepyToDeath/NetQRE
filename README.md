@@ -5,3 +5,4 @@
 * `netqre2dt` contains a complier from NetQRE to data-transducer, which is expected to be faster than native implementation.
 * `synthesizer` contains a code generator of NetQRE from labelled examples.
 
+For usage instruction, see `synthesizer/README.md`.

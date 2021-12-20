@@ -27,6 +27,8 @@ std::shared_ptr<NetqreAST> NetqreParser::parse(string code) {
 
 std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
+//	std::cerr<< "WTF!!!!!!!!!! ";
+//	std::cerr<< code << std::endl;
 
 	auto parse_node = [&](int cursor, NetqreExpType context, auto& self) -> tuple<shared_ptr<NetqreAST>, int>
 	{
@@ -45,9 +47,9 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			cur->type = ExpTypeMap.at(node_name);
 		else if (node_name[0] >= '0' && node_name[0] <= '9')
 		{
-			if (context == NetqreExpType::VALUE_SET || context == NetqreExpType::VALUE_DEC)
+			if (context == NetqreExpType::VALUE_SET || context == NetqreExpType::VALUE_BOX)
 				cur->type = NetqreExpType::VALUE_DEC;
-			else
+			else // VALUE_BIN || VALUE_DIGIT
 				cur->type = NetqreExpType::VALUE_DIGIT;
 		}
 		else if (node_name.start_with("\\r"))
@@ -55,12 +57,12 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			if (context == NetqreExpType::FEATURE_SET)
 				cur->type = NetqreExpType::VALUE_SET;
 			else
-				cur->type = NetqreExpType::VALUE_DEC;
+				cur->type = NetqreExpType::VALUE_BOX;
 		}
 		else
 			cur->type = NetqreExpType::PENDING_LITERAL;
 
-		std::cerr<<"{ "<<node_name<<" "<< (int)(cur->type) <<" "<<cursor<<" |";
+//		std::cerr<<"{ "<<node_name<<" "<< (int)(cur->type) <<" "<<cursor<<" |";
 
 		/* parse subtree */
 		vector< std::shared_ptr<NetqreAST> > pending;
@@ -95,6 +97,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			}
 
 			case NetqreExpType::FEATURE_SET:
+			case NetqreExpType::VALUE_BOX:
 			{
 				cur = pending[0];
 				break;
@@ -142,12 +145,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 					cur->subtree = pending;
 					break;
 				}
-				else if (pending[0]->name == "max")
-					cur->agg_type = AggOpType::MAX;
-				else if (pending[0]->name == "min")
-					cur->agg_type = AggOpType::MIN;
-				else if (pending[0]->name == "sum")
-					cur->agg_type = AggOpType::SUM;
+				cur->agg_type = pending[0]->agg_type;
 				cur->subtree.push_back(pending[1]);
 				cur->subtree.push_back(pending[2]);
 				break;
@@ -235,7 +233,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 
 			case NetqreExpType::VALUE_BIN:
 			{
-				cerr << " " << cur->name << "";
+//				cerr << " " << cur->name << "";
 				cur->value = pending[0]->value;
 				break;
 			}
@@ -244,7 +242,7 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 			{
 				if (pending.size() != 0)
 					cur->name = pending[0]->name + pending[1]->name;
-				cerr << " " << cur->name << "";
+//				cerr << " " << cur->name << "";
 				cur->value = Rubify::string("1" + cur->name).to_i(2);
 				break;
 			}
@@ -274,10 +272,11 @@ std::shared_ptr<NetqreAST> NetqreParser::structured_parse(string code) {
 				break;
 		}
 
-		std::cerr<<" | "<<node_name<<" "<<cursor<<" "<<cur->subtree.size()<<" }";
+//		std::cerr<<" | "<<node_name<<" "<<cursor<<" "<<cur->subtree.size()<<" }";
 
 		return {cur, cursor2};
 	};
+
 	auto [ast, cursor] = parse_node(0, NetqreExpType::PENDING_LITERAL, parse_node);
 	return ast;
 }

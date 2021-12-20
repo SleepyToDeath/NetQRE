@@ -342,15 +342,10 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 
 
 			/* ====================== Run ========================= */
-			errputs("#0");
 			run_this_round();
-			errputs("#1");
 			gather_candidates();
-			errputs("#2");
 			print_progress();
-			errputs("#3");
 			prepare_next_round();
-			errputs("#4");
 			/* ================== End of Run ====================== */
 		}
 	}
