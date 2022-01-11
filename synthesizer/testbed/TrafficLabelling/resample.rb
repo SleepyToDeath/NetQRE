@@ -20,10 +20,9 @@ def new_flow?(flow, pkt)
   $flow_id_idx.each do |idx|
     if flow[-1][idx] != pkt[idx]
       return true
-    else
-      return false
-    end
+		end
   end
+	return false
 end
 
 
@@ -93,6 +92,7 @@ class Trace
         flow << pkt
       end
     end
+		@num_flow = @flows.size
   end
 
   ## ========= modifier ==========
@@ -118,6 +118,9 @@ class Trace
 
   # keep only the first `len` flows
   def trunc(len)
+		if @num_flow < len
+			puts "Warning: truncate to longer!\n"
+		end
     @flows = @flows[0..(len-1)]
     @num_flow = len
   end
@@ -151,22 +154,27 @@ class Trace
   end
 end
 
-$input_files = ["./tokenstreams/ddos-train.ts", "./tokenstreams/neg-train.ts"]
-$output_file_prefix = "./tokenstreams/mixed-ddos-train"
+$input_files = ["./tokenstreams/ddos-test.ts", "./tokenstreams/neg-test.ts"]
+$output_file_prefix = "./tokenstreams/mixed0.8-ddos-test"
 $output_file_suffix = ".ts"
-$mix_rate = [ 0.3, 0.7 ]
-$sample_sizes = [ 5, 10, 20 ]
+$mix_rate = [ 0.2, 0.8 ]
+$sample_sizes = [ 5, 10, 20, 50 ]
 
 srcs = $input_files.map do |name|
   t = Trace.new
   t.from_file(name)
+	puts t.num_flow
   t
 end
 
 dst = Trace.new
-dst.merge(srcs, $mix_rate)
+if srcs.size == 1 then
+	dst = srcs[0]
+else
+	dst.merge(srcs, $mix_rate)
+end
 
-dst.trunc(200)
+dst.trunc(1000)
 $sample_sizes.each do |size|
   name = $output_file_prefix + size.to_s + $output_file_suffix
   dst.to_file(size, name)

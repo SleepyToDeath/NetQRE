@@ -1,6 +1,6 @@
-#!/bin/bash
-#make kill
-#for ((i=2; i<=$1; i++))
-#do
-#	ssh n$i "cd rpc; make kill" & 
-#done
+!/bin/bash
+make kill
+for ((i=$1; i<=$2; i++))
+do
+	ssh -p2324 dedos$(printf "%02d" $i) "cd rpc; make kill" & 
+done

@@ -81,7 +81,7 @@ class GeneralInterpreter {
 	virtual double extra_complexity(AbstractCode code) { return 0.0; }
 	virtual double extra_complexity(shared_ptr<GeneralSyntaxTree> code) { return 0.0; }
 	virtual vector<string> get_range(int handle, shared_ptr<GeneralExample> input) { return vector<string>(); }
-	virtual GeneralTestResult test(string code, shared_ptr<GeneralExample> input) 
+	virtual GeneralTestResult test(string code, shared_ptr<GeneralExample> input, bool print_res) 
 		{ GeneralTestResult res; res.pos_accuracy = 0; res.neg_accuracy = 0; return res; }
 };
 

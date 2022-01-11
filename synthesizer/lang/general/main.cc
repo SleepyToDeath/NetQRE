@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
 
 		{
 			cerr<<"Training Set:"<<endl;
-			auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), e_train);
+			auto res = GeneralProgram::interpreter->test(answer[i]->to_string(), e_train, false);
 			cerr<<"Positive accuracy: "<<res.pos_accuracy<<endl;
 			cerr<<"Negative accuracy: "<<res.neg_accuracy<<endl;
 			cerr<<endl;
@@ -227,6 +227,6 @@ int main(int argc, char *argv[]) {
 		}
 		*/
 	}
-	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
+//	errputs(require_(shared_ptr<NetqreExample>, "global_example")->to_s());
 	/*=============================================*/
 }

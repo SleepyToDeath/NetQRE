@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 INCLUDE_PATH = ../../../rubify
 
-CC = g++
+CC = g++-9
 STD = --std=c++2a
 
 SRC = ./client.hpp
@@ -49,6 +49,7 @@ exec:
 run-server-local:
 	echo "Staring QRE Servers Locally"
 	-killall netqre_server
+	sleep 1
 	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23333 >> server_log_1 2>&1 &
 	sleep 0.1
 	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23334 >> server_log_2 2>&1 &
@@ -56,24 +57,41 @@ run-server-local:
 	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23335 >> server_log_3 2>&1 &
 	sleep 0.1
 	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23336 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23337 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23338 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23339 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23340 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23341 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23342 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23343 >> server_log_4 2>&1 &
+	sleep 0.1
+	./netqre_server $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) 23344 >> server_log_4 2>&1 &
 	sleep 5
 
-LAST_SERVER = 6
+LAST_SERVER = 13
+FIRST_SERVER = 9
 
 run-server:
 	echo "Staring QRE Servers"
-	./killall.sh $(LAST_SERVER)
-	./distribute.sh $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(SAVING_PATH)$(POS_TEST_FILE) $(SAVING_PATH)$(NEG_TEST_FILE) $(LAST_SERVER)
-	./runall.sh $(LAST_SERVER)
+	./killall.sh $(FIRST_SERVER) $(LAST_SERVER)
+	./distribute.sh $(SAVING_PATH)$(POS_DATA_FILE) $(SAVING_PATH)$(NEG_DATA_FILE) $(SAVING_PATH)$(POS_TEST_FILE) $(SAVING_PATH)$(NEG_TEST_FILE) $(FIRST_SERVER)  $(LAST_SERVER)
+	./runall.sh $(FIRST_SERVER) $(LAST_SERVER)
 	sleep 5
 
 run-test: run-server
 	./netqre_client ./testbed/test1/test.netqre ./testbed/test1/01.ts ./testbed/test1/server_list.txt
 
 test:                                           
-	for ((i=23333; i<=23340; i++)); \
+	for ((i=23333; i<=23344; i++)); \
 	do \
-		valgrind --tool=callgrind ./netqre_server ./$(POS_DATA_FILE) ./$(NEG_DATA_FILE) ./$(POS_TEST_FILE) ./$(NEG_TEST_FILE) $$i >> server_log &  \
+		./netqre_server ./$(POS_DATA_FILE) ./$(NEG_DATA_FILE) $$i >> server_log &  \
 		sleep 0.1 ;\
 	done 
 

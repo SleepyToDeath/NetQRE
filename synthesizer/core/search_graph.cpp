@@ -241,7 +241,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 					return (- e->get_complexity());
 				});
 
-				errputs( _S_(buffer[0]->get_complexity()) + " ~ " + _S_(buffer[-1]->get_complexity()) );
+//				errputs( _S_(buffer[0]->get_complexity()) + " ~ " + _S_(buffer[-1]->get_complexity()) );
 
 				pending_answer.select_( [&] (const shared_ptr<IESyntaxTree>& papapa)->bool {
 //					double threshold = (buffer.size() > 0) ? (buffer[buffer.size()/2]->get_complexity()) : 0;
@@ -344,7 +344,7 @@ vector< shared_ptr<IESyntaxTree> > SearchGraph::enumerate_random_v2(
 			/* ====================== Run ========================= */
 			run_this_round();
 			gather_candidates();
-			print_progress();
+//			print_progress();
 			prepare_next_round();
 			/* ================== End of Run ====================== */
 		}

@@ -235,7 +235,7 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 	*/
 
 
-	GeneralTestResult test(string code, shared_ptr<GeneralExample> input) { 
+	GeneralTestResult test(string code, shared_ptr<GeneralExample> input, bool print_res) { 
 		auto e = std::static_pointer_cast<NetqreExampleHandle>(input);
 		vector<std::unique_ptr<Netqre::IntValue> > ans_pos;
 		vector<std::unique_ptr<Netqre::IntValue> > ans_neg;
@@ -265,15 +265,18 @@ class NetqreInterpreterInterface: public GeneralInterpreter {
 		auto tmp_neg = ans_neg.map<StreamFieldType>([](auto& ans)->StreamFieldType { return ans->upper; })
 						.sort_by<StreamFieldType>([](auto ans)->StreamFieldType { return ans; });
 
-		errputs("Negative results:");
-		tmp_neg.each([](auto ans) {
-			errputs("- " + _S_(ans));
-		});
+		if (print_res) 
+		{
+			errputs("Negative results:");
+			tmp_neg.each([](auto ans) {
+				errputs("- " + _S_(ans));
+			});
 
-		errputs("Positive results:");
-		tmp_pos.each([](auto ans) {
-			errputs("- " + _S_(ans));
-		});
+			errputs("Positive results:");
+			tmp_pos.each([](auto ans) {
+				errputs("- " + _S_(ans));
+			});
+		}
 
 		for (int i=0; i<ans_pos.size(); i++)
 		{

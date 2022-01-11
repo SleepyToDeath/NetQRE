@@ -180,7 +180,7 @@ class MergeSearch {
 					for (int j=0; j<e_tree[i].size(); j++)
 						if (global_pool[k]->to_program()->accept(e_tree[i][j], {accuracy}))
 							acc_count ++;
-					if (acc_count >= e_tree[i].size() / 2)
+					if (acc_count >= 1)//e_tree[i].size() / 2)
 					{
 						tmp.push_back(global_pool[k]);
 						for (int j=3; j<=7; j++)
