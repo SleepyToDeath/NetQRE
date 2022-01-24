@@ -6,6 +6,15 @@
 
 int main(int argc, char* argv[])
 {
+	if (string(argv[1]) == string("-h"))
+	{
+		std::cout << "Usage: netqre_exec program_file train_pos_file train_neg_file test_pos_file test_neg_file\n"
+			<< "\t program_file: each line represents a program, containing 1)the program, 2)the threshold, 3)0/1 bit indicating whether the label should be negative if output equals threshold, each separated by a spece. Empty lines are automatically skipped.\n"
+			<< "\t train files: must be the same as those used to train the programs" << std::endl;
+		return 0;
+	}
+
+
 	Rubify::string program;
 	std::ifstream fin(argv[1]);
 
@@ -63,15 +72,27 @@ int main(int argc, char* argv[])
 		std::cout << "Total Number: " << exp_test->negative_token.size() << endl;
 
 		correct_count = 0;
+		int lcp = 0;
+		int cp = 0;
 		exp_test->negative_token.each( [&](auto s) {
 			unique_ptr<Netqre::IntValue> ans;
 			ans = mac->process(s);
 			std::cout<<ans->upper<<", ";
 			if (!is_pos(ans->upper))
+			{
 				correct_count++;
+				cp = 0;
+			}
+			else
+			{
+				cp++;
+				if (cp > lcp)
+					lcp = cp;
+			}
 		});
 		std::cout << std::endl;
 		std::cout << "Accuracy: " << correct_count << "/" << exp_test->negative_token.size() << std::endl;
+		std::cout << "Longest false positive sequence: " << lcp << std::endl;
 
 	}
 }

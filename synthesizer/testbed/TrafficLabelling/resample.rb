@@ -154,11 +154,35 @@ class Trace
   end
 end
 
-$input_files = ["./tokenstreams/ddos-test.ts", "./tokenstreams/neg-test.ts"]
+#train
+#=begin
+$input_files = ["./tokenstreams/portscan-train.ts", "./tokenstreams/neg-train.ts"]
+$output_file_prefix = "./tokenstreams/mixed-portscan-train"
+$output_file_suffix = ".ts"
+$mix_rate = [ 0.8, 0.2 ]
+$sample_sizes = [ 10 ]
+$total_length = 1000
+#=end
+
+#test
+=begin
+$input_files = ["./tokenstreams/ddos-test.ts", "./tokenstreams/neg-test.ts"]#, "tokenstreams/portscan-test.ts"]
 $output_file_prefix = "./tokenstreams/mixed0.8-ddos-test"
 $output_file_suffix = ".ts"
 $mix_rate = [ 0.2, 0.8 ]
-$sample_sizes = [ 5, 10, 20, 50 ]
+$sample_sizes = [ 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300, 400, 500 ]
+$total_length = 5000
+=end
+
+#negative
+=begin
+$input_files = ["./tokenstreams/neg-test.ts", "tokenstreams/portscan-test.ts"]
+$output_file_prefix = "./tokenstreams/resize-neg0.75-test"
+$output_file_suffix = ".ts"
+$mix_rate = [ 0.25, 0.75 ]
+$sample_sizes = [ 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300, 400, 500 ]
+$total_length = 2000
+=end
 
 srcs = $input_files.map do |name|
   t = Trace.new
@@ -174,7 +198,7 @@ else
 	dst.merge(srcs, $mix_rate)
 end
 
-dst.trunc(1000)
+dst.trunc($total_length)
 $sample_sizes.each do |size|
   name = $output_file_prefix + size.to_s + $output_file_suffix
   dst.to_file(size, name)
